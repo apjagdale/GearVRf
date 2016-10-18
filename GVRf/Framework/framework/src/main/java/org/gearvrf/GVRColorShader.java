@@ -24,24 +24,29 @@ package org.gearvrf;
  */
 public class GVRColorShader extends GVRShader
 {
-    private String vertexShader =
+    private String vertexShader = "precision mediump float;\n" +
             "attribute vec3 a_position;\n" +
             "uniform mat4 u_mvp;\n" +
             "void main() {\n" +
             "  gl_Position = u_mvp * vec4(a_position, 1);\n" +
             "}\n";
 
-    private String fragmentShader =
-        "uniform vec4 u_color;\n" +
+    private String fragmentShader = "precision mediump float;\n" +
+        "uniform vec3 u_color;\n" +
         "void main()\n" +
         "{\n" +
-        "  gl_FragColor = u_color;" +
+        "  gl_FragColor = vec4(u_color, 1);" +
         "}\n";
 
     public GVRColorShader()
     {
-        super("float4 u_color", "", "float3 a_position");
+        super("float3 u_color", "", "float3 a_position");
         setSegment("FragmentTemplate", fragmentShader);
         setSegment("VertexTemplate", vertexShader);
+    }
+
+    protected void setMaterialDefaults(GVRShaderData material)
+    {
+        material.setVec3("u_color", 1, 1, 1);
     }
 }

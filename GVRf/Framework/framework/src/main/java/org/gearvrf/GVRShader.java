@@ -250,8 +250,14 @@ public class GVRShader
         GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
         int nativeShader = shaderManager.getShader(signature);
         if (nativeShader == 0) {
-            String vertexShaderSource = getSegment("VertexTemplate");
-            String fragmentShaderSource = getSegment("FragmentTemplate");
+            String vertexShaderSource = "";
+            String fragmentShaderSource = "";
+            if (mGLSLVersion > 100) {
+                vertexShaderSource = "#version " + mGLSLVersion.toString() + " es\n";
+                fragmentShaderSource = "#version " + mGLSLVersion.toString() + " es\n";
+            }
+            vertexShaderSource += getSegment("VertexTemplate");
+            fragmentShaderSource += getSegment("FragmentTemplate");
             nativeShader = context.getMaterialShaderManager().
                     addShader(signature, mUniformDescriptor, mTextureDescriptor, mVertexDescriptor, vertexShaderSource, fragmentShaderSource);
         }
@@ -300,8 +306,14 @@ public class GVRShader
 
         if (nativeShader == 0)
         {
-            String vertexShaderSource = getSegment("VertexTemplate");
-            String fragmentShaderSource = getSegment("FragmentTemplate");
+            String vertexShaderSource = "";
+            String fragmentShaderSource = "";
+            if (mGLSLVersion > 100) {
+                vertexShaderSource = "#version " + mGLSLVersion.toString() + " es\n";
+                fragmentShaderSource = "#version " + mGLSLVersion.toString() + " es\n";
+            }
+            vertexShaderSource += getSegment("VertexTemplate");
+            fragmentShaderSource += getSegment("FragmentTemplate");
             nativeShader = context.getMaterialShaderManager().addShader(signature,
                         mUniformDescriptor, mTextureDescriptor, mVertexDescriptor, vertexShaderSource, fragmentShaderSource);
         }

@@ -26,7 +26,7 @@ public class GVRShaderId {
     protected GVRShader mShaderTemplate;
     protected long mNativeShader;
 
-    protected GVRShaderId(Class<? extends GVRShader> id)
+    public GVRShaderId(Class<? extends GVRShader> id)
     {
         ID = id;
         mShaderTemplate = null;
