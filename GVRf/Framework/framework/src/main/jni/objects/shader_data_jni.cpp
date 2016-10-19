@@ -27,7 +27,7 @@ extern "C" {
     JNIEXPORT jlong JNICALL
     Java_org_gearvrf_NativeShaderData_ctor(JNIEnv * env,
             jobject obj);
-    JNIEXPORT jlong JNICALL
+    JNIEXPORT jint JNICALL
     Java_org_gearvrf_NativeShaderData_getNativeShader(
             JNIEnv * env, jobject obj, jlong jshader_data);
 
@@ -89,12 +89,12 @@ Java_org_gearvrf_NativeShaderData_ctor(JNIEnv * env, jobject obj)
     return reinterpret_cast<jlong>(new ShaderData());
 }
 
-JNIEXPORT jlong JNICALL
+JNIEXPORT jint JNICALL
 Java_org_gearvrf_NativeShaderData_getNativeShader(
         JNIEnv * env, jobject obj, jlong jshader_data)
 {
     ShaderData* shader_data = reinterpret_cast<ShaderData*>(jshader_data);
-    return static_cast<jlong>(shader_data->get_shader());
+    return static_cast<jint>(shader_data->get_shader());
 }
 
 JNIEXPORT void JNICALL

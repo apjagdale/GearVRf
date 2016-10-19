@@ -301,7 +301,7 @@ public class GVRShader
     public int bindShader(GVRContext context, GVRShaderData material)
     {
         String signature = getClass().getSimpleName();
-        GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
+        GVRShaderManager shaderManager = context.getMaterialShaderManager();
         int nativeShader = shaderManager.getShader(signature);
 
         if (nativeShader == 0)
@@ -316,6 +316,41 @@ public class GVRShader
             fragmentShaderSource += getSegment("FragmentTemplate");
             nativeShader = context.getMaterialShaderManager().addShader(signature,
                         mUniformDescriptor, mTextureDescriptor, mVertexDescriptor, vertexShaderSource, fragmentShaderSource);
+        }
+        return nativeShader;
+    }
+
+    /**
+     * Select the specific vertex and fragment shader to use with a shader
+     * template that does not generate variants.
+     *
+     * This is the only way to bind a post-effect shader.
+     *
+     * @param context
+     *            GVRContext
+     * @param shaderManager
+     *          shader manager to use
+     * @return ID of vertex/fragment shader set
+     * @see GVRContext.getMaterialShaderManager
+     * @see GVRContext.getPostEffectShaderManager
+     */
+    public int bindShader(GVRContext context, GVRShaderManager shaderManager)
+    {
+        String signature = getClass().getSimpleName();
+        int nativeShader = shaderManager.getShader(signature);
+
+        if (nativeShader == 0)
+        {
+            String vertexShaderSource = "";
+            String fragmentShaderSource = "";
+            if (mGLSLVersion > 100) {
+                vertexShaderSource = "#version " + mGLSLVersion.toString() + " es\n";
+                fragmentShaderSource = "#version " + mGLSLVersion.toString() + " es\n";
+            }
+            vertexShaderSource += getSegment("VertexTemplate");
+            fragmentShaderSource += getSegment("FragmentTemplate");
+            nativeShader = shaderManager.addShader(signature,
+                    mUniformDescriptor, mTextureDescriptor, mVertexDescriptor, vertexShaderSource, fragmentShaderSource);
         }
         return nativeShader;
     }

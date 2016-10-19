@@ -24,7 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 public class GVRShaderId {
     final Class<? extends GVRShader> ID;
     protected GVRShader mShaderTemplate;
-    protected long mNativeShader;
+    protected int mNativeShader;
 
     public GVRShaderId(Class<? extends GVRShader> id)
     {
@@ -53,14 +53,14 @@ public class GVRShaderId {
         mShaderTemplate = shader;
     }
 
-    long getNativeShader(GVRContext ctx)
+    int getNativeShader(GVRContext ctx, GVRShaderManager manager)
     {
         if (mNativeShader == 0)
         {
             GVRShader shader = getTemplate(ctx);
             if ((shader != null) && !shader.hasVariants())
             {
-                mNativeShader = shader.bindShader(ctx, (GVRShaderData) null);
+                mNativeShader = shader.bindShader(ctx, manager);
             }
         }
         return mNativeShader;

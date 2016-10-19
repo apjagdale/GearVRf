@@ -68,8 +68,8 @@ public class GVRCubemapShader extends GVRShader
             "uniform mat4 u_model;\n" +
             "uniform mat4 u_mvp;\n" +
             "varying vec3 diffuse_coord;\n" +
-            "vec4 pos = vec4(a_position, 1);\n" +
             "void main() {\n" +
+            "  vec4 pos = vec4(a_position, 1.0);\n" +
             "  diffuse_coord = normalize((u_model * pos).xyz);\n" +
             "  diffuse_coord.z = -diffuse_coord.z;\n" +
             "  gl_Position = u_mvp * pos;\n" +

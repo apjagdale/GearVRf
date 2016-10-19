@@ -315,8 +315,8 @@ public:
         return texture_capturer;
     }
 
-    void set_shader(long shaderid) {
-        render_pass_list_[0]->set_shader(shaderid);
+    void set_shader(int shaderid, int pass) {
+        render_pass_list_[pass]->set_shader(shaderid);
     }
 
     int get_shader() const { return render_pass_list_[0]->get_shader(); }

@@ -31,6 +31,7 @@ import org.gearvrf.GVRPostEffectShaderId;
 import org.gearvrf.GVRPostEffectShaderManager;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRScript;
+import org.gearvrf.GVRShader;
 import org.gearvrf.GVRShaderId;
 import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.R;
@@ -64,6 +65,27 @@ import android.graphics.Paint;
  * </ul>
  */
 public class GVRConsole extends GVRPostEffect {
+
+    public static class ConsoleShader extends GVRShader
+    {
+        static private String vertexShader;
+        static private String fragmentShader;
+
+        public ConsoleShader(GVRContext ctx)
+        {
+            super("", "sampler2D u_texture sampler2D u_overlay", "float3 a_position float2 a_texcoord");
+            if (vertexShader == null)
+            {
+                vertexShader = TextFile.readTextFile(ctx.getContext(), R.raw.posteffect_quad);
+            }
+            if (fragmentShader == null)
+            {
+                fragmentShader = TextFile.readTextFile(ctx.getContext(), R.raw.hud_console);
+            }
+            setSegment("FragmentTemplate", fragmentShader);
+            setSegment("VertexTemplate", vertexShader);
+        }
+    }
 
 //    private static final String TAG = Log.tag(GVRConsole.class);
 
@@ -381,7 +403,7 @@ public class GVRConsole extends GVRPostEffect {
         try {
             if (texture == null || (textureUpdated.get() != null && !textureUpdated.get())) {
                 texture = new GVRBitmapTexture(getGVRContext(), HUD);
-                setTexture("u_texture", texture);
+                setTexture("u_overlay", texture);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -421,23 +443,4 @@ public class GVRConsole extends GVRPostEffect {
     private static final float TOP_FUDGE = 20;
 }
 
-class ConsoleShader extends GVRShaderTemplate
-{
-    static private String vertexShader;
-    static private String fragmentShader;
 
-    ConsoleShader(GVRContext ctx)
-    {
-        super("", "sampler2D u_texture sampler2D u_overlay", "float3 a_position float2 a_texcoord");
-        if (vertexShader == null)
-        {
-            vertexShader = TextFile.readTextFile(ctx.getContext(), R.raw.posteffect_quad);
-        }
-        if (fragmentShader == null)
-        {
-            fragmentShader = TextFile.readTextFile(ctx.getContext(), R.raw.hud_console);
-        }
-        setSegment("FragmentTemplate", fragmentShader);
-        setSegment("VertexTemplate", vertexShader);
-    }
-}

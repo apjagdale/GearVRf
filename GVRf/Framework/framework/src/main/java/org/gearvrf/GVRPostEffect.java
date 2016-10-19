@@ -76,10 +76,12 @@ public class GVRPostEffect extends GVRHybridObject implements  GVRShaderData {
      */
     public GVRPostEffect(GVRContext gvrContext, GVRShaderId shaderId) {
         super(gvrContext, NativeShaderData.ctor());
-        mShaderId = getGVRContext().getPostEffectShaderManager().getShaderType(shaderId.ID);
-        mUniformDescriptor = mShaderId.getTemplate(gvrContext).getUniformDescriptor();
-        mTextureDescriptor = mShaderId.getTemplate(gvrContext).getTextureDescriptor();
-        NativeShaderData.setNativeShader(getNative(), mShaderId.getNativeShader(gvrContext));
+        GVRShader shader = shaderId.getTemplate(gvrContext);
+        GVRPostEffectShaderManager shaderManager = gvrContext.getPostEffectShaderManager();
+        mShaderId = shaderManager.getShaderType(shaderId.ID);
+        mUniformDescriptor = shader.getUniformDescriptor();
+        mTextureDescriptor = shader.getTextureDescriptor();
+        NativeShaderData.setNativeShader(getNative(), mShaderId.getNativeShader(gvrContext, shaderManager));
     }
 
     protected GVRPostEffect(GVRContext gvrContext, GVRShaderId shaderId, long constructor) {
@@ -263,9 +265,9 @@ public class GVRPostEffect extends GVRHybridObject implements  GVRShaderData {
 class NativeShaderData {
     static native long ctor();
 
-    static native long getNativeShader(long shaderData);
+    static native int getNativeShader(long shaderData);
 
-    static native void setNativeShader(long shaderData, long nativeShader);
+    static native void setNativeShader(long shaderData, int nativeShader);
 
     static native boolean hasUniform(long shaderData, String key);
 

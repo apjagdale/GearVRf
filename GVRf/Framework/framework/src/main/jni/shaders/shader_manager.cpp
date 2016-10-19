@@ -28,7 +28,9 @@ namespace gvr {
         }
         std::lock_guard<std::mutex> lock(lock_);
         int id = ++latest_shader_id_;
+        LOGD("SHADER: before add shader %d %s", id, signature.c_str());
         shader = new Shader(id, signature, uniformDescriptor, textureDescriptor, vertexDescriptor, vertex_shader, fragment_shader);
+        LOGD("SHADER: after obj creation shader %d %s", id, signature.c_str());
         shadersBySignature[signature] = shader;
         shadersByID[id] = shader;
         if (Shader::LOG_SHADER) LOGD("SHADER: added shader %d %s", id, signature.c_str());

@@ -157,15 +157,25 @@ namespace gvr {
         int loc = shader_->getLocation(key);
         if (loc < 0)
         {
-            if (Shader::LOG_SHADER) LOGE("SHADER::texture: %s location not found", key.c_str());
-            AllTexturesAvailable = false;
-            return;
+            loc = glGetUniformLocation(shader_->getProgramId(), key.c_str());
+            if (loc >= 0) {
+                if (Shader::LOG_SHADER) LOGE("SHADER::texture: %s location not found", key.c_str());
+                AllTexturesAvailable = false;
+                return;
+            }
+            shader_->setLocation(key, loc);
         }
-        Texture* texture = material_->getTexture(key);
-        glActiveTexture(GL_TEXTURE0 + TextureIndex);
-        glBindTexture(texture->getTarget(), texture->getId());
-        glUniform1i(loc, TextureIndex++);
-
+        Texture* texture = material_->getTextureNoError(key);
+        if (texture != NULL)
+        {
+            glActiveTexture(GL_TEXTURE0 + TextureIndex);
+            glBindTexture(texture->getTarget(), texture->getId());
+            glUniform1i(loc, TextureIndex++);
+        }
+        else
+        {
+            AllTexturesAvailable = false;
+        }
     }
 
     void AttributeLocation::visit(const std::string& key, const std::string& type, int size)
@@ -340,7 +350,7 @@ void Shader::render(RenderState* rstate, RenderData* render_data, ShaderData* ma
     {
         LOGE("SHADER: shader could not be generated %s", signature_.c_str());
     }
-    if (LOG_SHADER) LOGD("SHADER: rendering %s with program %d", render_data->owner_object()->name().c_str(), program_->id());
+    if (LOG_SHADER) LOGD("SHADER: rendering with program %d", program_->id());
     glUseProgram(program_->id());
 
     /*

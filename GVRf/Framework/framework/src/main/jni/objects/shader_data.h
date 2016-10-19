@@ -46,7 +46,7 @@ public:
         return native_shader_;
     }
 
-    void set_shader(long shader) {
+    void set_shader(int shader) {
         native_shader_ = shader;
     }
 
@@ -78,6 +78,7 @@ public:
         //By the time the texture is being set to its attaching material, it is ready
         //This is guaranteed by upper java layer scheduling
         if (texture != NULL) {
+            LOGE("SHADER: texture %s is ready", key.c_str());
             texture->setReady(true);
         }
     }
@@ -253,7 +254,7 @@ private:
     ShaderData& operator=(ShaderData&& post_effect_data);
 
 protected:
-    long native_shader_;
+    int native_shader_;
     std::map<std::string, Texture*> textures_;
     std::map<std::string, float> floats_;
     std::map<std::string, glm::vec2> vec2s_;

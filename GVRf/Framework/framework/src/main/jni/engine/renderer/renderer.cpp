@@ -391,7 +391,7 @@ void Renderer::renderPostEffectData(RenderState& rstate,
         {
             post_effect_data->setTexture("u_texture", render_texture);
             RenderData* rdata = shader_manager->get_render_data();
-            rdata->set_shader(post_effect_data->get_shader());
+            rdata->set_shader(post_effect_data->get_shader(), 0);
             shader->render(&rstate, rdata, post_effect_data);
         }
         else {

@@ -61,8 +61,10 @@ public:
         mesh->set_vertices(quad_vertices);
         mesh->set_tex_coords(quad_uvs);
         mesh->set_triangles(quad_triangles);
+        RenderPass* pass = new RenderPass();
         render_data = new RenderData();
         render_data->set_mesh(mesh);
+        render_data->add_pass(pass);
     }
 
     RenderData* get_render_data()
