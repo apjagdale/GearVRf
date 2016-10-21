@@ -130,6 +130,10 @@ public class GVRJassimpAdapter {
                 }
             }
         }
+        if (aiMesh.hasBones()) {
+            bones = new ArrayList<GVRBone>();
+            vertexDescriptor += "float4 a_bone_weights int4 a_bone_indices";
+        }
         GVRMesh mesh = new GVRMesh(ctx, vertexDescriptor);
 
         // Triangles
@@ -145,8 +149,7 @@ public class GVRJassimpAdapter {
         // Bones
         if (aiMesh.hasBones()) {
             bones = new ArrayList<GVRBone>();
-            vertexDescriptor += "float4 a_bone_weights int4 a_bone_indices";
-            for (AiBone bone : aiMesh.getBones()) {
+             for (AiBone bone : aiMesh.getBones()) {
                 bones.add(createBone(ctx, bone));
             }
         }

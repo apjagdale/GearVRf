@@ -381,8 +381,8 @@ public class GVRShaderTemplate extends GVRShader
             String vertexShaderSource = generateShaderVariant(isMultiviewSet,"Vertex", variantDefines, lightlist, lightClasses);
             String fragmentShaderSource = generateShaderVariant(isMultiviewSet,"Fragment", variantDefines, lightlist, lightClasses);
             StringBuilder uniformDescriptor = new StringBuilder();
-            StringBuilder textureDescriptor = new StringBuilder();;
-            StringBuilder vertexDescriptor = new StringBuilder();;
+            StringBuilder textureDescriptor = new StringBuilder();
+            StringBuilder vertexDescriptor = new StringBuilder();
             updateDescriptors(mesh, material, uniformDescriptor, textureDescriptor, vertexDescriptor);
             nativeShader = shaderManager.addShader(signature, uniformDescriptor.toString(),
                                                     textureDescriptor.toString(), vertexDescriptor.toString(),

@@ -83,7 +83,7 @@ namespace gvr {
         }
         const float* fv;
         const int* iv;
-        if (Shader::LOG_SHADER) LOGE("SHADER::uniform:value: %s location: %d", key.c_str(), loc);
+       // if (Shader::LOG_SHADER) LOGE("SHADER::uniform:value: %s location: %d", key.c_str(), loc);
         switch (tolower(type[0]))
         {
             case 'f':
@@ -147,7 +147,7 @@ namespace gvr {
             loc = glGetUniformLocation(shader_->getProgramId(), key.c_str());
             if (loc >= 0) {
                 shader_->setLocation(key, loc);
-                if (Shader::LOG_SHADER) LOGE("SHADER::uniform:location: %s location: %d", key.c_str(), loc);
+            //    if (Shader::LOG_SHADER) LOGE("SHADER::uniform:location: %s location: %d", key.c_str(), loc);
             }
         }
     }
@@ -159,7 +159,7 @@ namespace gvr {
         {
             loc = glGetUniformLocation(shader_->getProgramId(), key.c_str());
             if (loc >= 0) {
-                if (Shader::LOG_SHADER) LOGE("SHADER::texture: %s location not found", key.c_str());
+           //     if (Shader::LOG_SHADER) LOGE("SHADER::texture: %s location not found", key.c_str());
                 AllTexturesAvailable = false;
                 return;
             }
@@ -187,7 +187,7 @@ namespace gvr {
             if (loc >= 0)
             {
                 shader_->setLocation(key, loc);
-                if (Shader::LOG_SHADER) LOGE("SHADER::attribute:location: %s location: %d", key.c_str(), loc);
+          //      if (Shader::LOG_SHADER) LOGE("SHADER::attribute:location: %s location: %d", key.c_str(), loc);
                 switch (size)
                 {
                     case 1:
@@ -240,6 +240,7 @@ void Shader::initializeOnDemand(RenderState* rstate, Mesh* mesh) {
             LOGE("Your shaders are not multiview");
             throw error;
         }
+        LOGE("vertex shader is %s", vertexShader_.c_str());
         if (use_multiview) {
             u_mvp_ = glGetUniformLocation(program_->id(), "u_mvp_[0]");
             u_view_ = glGetUniformLocation(program_->id(), "u_view_[0]");
