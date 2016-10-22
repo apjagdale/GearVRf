@@ -58,4 +58,10 @@ public class GVROESShader extends GVRShader
         setSegment("FragmentTemplate", fragmentShader);
         setSegment("VertexTemplate", vertexShader);
     }
+
+    protected void setMaterialDefaults(GVRShaderData material)
+    {
+        material.setVec3("u_color", 1, 1, 1);
+        material.setFloat("u_opacity", 1);
+    }
 }

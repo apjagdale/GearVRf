@@ -81,6 +81,8 @@ public class GVRPostEffect extends GVRHybridObject implements  GVRShaderData {
         mShaderId = shaderManager.getShaderType(shaderId.ID);
         mUniformDescriptor = shader.getUniformDescriptor();
         mTextureDescriptor = shader.getTextureDescriptor();
+
+        //shader.setMaterialDefaults(this);
         NativeShaderData.setNativeShader(getNative(), mShaderId.getNativeShader(gvrContext, shaderManager));
     }
 
