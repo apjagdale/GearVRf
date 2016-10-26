@@ -119,7 +119,7 @@ public class GVRMaterial extends GVRPostEffect
 
         public abstract static class UnlitFBO {
             public static final GVRShaderId ID = new GVRShaderId(GVRUnlitFBOShader.class);
-					}
+        }
 
         public abstract static class LightMap {
             public static final GVRShaderId ID = new GVRShaderId(GVRLightmapShader.class);

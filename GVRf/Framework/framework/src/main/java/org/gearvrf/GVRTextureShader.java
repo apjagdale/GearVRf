@@ -39,7 +39,7 @@ public class GVRTextureShader extends GVRShaderTemplate
 
     public GVRTextureShader(GVRContext gvrcontext)
     {
-        super("float3 u_color; float u_opacity; float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float specular_exponent",
+        super("float3 u_color; float u_opacity; float4 ambient_color; float4 diffuse_color; float4 specular_color; float4 emissive_color; float line_width; float specular_exponent",
               "sampler2D u_texture; sampler2D diffuseTexture sampler2D inactive_pause sampler2D normal_pause sampler2D inactive_play sampler2D normal_play",
               "vec3 a_position; vec2 a_texcoord; vec3 a_normal", 300);
         if (fragTemplate == null) {

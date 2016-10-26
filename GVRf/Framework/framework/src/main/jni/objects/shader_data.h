@@ -148,11 +148,11 @@ public:
 
             case 16:
             it5 = mat4s_.find(key);
-            if (it5 != mat4s_.find(key))
+            if (it5 != mat4s_.end())
                 return glm::value_ptr(it5->second);
             break;
         }
-        LOGE("SHADER: key %s not found in material", key.c_str());
+        LOGE("SHADER: key %s not found in material %d ", key.c_str(), numfloats);
         return NULL;
     }
 
@@ -233,6 +233,7 @@ public:
     }
 
     virtual void setMat4(const std::string& key, glm::mat4 matrix) {
+        //LOGE( "Material::setting Mat4() : %s ", key.c_str());
         mat4s_[key] = matrix;
     }
 

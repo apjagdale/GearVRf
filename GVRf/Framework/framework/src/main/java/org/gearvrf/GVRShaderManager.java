@@ -69,10 +69,10 @@ public class GVRShaderManager extends GVRHybridObject
     public GVRShaderId getShaderType(Class<? extends GVRShader> shaderClass)
     {
         GVRShaderId shaderId = mShaderTemplates.get(shaderClass);
-        GVRContext ctx = getGVRContext();
 
         if (shaderId == null)
         {
+            GVRContext ctx = getGVRContext();
             shaderId = new GVRShaderId(shaderClass);
             mShaderTemplates.put(shaderClass, shaderId);
             shaderId.getTemplate(ctx);
