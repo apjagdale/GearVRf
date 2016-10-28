@@ -441,7 +441,7 @@ void GLRenderer::renderMaterialShader(RenderState& rstate, RenderData* render_da
                     glLineWidth(1.0f);
                 }
             }
-            LOGE("SHADER: selecting shader %s %d", shader->signature().c_str(), shader->getShaderID());
+            //LOGE("SHADER: selecting shader %s %d", shader->signature().c_str(), shader->getShaderID());
             shader->render(&rstate, render_data, curr_material);
         }
         catch (const std::string &error) {
@@ -452,12 +452,13 @@ void GLRenderer::renderMaterialShader(RenderState& rstate, RenderData* render_da
         }
     }
     else {
-        LOGE("Rendering error: GVRRenderData shader cannot be determined, using GVRErrorShader\n");
+        LOGE("Rendering error: GVRRenderData shader cannot be determined, using GVRErrorShader %s \n", owner->name().c_str());
         shader = shader_manager->findShader(std::string("GVRErrorShader"));
         shader->render(&rstate, render_data, curr_material);
     }
     GLuint programId = shader->getProgramId();
     if (Shader::LOG_SHADER) LOGE("SHADER: binding vertex arrays to program %d", programId);
+
     glBindVertexArray(mesh->getVAOId(programId));
     if (mesh->indices().size() > 0)
     {

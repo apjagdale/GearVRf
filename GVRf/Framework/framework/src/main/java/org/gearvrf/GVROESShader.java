@@ -33,7 +33,7 @@ public class GVROESShader extends GVRShader
             "uniform mat4 u_mvp;\n" +
             "varying vec2 diffuse_coord;\n" +
             "void main() {\n" +
-            "   vec2 diffuse_coord = a_texcoord;\n" +
+            "   diffuse_coord = a_texcoord;\n" +
             "   gl_Position = u_mvp * vec4(a_position, 1.0);\n" +
             "}";
 
@@ -46,7 +46,7 @@ public class GVROESShader extends GVRShader
             "varying vec2 diffuse_coord;\n" +
             "void main()\n" +
             "{\n" +
-            "  vec4 color = texture2D(u_texture, diffuse_coord);" +
+            "  vec4 color = texture2D(u_texture, diffuse_coord);\n" +
             "  gl_FragColor = vec4(color.r * u_color.r * u_opacity, color.g * u_color.g * u_opacity, color.b * u_color.b * u_opacity, color.a * u_opacity);\n" +
             "}\n";
 
