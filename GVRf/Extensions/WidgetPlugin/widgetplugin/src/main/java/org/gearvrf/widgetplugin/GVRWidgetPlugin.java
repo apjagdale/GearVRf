@@ -507,8 +507,8 @@ public class GVRWidgetPlugin implements AndroidApplicationBase {
         mMain = main;
     }
 
-    public void setPickedObject(GVRSceneObject obj) {
-        mInputDispatcher.setPickedObject(obj);
+    public void setPickedObject(GVRSceneObject obj, float [] hitLocation) {
+        mInputDispatcher.setPickedObject(obj, hitLocation);
     }
 
     public void initializeWidget(GVRWidget widget) {
