@@ -15,6 +15,7 @@
 
 package org.gearvrf.widgetplugin;
 
+import org.gearvrf.GVRPicker;
 import org.gearvrf.GVRSceneObject;
 
 
@@ -52,10 +53,11 @@ public class GVRWidgetInputDispatcher {
         mInput = in;
     }
 
-    public void setPickedObject(GVRSceneObject obj, float [] hitLocation) {
+    public void setPickedObject(GVRPicker.GVRPickedObject pickInfo) {
+        GVRSceneObject obj = pickInfo.getHitObject();
         if (obj instanceof GVRWidgetSceneObject) {
             mPickedObject = (GVRWidgetSceneObject) obj;
-            mHitLocation = hitLocation;
+            mHitLocation = pickInfo.getHitLocation();
         } else {
             mPickedObject = null;
         }
