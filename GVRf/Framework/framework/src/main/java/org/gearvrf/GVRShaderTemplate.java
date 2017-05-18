@@ -674,7 +674,7 @@ public class GVRShaderTemplate
                 }
             }
 
-            if(name.equals("mat4")){
+            if(type.equals("mat4")){
                 nfloats = 16;
             }
 
