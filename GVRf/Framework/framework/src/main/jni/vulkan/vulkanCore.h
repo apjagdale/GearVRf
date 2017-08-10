@@ -88,6 +88,14 @@ public:
             return theInstance;
         return NULL;
     }
+
+    void releaseInstance(){
+        delete theInstance;
+        theInstance = nullptr;
+    }
+
+    ~VulkanCore();
+
     void InitLayoutRenderData(VulkanMaterial& vkMtl, VulkanRenderData* vkdata, Shader*, bool postEffectFlag);
 
     void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);

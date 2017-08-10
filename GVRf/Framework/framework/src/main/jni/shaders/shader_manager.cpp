@@ -12,6 +12,7 @@ namespace gvr {
             Shader *shader = it->second;
             delete shader;
         }
+
         shadersByID.clear();
         shadersBySignature.clear();
     }

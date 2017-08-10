@@ -1608,6 +1608,25 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         CreateSampler(textureObject);
     }
 
+    VulkanCore::~VulkanCore() {
+        if(swapChainCmdBuffer.capacity() != 0) {
+            for (int i = 0; i < SWAP_CHAIN_COUNT; i++) {
+                delete mRenderTexture[i];
+                vkFreeCommandBuffers(m_device, m_commandPool, 1, swapChainCmdBuffer[i]);
+            }
+        }
+
+        if(postEffectCmdBuffer != nullptr){
+            vkFreeCommandBuffers(m_device, m_commandPool, 1, postEffectCmdBuffer);
+            for (int i = 0; i < POSTEFFECT_CHAIN_COUNT; i++) {
+                delete mPostEffectTexture[i];
+            }
+        }
+
+        vkDestroyDevice(getDevice(), nullptr);
+        vkDestroyInstance(m_instance, nullptr);
+    }
+
     void VulkanCore::initVulkanCore() {
         GLint viewport[4];
         glGetIntegerv(GL_VIEWPORT, viewport);
