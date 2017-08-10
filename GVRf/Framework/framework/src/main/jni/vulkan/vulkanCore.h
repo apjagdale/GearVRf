@@ -154,7 +154,7 @@ public:
 private:
     std::vector <VkFence> waitFences;
     VkFence postEffectFence;
-    std::vector <VkFence> waitSCBFences;
+    VkFence waitSCBFences;
     static VulkanCore *theInstance;
 
     bool swap_chain_init_;

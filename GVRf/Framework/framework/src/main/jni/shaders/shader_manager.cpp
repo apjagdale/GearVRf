@@ -12,17 +12,16 @@ namespace gvr {
             Shader *shader = it->second;
             delete shader;
         }
-
         shadersByID.clear();
         shadersBySignature.clear();
     }
 
     int ShaderManager::addShader(const char* signature,
-          const char* uniformDescriptor,
-          const char* textureDescriptor,
-          const char* vertexDescriptor,
-          const char* vertex_shader,
-          const char* fragment_shader)
+                                 const char* uniformDescriptor,
+                                 const char* textureDescriptor,
+                                 const char* vertexDescriptor,
+                                 const char* vertex_shader,
+                                 const char* fragment_shader)
     {
         Shader* shader = findShader(signature);
         if (shader != NULL)
