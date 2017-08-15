@@ -1405,7 +1405,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             m_Vulkan_Initialised = false;
             return;
         }
-        createPipelineCache();
+
     }
 
     void VulkanCore::CreateSampler(TextureObject *&textureObject) {
@@ -1641,5 +1641,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         LOGE("Vulkan after intialization");
         InitSync();
         swap_chain_init_ = true;
+        createPipelineCache();
     }
 }
