@@ -137,6 +137,15 @@ namespace gvr
         return -1;
     }
 
+    int DataDescriptor::getPaddingSize(int &totaSize, int padSize){
+        int mod = totaSize % padSize;
+        int requiredSize = 0;
+        if(mod != 0) {
+            requiredSize = padSize - mod;
+        }
+        return requiredSize;
+    }
+
     void  DataDescriptor::parseDescriptor()
     {
         int index = 0;
@@ -167,6 +176,17 @@ namespace gvr
             }
             DataEntry entry;
             short byteSize = calcSize(type);
+
+            switch(byteSize/4){
+                case 2:
+                    mTotalSize += getPaddingSize(mTotalSize, 8);
+                    break;
+
+                case 3:
+                case 4:
+                    mTotalSize += getPaddingSize(mTotalSize, 16);
+                    break;
+            }
 
             entry.Type = makeShaderType(type, byteSize);
             byteSize *= array_size;     // multiply by number of array elements

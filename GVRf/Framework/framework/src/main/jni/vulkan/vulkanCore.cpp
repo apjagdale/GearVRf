@@ -896,7 +896,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.stageCount = 2; //vertex and fragment
     VkPipeline pipeline = 0;
     LOGI("Vulkan graphics call before");
-    err = vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr,
+    err = vkCreateGraphicsPipelines(m_device, m_pipelineCache, 1, &pipelineCreateInfo, nullptr,
                                     &pipeline);
     GVR_VK_CHECK(!err);
     rdata->setPipeline(pipeline,pass);
@@ -1382,7 +1382,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
         GVR_VK_CHECK(vkCreatePipelineCache(m_device, &pipelineCacheCreateInfo, nullptr,
                                            &m_pipelineCache));
-        LOGE("Pipleline cace faile");
     }
 
     void VulkanCore::initVulkanDevice(ANativeWindow *newNativeWindow) {
@@ -1406,7 +1405,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             m_Vulkan_Initialised = false;
             return;
         }
-        //createPipelineCache();
+        createPipelineCache();
     }
 
     void VulkanCore::CreateSampler(TextureObject *&textureObject) {

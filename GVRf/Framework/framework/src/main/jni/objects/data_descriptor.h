@@ -162,6 +162,9 @@ protected:
     std::string mDescriptor;        // descriptor with name, type and size of uniforms
     int         mTotalSize;         // number of bytes in data block or vertex
     std::vector<DataEntry> mLayout; // entries describing layout
+
+private:
+    int getPaddingSize(int &totaSize, int padSize);
 };
 
 }
