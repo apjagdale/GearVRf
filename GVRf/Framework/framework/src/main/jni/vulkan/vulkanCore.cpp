@@ -1380,8 +1380,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     void VulkanCore::createPipelineCache() {
         VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
         pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-        GVR_VK_CHECK(vkCreatePipelineCache(m_device, &pipelineCacheCreateInfo, nullptr,
-                                           &m_pipelineCache));
+        VkResult ret = vkCreatePipelineCache(m_device, &pipelineCacheCreateInfo, nullptr,
+                                           &m_pipelineCache);
+        GVR_VK_CHECK(!ret);
     }
 
     void VulkanCore::initVulkanDevice(ANativeWindow *newNativeWindow) {
@@ -1405,6 +1406,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             m_Vulkan_Initialised = false;
             return;
         }
+        createPipelineCache();
 
     }
 
@@ -1641,6 +1643,5 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         LOGE("Vulkan after intialization");
         InitSync();
         swap_chain_init_ = true;
-        createPipelineCache();
     }
 }

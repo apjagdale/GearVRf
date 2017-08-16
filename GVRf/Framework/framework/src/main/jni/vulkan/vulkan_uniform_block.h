@@ -70,6 +70,8 @@ namespace gvr {
         }
 
         char * getUniformData() { return mUniformData; }
+        virtual bool setFloatVec(const char *name, const float *val, int n);
+        virtual bool setIntVec(const char *name, const int *val, int n);
     protected:
         void createBuffer(VulkanCore*);
         void updateBuffer(VulkanCore* vk);

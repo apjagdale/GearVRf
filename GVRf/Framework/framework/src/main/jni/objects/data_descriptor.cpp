@@ -177,7 +177,13 @@ namespace gvr
             DataEntry entry;
             short byteSize = calcSize(type);
 
-            switch(byteSize/4){
+            int padType =byteSize/4;
+
+            // For Scalar arrays the base allignemnt should always be vec4
+            if(array_size > 1 && padType < 3)
+                padType = 4;
+
+            switch(padType){
                 case 2:
                     mTotalSize += getPaddingSize(mTotalSize, 8);
                     break;
@@ -190,6 +196,11 @@ namespace gvr
 
             entry.Type = makeShaderType(type, byteSize);
             byteSize *= array_size;     // multiply by number of array elements
+
+            // Appending 1 float for every vec3 if it is an array
+            if(padType == 3 && array_size > 1)
+                byteSize += array_size * sizeof(float);
+
             entry.IsSet = false;
             entry.Count = array_size;
             entry.NotUsed = false;
@@ -206,7 +217,7 @@ namespace gvr
             }
             addName(name, namelen, entry);
             mLayout.push_back(entry);
-            LOGV("DataDescriptor: %s offset=%d size=%d\n", name, entry.Offset, entry.Size);
+            LOGV("DataDescriptor: %s offset=%d size=%d  count=%d\n", name, entry.Offset, entry.Size, entry.Count);
             mTotalSize += entry.Size;
         });
     }

@@ -66,26 +66,26 @@ namespace gvr {
     std::string VulkanUniformBlock::makeShaderLayout()
     {
         std::ostringstream stream;
-        if (mUseBuffer)
-        {
-            stream << "layout (std140, set = 0, binding = " << getBindingPoint() <<" ) uniform " << getBlockName() << " {" << std::endl;
-            DataDescriptor::forEachEntry([&stream](const DataEntry& entry) mutable
-                                         {
-                                             if(entry.IsSet)
-                                                 stream << "   " << entry.Type << " " << entry.Name << ";" << std::endl;
-                                         });
+        if (mUseBuffer) {
+            stream << "layout (std140, set = 0, binding = " << getBindingPoint() << " ) uniform "
+                   << getBlockName() << " {" << std::endl;
         }
-        else
-        {
-            stream << "layout (std140, push_constant) uniform PushConstants {" << std::endl;
-            DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
-                                         {
-                                             if (entry.IsSet)
-                                             {
-                                                 stream << "   " << entry.Type << " " << entry.Name << ";" << std::endl;
-                                             }
-                                         });
+        else {
+                stream << "layout (std140, push_constant) uniform PushConstants {" << std::endl;
         }
+
+        DataDescriptor::forEachEntry([&stream, this](const DataEntry& entry) mutable
+        {
+            int nelems = entry.Count;
+            if (entry.IsSet)
+            {
+                if(nelems > 1)
+                    stream << " layout(offset=" << entry.Offset << ") " << entry.Type << " " << entry.Name << "[" << nelems << "];" << std::endl;
+                else
+                    stream << " layout(offset=" << entry.Offset << ") " << entry.Type << " " << entry.Name << ";" << std::endl;
+            }
+        });
+
         stream << "};" << std::endl;
         return stream.str();
     }
@@ -146,4 +146,79 @@ namespace gvr {
         buffer_init_ = true;
     }
 
+    bool VulkanUniformBlock::setFloatVec(const char* name, const float *val, int n) {
+        std::vector<float> holder;
+        DataEntry *u = find(name);
+
+        if (u == NULL)
+            return NULL;
+
+        int bytesize = n * sizeof(float);
+        char *data = getData(name, bytesize);
+
+        // For array of vec3 needs padding for every entry in UBO
+        if (u->Type[u->Type.length() - 1] == '3') {
+            for (int i = 0; i < n / 3; i++) {
+                holder.push_back(*val);
+                val++;
+                holder.push_back(*val);
+                val++;
+                holder.push_back(*val);
+                val++;
+                holder.push_back(0.0f);
+            }
+
+            if (data != NULL) {
+                memcpy(data, holder.data(), bytesize);
+                markDirty();
+                return true;
+            }
+        }
+
+        if (data != NULL)
+        {
+            memcpy(data, val, bytesize);
+            markDirty();
+            return true;
+        }
+        return false;
+    }
+
+    bool VulkanUniformBlock::setIntVec(const char* name, const int *val, int n) {
+        std::vector<int> holder;
+        DataEntry *u = find(name);
+
+        if (u == NULL)
+            return NULL;
+
+        int bytesize = n * sizeof(float);
+        char *data = getData(name, bytesize);
+
+        // For array of vec3 needs padding for every entry in UBO
+        if (u->Type[u->Type.length() - 1] == '3') {
+            for (int i = 0; i < n / 3; i++) {
+                holder.push_back(*val);
+                val++;
+                holder.push_back(*val);
+                val++;
+                holder.push_back(*val);
+                val++;
+                holder.push_back(0.0f);
+            }
+
+            if (data != NULL) {
+                memcpy(data, holder.data(), bytesize);
+                markDirty();
+                return true;
+            }
+        }
+
+        if (data != NULL)
+        {
+            memcpy(data, val, bytesize);
+            markDirty();
+            return true;
+        }
+        return false;
+    }
 }
