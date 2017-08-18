@@ -137,89 +137,58 @@ namespace gvr
         return -1;
     }
 
-    int DataDescriptor::getPaddingSize(int &totaSize, int padSize){
-        int mod = totaSize % padSize;
-        int requiredSize = 0;
-        if(mod != 0) {
-            requiredSize = padSize - mod;
-        }
-        return requiredSize;
-    }
-
     void  DataDescriptor::parseDescriptor()
     {
         int index = 0;
         forEach([this, index](const char* name, const char* type, int size) mutable
-        {
-            // check if it is array
-            int array_size = 1;
-            const char* p = name;
-            const char* bracket = strchr(name, '[');
-            size_t namelen = strlen(name);
-
-            if (name == NULL)
-            {
-                LOGE("UniformBlock: SYNTAX ERROR: expecting uniform name\n");
-                return;
-            }
-            if (bracket)                // parse array size in brackets
-            {
-                namelen = bracket - name;
-                array_size = 0;
-                p += (bracket - name) + 1;
-                while (std::isdigit(*p))
                 {
-                    int v = *p - '0';
-                    array_size = array_size * 10 + v;
-                    ++p;
-                }
-            }
-            DataEntry entry;
-            short byteSize = calcSize(type);
+                    // check if it is array
+                    int array_size = 1;
+                    const char* p = name;
+                    const char* bracket = strchr(name, '[');
+                    size_t namelen = strlen(name);
 
-            int padType =byteSize/4;
+                    if (name == NULL)
+                    {
+                        LOGE("UniformBlock: SYNTAX ERROR: expecting uniform name\n");
+                        return;
+                    }
+                    if (bracket)                // parse array size in brackets
+                    {
+                        namelen = bracket - name;
+                        array_size = 0;
+                        p += (bracket - name) + 1;
+                        while (std::isdigit(*p))
+                        {
+                            int v = *p - '0';
+                            array_size = array_size * 10 + v;
+                            ++p;
+                        }
+                    }
+                    DataEntry entry;
+                    short byteSize = calcSize(type);
 
-            // For Scalar arrays the base allignemnt should always be vec4
-            if(array_size > 1 && padType < 3)
-                padType = 4;
+                    entry.Type = makeShaderType(type, byteSize);
+                    byteSize *= array_size;     // multiply by number of array elements
+                    entry.IsSet = false;
+                    entry.Count = array_size;
+                    entry.NotUsed = false;
+                    entry.IsInt = type[0] == 'i';
+                    entry.IsMatrix = type[0] == 'm';
+                    entry.Index = index++;
+                    entry.Offset = mTotalSize;
+                    entry.Size = byteSize;
 
-            switch(padType){
-                case 2:
-                    mTotalSize += getPaddingSize(mTotalSize, 8);
-                    break;
-
-                case 3:
-                case 4:
-                    mTotalSize += getPaddingSize(mTotalSize, 16);
-                    break;
-            }
-
-            entry.Type = makeShaderType(type, byteSize);
-            byteSize *= array_size;     // multiply by number of array elements
-
-            // Appending 1 float for every vec3 if it is an array
-            if(padType == 3 && array_size > 1)
-                byteSize += array_size * sizeof(float);
-
-            entry.IsSet = false;
-            entry.Count = array_size;
-            entry.NotUsed = false;
-            entry.IsInt = type[0] == 'i';
-            entry.IsMatrix = type[0] == 'm';
-            entry.Index = index++;
-            entry.Offset = mTotalSize;
-            entry.Size = byteSize;
-
-            if (*name == '!')           // ! indicates entry not used by shader
-            {
-                entry.NotUsed = true;
-                ++name;
-            }
-            addName(name, namelen, entry);
-            mLayout.push_back(entry);
-            LOGV("DataDescriptor: %s offset=%d size=%d  count=%d\n", name, entry.Offset, entry.Size, entry.Count);
-            mTotalSize += entry.Size;
-        });
+                    if (*name == '!')           // ! indicates entry not used by shader
+                    {
+                        entry.NotUsed = true;
+                        ++name;
+                    }
+                    addName(name, namelen, entry);
+                    mLayout.push_back(entry);
+                    LOGV("DataDescriptor: %s offset=%d size=%d\n", name, entry.Offset, entry.Size);
+                    mTotalSize += entry.Size;
+                });
     }
 
     std::string DataDescriptor::makeShaderType(const char* type, int byteSize)

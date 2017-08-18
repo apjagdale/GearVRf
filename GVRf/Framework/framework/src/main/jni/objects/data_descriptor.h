@@ -164,7 +164,7 @@ protected:
     std::vector<DataEntry> mLayout; // entries describing layout
 
 private:
-    int getPaddingSize(int &totaSize, int padSize);
+    //int getPaddingSize(int &totaSize, int padSize);
 };
 
 }

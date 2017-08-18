@@ -52,6 +52,8 @@ namespace gvr {
      */
     class VulkanUniformBlock : public UniformBlock
     {
+        int getPaddingSize(short &totaSize, int padSize);
+        void uboPadding();
     public:
         VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName);
         VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName, int maxelems);

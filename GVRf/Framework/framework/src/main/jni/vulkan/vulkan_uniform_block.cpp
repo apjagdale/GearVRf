@@ -23,12 +23,14 @@ namespace gvr {
             : UniformBlock(descriptor, bindingPoint, blockName), vk_descriptor(nullptr)
     {
         vk_descriptor = new VulkanDescriptor();
+        uboPadding();
     }
 
     VulkanUniformBlock::VulkanUniformBlock(const char* descriptor, int bindingPoint, const char* blockName, int maxelems)
             : UniformBlock(descriptor, bindingPoint, blockName, maxelems), vk_descriptor(nullptr)
     {
         vk_descriptor = new VulkanDescriptor();
+        uboPadding();
     }
 
     void VulkanUniformBlock::createDescriptorWriteInfo(int binding_index, int stageFlags, bool sampler) {
@@ -220,5 +222,39 @@ namespace gvr {
             return true;
         }
         return false;
+    }
+
+    int VulkanUniformBlock::getPaddingSize(short &totaSize, int padSize){
+        int mod = totaSize % padSize;
+        int requiredSize = 0;
+        if(mod != 0) {
+            requiredSize = padSize - mod;
+        }
+        return requiredSize;
+    }
+
+    void VulkanUniformBlock::uboPadding(){
+        for(int i = 0; i < mLayout.size(); i++) {
+            int padType = (mLayout[i].Size / mLayout[i].Count) / 4;
+
+            // For Scalar arrays the base allignemnt should always be vec4
+            if (mLayout[i].Count > 1 && padType < 3)
+                padType = 4;
+
+            int newOffset = 0;
+            switch (padType) {
+                case 2:
+                    newOffset = getPaddingSize(mLayout[i].Offset, 8);
+                    break;
+
+                case 3:
+                case 4:
+                    newOffset += getPaddingSize(mLayout[i].Offset, 16);
+                    break;
+            }
+
+            mLayout[i].Offset += newOffset;
+            mTotalSize += newOffset;
+        }
     }
 }
