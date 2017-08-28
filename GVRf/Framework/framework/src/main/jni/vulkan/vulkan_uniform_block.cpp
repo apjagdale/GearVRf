@@ -149,7 +149,6 @@ namespace gvr {
     }
 
     bool VulkanUniformBlock::setFloatVec(const char* name, const float *val, int n) {
-        std::vector<float> holder;
         DataEntry *u = find(name);
 
         if (u == NULL)
@@ -160,21 +159,13 @@ namespace gvr {
 
         // For array of vec3 needs padding for every entry in UBO
         if (u->Type[u->Type.length() - 1] == '3') {
+            float * dest = (float*) data;
             for (int i = 0; i < n / 3; i++) {
-                holder.push_back(*val);
-                val++;
-                holder.push_back(*val);
-                val++;
-                holder.push_back(*val);
-                val++;
-                holder.push_back(0.0f);
+                memcpy(dest, val, 3 * sizeof(float));
+                dest +=4;
+                val +=3;
             }
-
-            if (data != NULL) {
-                memcpy(data, holder.data(), bytesize);
-                markDirty();
-                return true;
-            }
+            return true;
         }
 
         if (data != NULL)
@@ -187,7 +178,6 @@ namespace gvr {
     }
 
     bool VulkanUniformBlock::setIntVec(const char* name, const int *val, int n) {
-        std::vector<int> holder;
         DataEntry *u = find(name);
 
         if (u == NULL)
@@ -198,21 +188,13 @@ namespace gvr {
 
         // For array of vec3 needs padding for every entry in UBO
         if (u->Type[u->Type.length() - 1] == '3') {
+            int * dest = (int*) data;
             for (int i = 0; i < n / 3; i++) {
-                holder.push_back(*val);
-                val++;
-                holder.push_back(*val);
-                val++;
-                holder.push_back(*val);
-                val++;
-                holder.push_back(0.0f);
+                memcpy(dest, val, 3 * sizeof(int));
+                dest +=4;
+                val +=3;
             }
-
-            if (data != NULL) {
-                memcpy(data, holder.data(), bytesize);
-                markDirty();
-                return true;
-            }
+            return true;
         }
 
         if (data != NULL)
