@@ -1213,7 +1213,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 swapChainIndx = (swapChainIndx + 2) % SWAP_CHAIN_COUNT;
             }
              if (!found) {
-            err = vkWaitForFences(m_device, 1, &waitFences[swapChainIndx], VK_TRUE,
+            err = vkWaitForFences(m_device, 1, &waitFences[(swapChainIndx+2)%SWAP_CHAIN_COUNT], VK_TRUE,
                                   4294967295U);
              }
         }

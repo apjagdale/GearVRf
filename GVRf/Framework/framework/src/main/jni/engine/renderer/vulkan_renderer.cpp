@@ -123,7 +123,17 @@ namespace gvr {
         if(vkRdata->isHashCodeDirty() || vkRdata->isDirty(0xFFFF) || vkRdata->isDescriptorSetNull(pass)) {
 
             vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
-            vkRdata->createPipeline(shader, this, pass, false, 0);
+            std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
+
+            VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
+            if(pipeline == NULL) {
+                vkRdata->createPipeline(shader, this, pass, false, 0);
+                vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
+            }
+            else{
+                vkRdata->setPipeline(pipeline, pass);
+                vkRdata->setDirty(false);
+            }
         }
         shader->useShader();
         return true;
@@ -144,7 +154,18 @@ namespace gvr {
 
             vulkanCore_->InitDescriptorSetForRenderDataPostEffect(this, pass, shader, vkRdata, postEffectIndx);
             vkRdata->set_depth_test(0);
-            vkRdata->createPipeline(shader, this, pass, true, postEffectIndx);
+
+            std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
+
+            VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
+            if(pipeline == NULL) {
+                vkRdata->createPipeline(shader, this, pass, true, postEffectIndx);
+                vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
+            }
+            else{
+                vkRdata->setPipeline(pipeline, pass);
+                vkRdata->setDirty(false);
+            }
        }
 
         shader->useShader();
