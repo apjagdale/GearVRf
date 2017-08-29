@@ -158,7 +158,7 @@ namespace gvr {
         char *data = getData(name, bytesize);
 
         // For array of vec3 needs padding for every entry in UBO
-        if ((u->Size == 3 * sizeof(float)) &&
+        if ((u->Type[u->Type.length() - 1] == '3') &&
             (u->Count > 1))
         {
             float* dest = (float*) data;
@@ -169,6 +169,7 @@ namespace gvr {
                 *dest++ = *val++;
                 ++dest;
             }
+            markDirty();
             return true;
         }
 
@@ -191,7 +192,7 @@ namespace gvr {
         char *data = getData(name, bytesize);
 
         // For array of vec3 needs padding for every entry in UBO
-        if ((u->Size == 3 * sizeof(float)) &&
+        if ((u->Type[u->Type.length() - 1] == '3') &&
             (u->Count > 1))
         {
             int* dest = (int*) data;
@@ -202,6 +203,7 @@ namespace gvr {
                 *dest++ = *val++;
                 ++dest;
             }
+            markDirty();
             return true;
         }
 
