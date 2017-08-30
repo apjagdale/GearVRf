@@ -126,7 +126,7 @@ namespace gvr {
             std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
 
             VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
-            if(pipeline == NULL) {
+            if(pipeline == 0) {
                 vkRdata->createPipeline(shader, this, pass, false, 0);
                 vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
             }
@@ -158,7 +158,7 @@ namespace gvr {
             std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
 
             VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
-            if(pipeline == NULL) {
+            if(pipeline == 0) {
                 vkRdata->createPipeline(shader, this, pass, true, postEffectIndx);
                 vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
             }

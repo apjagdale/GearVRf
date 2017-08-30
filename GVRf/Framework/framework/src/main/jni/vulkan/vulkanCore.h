@@ -155,7 +155,7 @@ public:
     VkPipeline getPipeline(std::string key){
         std::unordered_map<std::string, VkPipeline >::const_iterator got = pipelineHashMap.find(key);
         if(got == pipelineHashMap.end())
-            return NULL;
+            return 0;
         else
             return got->second;
     }
