@@ -52,7 +52,7 @@ namespace gvr {
         {
             return new VulkanUniformBlock(desc, binding, name);
         }
-        return new VulkanUniformBlock(desc, binding, name);
+        return new VulkanUniformBlock(desc, binding, name, maxelems);
     }
 
     Image* VulkanRenderer::createImage(int type, int format)
