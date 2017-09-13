@@ -406,7 +406,7 @@ public class GVRAsynchronousResourceLoader {
      * Load a GL mesh asynchronously.
      * 
      * This is the implementation of
-     * {@link GVRContext#loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
+     * {@link org.gearvrf.GVRAssetLoader#loadMesh(GVRAndroidResource.MeshCallback, GVRAndroidResource, int)}
      * - it will usually be more convenient to call that directly.
      * 
      * @param gvrContext
