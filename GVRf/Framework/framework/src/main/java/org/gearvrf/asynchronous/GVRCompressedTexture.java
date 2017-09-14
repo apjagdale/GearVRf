@@ -19,16 +19,17 @@ import static android.opengl.GLES30.*;
 
 import static org.gearvrf.asynchronous.GLESX.*;
 
+import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.utility.Log;
+import org.gearvrf.utility.ResourceCache;
 import org.gearvrf.utility.RuntimeAssertion;
 
 /**
  * A GL compressed texture; you get it from
- * {@linkplain GVRContext#loadCompressedTexture(org.gearvrf.GVRAndroidResource.CompressedTextureCallback, org.gearvrf.GVRAndroidResource)
- * GVRContext.loadCompressedTexture()}.
+ * {@linkplain GVRAsynchronousResourceLoader#loadTexture(GVRContext, ResourceCache, GVRAndroidResource.CancelableCallback, GVRAndroidResource, int, int)}
  * 
  * This is mostly an internal, implementation class: You <em>may</em> find
  * {@link #mLevels} and/or {@link #mQuality} useful.
@@ -53,7 +54,7 @@ public class GVRCompressedTexture extends GVRTexture {
 
     /**
      * The speed/quality parameter passed to
-     * {@link GVRContext#loadCompressedTexture(org.gearvrf.GVRAndroidResource.CompressedTextureCallback, org.gearvrf.GVRAndroidResource, int)
+     * {@link GVRAsynchronousResourceLoader#loadCompressedTexture(GVRContext, ResourceCache, GVRAndroidResource.CompressedTextureCallback, GVRAndroidResource, int)}
      * GVRContext.loadCompressedTexture()}.
      * 
      * This copy has been 'clamped' to one of the
