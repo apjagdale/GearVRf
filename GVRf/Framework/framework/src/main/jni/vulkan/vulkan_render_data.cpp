@@ -55,9 +55,7 @@ namespace gvr
         // TODO: if viewport, vertices, shader, draw_mode, blending or depth state changes, we need to re-create the pipeline
         renderer->getCore()->InitPipelineForRenderData(vertices,this, vk_shader, pass, postEffect, postEffectIndx);
         getHashCode();
-        setDirty(false);
-
-
+        clearDirty();
     }
 }
 
