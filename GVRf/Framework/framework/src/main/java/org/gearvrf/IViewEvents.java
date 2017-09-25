@@ -12,19 +12,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.gearvrf;
 
-interface IRenderBundle {
+import android.view.View;
 
-    GVRMaterialShaderManager getMaterialShaderManager();
+import org.gearvrf.scene_objects.GVRViewSceneObject;
 
-    GVRPostEffectShaderManager getPostEffectShaderManager();
-
-    GVRRenderTexture getPostEffectRenderTextureA();
-    GVRRenderTexture getEyeCapturePostEffectRenderTextureA();
-    GVRRenderTexture getEyeCapturePostEffectRenderTextureB();
-    GVRRenderTexture getPostEffectRenderTextureB();
-    GVRRenderTarget getEyeCaptureRenderTarget();
-
-    GVRRenderTarget getRenderTarget(GVRViewManager.EYE eye, int index);
+/**
+ * This interface defines the callback interface of an Android {@code View}
+ * that is inflated by a {@link GVRViewSceneObject}.
+ */
+public interface IViewEvents extends IEvents {
+    void onInitView(GVRViewSceneObject sceneObject, View view);
+    void onStartDraw(GVRViewSceneObject sceneObject, View view);
 }
