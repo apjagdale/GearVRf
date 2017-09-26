@@ -21,6 +21,7 @@
 #include "VrApi_SystemUtils.h"
 #include <cstring>
 #include <unistd.h>
+#include <VrApi_Types.h>
 #include "engine/renderer/renderer.h"
 
 
@@ -82,7 +83,14 @@ namespace gvr {
     }
 
     void GVRActivity::showConfirmQuit() {
-        LOGV("GVRActivity::showConfirmQuit");
+        LOGV("GVRActivity::showConfirmuit");
+
+        ovrFrameParms parms = vrapi_DefaultFrameParms(&oculusJavaGlThread_, VRAPI_FRAME_INIT_BLACK_FINAL, vrapi_GetTimeInSeconds(), nullptr);
+        parms.FrameIndex = ++frameIndex;
+        parms.MinimumVsyncs = 1;
+        parms.PerformanceParms = oculusPerformanceParms_;
+        vrapi_SubmitFrame(oculusMobile_, &parms);
+
         vrapi_ShowSystemUI(&oculusJavaMainThread_, VRAPI_SYS_UI_CONFIRM_QUIT_MENU);
     }
 
@@ -124,10 +132,15 @@ RenderTexture*  GVRActivity::createRenderTexture(int eye, int index){
 
         if (nullptr == oculusMobile_) {
             ovrModeParms parms = vrapi_DefaultModeParms(&oculusJavaGlThread_);
-        bool AllowPowerSave, ResetWindowFullscreen;
-            configurationHelper_.getModeConfiguration(env, AllowPowerSave, ResetWindowFullscreen);
-            parms.Flags |=AllowPowerSave;
-            parms.Flags |=ResetWindowFullscreen;
+
+            bool allowPowerSave, resetWindowFullscreen;
+            configurationHelper_.getModeConfiguration(env, allowPowerSave, resetWindowFullscreen);
+            if (allowPowerSave) {
+                parms.Flags |= VRAPI_MODE_FLAG_ALLOW_POWER_SAVE;
+            }
+            if (resetWindowFullscreen) {
+                parms.Flags |= VRAPI_MODE_FLAG_RESET_WINDOW_FULLSCREEN;
+            }
 
             oculusMobile_ = vrapi_EnterVrMode(&parms);
             if (gearController != nullptr) {
@@ -135,6 +148,7 @@ RenderTexture*  GVRActivity::createRenderTexture(int eye, int index){
             }
 
             oculusPerformanceParms_ = vrapi_DefaultPerformanceParms();
+        env.ExceptionClear(); //clear a weird GearVrRemoteForBatteryWorkAround raised by Oculus
             configurationHelper_.getPerformanceConfiguration(env, oculusPerformanceParms_);
             oculusPerformanceParms_.MainThreadTid = mainThreadId_;
             oculusPerformanceParms_.RenderThreadTid = gettid();
@@ -233,7 +247,9 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
         // Render the eye images.
         for (int eye = 0; eye < (use_multiview ? 1 :VRAPI_FRAME_LAYER_EYE_MAX); eye++) {
             int textureSwapChainIndex = frameBuffer_[eye].mTextureSwapChainIndex;
-            beginRenderingEye(eye);
+            if(!gRenderer->isVulkanInstance()) {
+                beginRenderingEye(eye);
+            }
             oculusJavaGlThread_.Env->CallVoidMethod(jViewManager, onDrawEyeMethodId, eye, textureSwapChainIndex, use_multiview);
             if(gRenderer->isVulkanInstance()){
                 glBindTexture(GL_TEXTURE_2D,vrapi_GetTextureSwapChainHandle(frameBuffer_[eye].mColorTextureSwapChain, textureSwapChainIndex));
@@ -246,8 +262,12 @@ void GVRActivity::onDrawFrame(jobject jViewManager) {
                                    GL_RGBA,
                                    GL_UNSIGNED_BYTE,
                                    oculusTexData);
+
+                frameBuffer_[eye].advance();
             }
-            endRenderingEye(eye);
+            else {
+                endRenderingEye(eye);
+            }
         }
 
         FrameBufferObject::unbind();
