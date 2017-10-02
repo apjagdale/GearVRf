@@ -13,7 +13,6 @@ package org.gearvrf.accessibility;
 
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRShader;
-import org.gearvrf.GVRShaderTemplate;
 import org.gearvrf.R;
 import org.gearvrf.utility.TextFile;
 
