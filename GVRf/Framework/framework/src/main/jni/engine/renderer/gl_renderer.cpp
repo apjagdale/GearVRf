@@ -15,6 +15,7 @@
 
 #include <gl/gl_index_buffer.h>
 #include <gl/gl_vertex_buffer.h>
+#include <gl/gl_render_target.h>
 #include "glm/gtc/matrix_inverse.hpp"
 #include "gl/gl_material.h"
 #include "gl/gl_render_data.h"
@@ -44,7 +45,22 @@ namespace gvr
     {
         return new RenderPass();
     }
+    RenderTarget* GLRenderer::createRenderTarget(Scene* scene) {
+        return new GLRenderTarget(scene);
+    }
+    RenderTarget* GLRenderer::createRenderTarget(RenderTexture* renderTexture, bool isMultiview){
+        return new GLRenderTarget(renderTexture, isMultiview);
+    }
+    RenderTarget* GLRenderer::createRenderTarget(RenderTexture* renderTexture, const RenderTarget* renderTarget){
+        return new GLRenderTarget(renderTexture, renderTarget);
+    }
+    RenderTexture* GLRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo){
 
+        if(renderTextureInfo.useMultiview)
+            return  new GLMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,2, renderTextureInfo.fboId, renderTextureInfo.texId);
+
+        return new GLNonMultiviewRenderTexture(renderTextureInfo.fdboWidth,renderTextureInfo.fboHeight,renderTextureInfo.multisamples,renderTextureInfo.fboId, renderTextureInfo.texId);
+    }
     void GLRenderer::clearBuffers(const Camera &camera) const
     {
         GLbitfield mask = GL_DEPTH_BUFFER_BIT;
@@ -121,7 +137,7 @@ namespace gvr
 
     RenderTexture* GLRenderer::createRenderTexture(int width, int height, int sample_count, int layers)
     {
-        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, DepthFormat::DEPTH_0);
+        RenderTexture* tex = new GLNonMultiviewRenderTexture(width, height, sample_count, layers, DepthFormat::DEPTH_24_STENCIL_8);
         return tex;
     }
 
@@ -159,7 +175,7 @@ namespace gvr
     {
         const char* desc;
 
-        desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_model; mat4 u_view_i; float u_right; ";
+        desc = " mat4 u_view_[2]; mat4 u_mvp_[2]; mat4 u_mv_[2]; mat4 u_mv_it_[2]; mat4 u_model; mat4 u_view_i; float u_right; uint u_render_mask; ";
 
         transform_ubo_[1] = reinterpret_cast<GLUniformBlock*>
         (createUniformBlock(desc, TRANSFORM_UBO_INDEX, "Transform_ubo", 0));
@@ -171,87 +187,6 @@ namespace gvr
         transform_ubo_[0]->useGPUBuffer(false);
     }
 
-    void GLRenderer::renderCamera(Scene *scene, Camera *camera, int framebufferId, int viewportX,
-                                  int viewportY, int viewportWidth, int viewportHeight,
-                                  ShaderManager *shader_manager,
-                                  RenderTexture *post_effect_render_texture_a,
-                                  RenderTexture *post_effect_render_texture_b)
-    {
-        resetStats();
-        RenderState rstate;
-        RenderData* post_effects = camera->post_effect_data();
-
-        rstate.shadow_map = false;
-        rstate.material_override = NULL;
-        rstate.viewportX = viewportX;
-        rstate.viewportY = viewportY;
-        rstate.viewportWidth = viewportWidth;
-        rstate.viewportHeight = viewportHeight;
-        rstate.uniforms.u_view = camera->getViewMatrix();
-        rstate.uniforms.u_proj = camera->getProjectionMatrix();
-        rstate.shader_manager = shader_manager;
-        rstate.scene = scene;
-        rstate.render_mask = camera->render_mask();
-        rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
-
-        GL(glEnable(GL_DEPTH_TEST));
-        GL(glDepthFunc(GL_LEQUAL));
-        GL(glEnable(GL_CULL_FACE));
-        GL(glFrontFace(GL_CCW));
-        GL(glCullFace(GL_BACK));
-        GL(glEnable(GL_BLEND));
-        GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-        GL(glBlendEquation(GL_FUNC_ADD));
-        GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
-        GL(glDisable(GL_POLYGON_OFFSET_FILL));
-        GL(glLineWidth(1.0f));
-        if ((post_effects == NULL) ||
-            (post_effects->pass_count() == 0))
-        {
-            glBindFramebuffer(GL_FRAMEBUFFER, framebufferId);
-            glViewport(viewportX, viewportY, viewportWidth, viewportHeight);
-
-            GL(clearBuffers(*camera));
-            renderRenderDataVector(rstate);
-        }
-        else
-        {
-            GLRenderTexture* target_texture = static_cast<GLRenderTexture*>(post_effect_render_texture_a);
-            RenderTexture* input_texture = target_texture;
-            int npass = post_effects->pass_count() - 1;
-
-            GL(glBindFramebuffer(GL_FRAMEBUFFER, target_texture->getFrameBufferId()));
-            GL(glViewport(0, 0, target_texture->width(), target_texture->height()));
-            GL(clearBuffers(*camera));
-            renderRenderDataVector(rstate);
-
-            GL(glDisable(GL_DEPTH_TEST));
-            GL(glDisable(GL_CULL_FACE));
-            for (int i = 0; i < npass; ++i)
-            {
-                if (i % 2 == 0)
-                {
-                    target_texture = static_cast<GLRenderTexture*>(post_effect_render_texture_b);
-                }
-                else
-                {
-                    target_texture = static_cast<GLRenderTexture*>(post_effect_render_texture_a);
-                }
-                GL(glBindFramebuffer(GL_FRAMEBUFFER, target_texture->getFrameBufferId()));
-                GL(glViewport(0, 0, target_texture->width(), target_texture->height()));
-                GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-                renderPostEffectData(rstate, input_texture, post_effects, i);
-                input_texture = target_texture;
-            }
-            GL(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
-            GL(glViewport(viewportX, viewportY, viewportWidth, viewportHeight));
-            GL(glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT));
-            renderPostEffectData(rstate, input_texture, post_effects, npass);
-        }
-        GL(glDisable(GL_DEPTH_TEST));
-        GL(glDisable(GL_CULL_FACE));
-        GL(glDisable(GL_BLEND));
-    }
 
     void GLRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget,
                             ShaderManager* shader_manager,
@@ -283,6 +218,9 @@ namespace gvr
         if (!rstate.shadow_map)
         {
             rstate.render_mask = camera->render_mask();
+            if(rstate.is_multiview)
+                rstate.render_mask = RenderData::RenderMaskBit::Right | RenderData::RenderMaskBit::Left;
+
             rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
             rstate.material_override = NULL;
             GL(glEnable (GL_BLEND));
@@ -481,47 +419,6 @@ namespace gvr
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFB);
     }
 
-    void GLRenderer::renderCamera(Scene* scene, Camera* camera,
-            RenderTexture* render_texture, ShaderManager* shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) {
-
-        renderCamera(scene, camera, render_texture->getFrameBufferId(), 0, 0,
-                render_texture->width(), render_texture->height(), shader_manager,
-                post_effect_render_texture_a,
-                post_effect_render_texture_b);
-    }
-
-
-    void GLRenderer::renderCamera(Scene *scene, Camera *camera, ShaderManager *shader_manager,
-                                  RenderTexture *post_effect_render_texture_a,
-                                  RenderTexture *post_effect_render_texture_b)
-    {
-        GLint curFBO;
-        GLint viewport[4];
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &curFBO);
-        glGetIntegerv(GL_VIEWPORT, viewport);
-
-        renderCamera(scene, camera, curFBO, viewport[0], viewport[1], viewport[2], viewport[3],
-                     shader_manager, post_effect_render_texture_a,
-                     post_effect_render_texture_b
-        );
-    }
-
-
-    void GLRenderer::renderCamera(Scene *scene, Camera *camera, int viewportX, int viewportY,
-                                  int viewportWidth, int viewportHeight,
-                                  ShaderManager *shader_manager,
-                                  RenderTexture *post_effect_render_texture_a,
-                                  RenderTexture *post_effect_render_texture_b)
-    {
-
-        renderCamera(scene, camera, 0, viewportX, viewportY, viewportWidth, viewportHeight,
-                     shader_manager, post_effect_render_texture_a,
-                     post_effect_render_texture_b
-        );
-    }
-
     void GLRenderer::set_face_culling(int cull_face)
     {
         switch (cull_face)
@@ -681,7 +578,6 @@ namespace gvr
         GLRenderData* rdata = static_cast<GLRenderData*>(render_data);
         int drawMode = render_data->draw_mode();
 
-        Transform* model = render_data->owner_object() ? render_data->owner_object()->transform() : nullptr;
         try
         {
             shader->useShader(rstate.is_multiview);
@@ -713,7 +609,7 @@ namespace gvr
             if (shader->usesMatrixUniforms())
             {
                 UniformBlock* transformBlock = getTransformUbo(rstate.is_multiview ? 1 : 0);
-                updateTransforms(rstate, transformBlock, model);
+                updateTransforms(rstate, transformBlock, rdata);
                 if (!transformBlock->usesGPUBuffer())
                 {
                     static_cast<GLShader*>(shader)->findUniforms(*transformBlock, TRANSFORM_UBO_INDEX);

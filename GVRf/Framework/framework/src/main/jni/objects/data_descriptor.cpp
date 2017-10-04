@@ -39,7 +39,6 @@ namespace gvr
 
     void DataDescriptor::forEachEntry(std::function<void(DataEntry&)> func)
     {
-        LOGV("DataDescriptor::forEachEntry %s %d entries", mDescriptor.c_str(), mLayout.size());
         for (auto it = mLayout.begin(); it != mLayout.end(); ++it)
         {
             func(*it);
@@ -48,7 +47,6 @@ namespace gvr
 
     void DataDescriptor::forEachEntry(std::function<void(const DataEntry&)> func) const
     {
-        LOGV("DataDescriptor::forEachEntry %s %d entries", mDescriptor.c_str(), mLayout.size());
         for (auto it = mLayout.begin(); it != mLayout.end(); ++it)
         {
             func(*it);
@@ -173,7 +171,7 @@ namespace gvr
                     entry.IsSet = false;
                     entry.Count = array_size;
                     entry.NotUsed = false;
-                    entry.IsInt = type[0] == 'i';
+                    entry.IsInt =  strstr(type,"int") != nullptr;
                     entry.IsMatrix = type[0] == 'm';
                     entry.Index = index++;
                     entry.Offset = mTotalSize;
@@ -231,6 +229,12 @@ namespace gvr
         else if (strncmp(type, "int", 3) == 0)
         {
             std::istringstream is(type + 3);
+            is >> size;
+            return size * sizeof(int);
+        }
+        else if (strncmp(type, "uint", 4) == 0)
+        {
+            std::istringstream is(type + 4);
             is >> size;
             return size * sizeof(int);
         }

@@ -19,6 +19,7 @@
 #include "util/jni_utils.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
+
 namespace gvr {
 
 RenderData::~RenderData() {
@@ -71,18 +72,9 @@ ShaderData* RenderData::material(int pass) const {
 
 void RenderData::adjustRenderingOrderForTransparency(bool hasAlpha)
 {
-    // had transparency before, but is now opaque
-    if (!hasAlpha)
+    if (hasAlpha)
     {
-        if (rendering_order_ > Geometry)
-        {
-            rendering_order_ = Geometry;
-            return;
-        }
-    }
         // has transparency now, but was opaque before
-    else
-    {
         if (rendering_order_ < Transparent)
         {
             rendering_order_ = Transparent;
@@ -148,7 +140,6 @@ void RenderData::bindShader(Scene *scene, bool isMultiview)
     int rc = scene->get_java_env(&env);
     if (env && (rc >= 0))
     {
-        LOGD("SHADER: Calling GVRRenderData.bindShaderNative(%p)", this);
         env->CallVoidMethod(javaObj_, bindShaderMethod_, scene->getJavaObj(), isMultiview);
         if (rc > 0)
         {

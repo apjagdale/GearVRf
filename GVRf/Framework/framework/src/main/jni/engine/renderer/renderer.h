@@ -36,6 +36,7 @@ typedef unsigned long Long;
 
 namespace gvr {
 extern bool use_multiview;
+struct RenderTextureInfo;
 class Camera;
 class Scene;
 class SceneObject;
@@ -131,13 +132,14 @@ public:
                                                 int jcolor_format, int jdepth_format, bool resolve_depth,
                                                 const TextureParameters* texture_parameters, int number_views) = 0;
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) = 0;
+    virtual RenderTexture* createRenderTexture(const RenderTextureInfo&)=0;
     virtual Shader* createShader(int id, const char* signature,
                                  const char* uniformDescriptor, const char* textureDescriptor,
                                  const char* vertexDescriptor, const char* vertexShader,
                                  const char* fragmentShader) = 0;
      virtual VertexBuffer* createVertexBuffer(const char* descriptor, int vcount) = 0;
      virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount) = 0;
-     void updateTransforms(RenderState& rstate, UniformBlock* block, Transform* model);
+     void updateTransforms(RenderState& rstate, UniformBlock* block, RenderData*);
      virtual void initializeStats();
      virtual void cullFromCamera(Scene *scene, Camera* camera,
                 ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector,bool);
@@ -146,29 +148,10 @@ public:
      virtual void cull(Scene *scene, Camera *camera,
             ShaderManager* shader_manager);
      virtual void renderRenderData(RenderState& rstate, RenderData* render_data);
+    virtual RenderTarget* createRenderTarget(Scene*) = 0;
+    virtual RenderTarget* createRenderTarget(RenderTexture*, bool) = 0;
+    virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*) = 0;
 
-
-     virtual void renderCamera(Scene* scene, Camera* camera,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b) = 0;
-
-     virtual void renderCamera(Scene* scene, Camera* camera, int viewportX,
-             int viewportY, int viewportWidth, int viewportHeight,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b)=0;
-
-     virtual void renderCamera(Scene* scene, Camera* camera, int framebufferId,
-            int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-            ShaderManager* shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) = 0;
-
-     virtual void renderCamera(Scene* scene, Camera* camera,
-            RenderTexture* render_texture, ShaderManager* shader_manager,
-            RenderTexture* post_effect_render_texture_a,
-            RenderTexture* post_effect_render_texture_b) = 0;
     virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                     RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b)=0;
     virtual void restoreRenderStates(RenderData* render_data) = 0;

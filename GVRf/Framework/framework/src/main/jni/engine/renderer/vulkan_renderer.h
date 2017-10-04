@@ -86,26 +86,7 @@ public:
     VkPhysicalDevice& getPhysicalDevice(){
         return vulkanCore_->getPhysicalDevice();
     }
-    // pure virtual
-     void renderCamera(Scene* scene, Camera* camera,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b);
 
-   void renderCamera(Scene* scene, Camera* camera, int viewportX,
-             int viewportY, int viewportWidth, int viewportHeight,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b){}
-   void renderCamera(Scene* scene, Camera* camera, int framebufferId,
-             int viewportX, int viewportY, int viewportWidth, int viewportHeight,
-             ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b){}
-   void renderCamera(Scene* scene, Camera* camera,
-             RenderTexture* render_texture, ShaderManager* shader_manager,
-             RenderTexture* post_effect_render_texture_a,
-             RenderTexture* post_effect_render_texture_b){}
     void restoreRenderStates(RenderData* render_data){}
     void setRenderStates(RenderData* render_data, RenderState& rstate){}
     virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
@@ -119,11 +100,15 @@ public:
     virtual RenderPass* createRenderPass();
     virtual UniformBlock* createUniformBlock(const char* desc, int binding, const char* name, int maxelems);
     Image* createImage(int type, int format);
+    virtual RenderTarget* createRenderTarget(Scene*);
+    virtual RenderTarget* createRenderTarget(RenderTexture*, bool);
+    virtual RenderTarget* createRenderTarget(RenderTexture*, const RenderTarget*);
     virtual Texture* createTexture(int target = GL_TEXTURE_2D);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) { }
+    virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
     virtual VertexBuffer* createVertexBuffer(const char* desc, int vcount);
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
     virtual Shader* createShader(int id, const char* signature,
@@ -131,9 +116,9 @@ public:
                                  const char* vertexDescriptor, const char* vertexShader,
                                  const char* fragmentShader);
     virtual void renderRenderTarget(Scene*, RenderTarget* renderTarget, ShaderManager* shader_manager,
-                                    RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){}
+                                    RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b);
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
-    virtual bool renderWithPostEffectShader(RenderState& rstate, Shader* shader, RenderData* rdata, int passNum);
+    virtual bool renderWithPostEffectShader(RenderState& rstate, Shader* shader, RenderData* rdata, int passNum, VkRenderTarget*);
     virtual Mesh* getPostEffectMesh();
 private:
     VulkanCore* vulkanCore_;
