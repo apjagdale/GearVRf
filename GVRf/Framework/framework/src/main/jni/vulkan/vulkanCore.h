@@ -81,7 +81,8 @@ class VkRenderTexture;
 class VulkanShader;
 class VkRenderTarget;
 class RenderTarget;
-class VulkanCore {
+
+class VulkanCore final {
 public:
     // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
     static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr) {
@@ -175,11 +176,10 @@ private:
     std::unordered_map<std::string, VkPipeline> pipelineHashMap;
 
 
-    VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL), postEffectCmdBuffer(
+    explicit VulkanCore(ANativeWindow *newNativeWindow) : m_pPhysicalDevices(NULL), postEffectCmdBuffer(
             nullptr){
         m_Vulkan_Initialised = false;
         initVulkanDevice(newNativeWindow);
-
     }
 
     bool CreateInstance();

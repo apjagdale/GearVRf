@@ -93,10 +93,6 @@ RenderTarget::RenderTarget()
 
 RenderTarget::~RenderTarget()
 {
-    if (mRenderTexture)
-    {
-        delete mRenderTexture;
-    }
 }
 
 /**

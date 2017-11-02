@@ -49,7 +49,7 @@ class vkImageBase
     vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageTiling tiling, VkImageUsageFlags flags, VkImageLayout imageLayout, int layers, int sample_count )
     :imageType(type), outBuffer(new VkBuffer), mLayers(layers) ,size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
     { }
-    ~vkImageBase();
+    virtual ~vkImageBase();
         void createImageView(bool host_accessible);
         int updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
 
