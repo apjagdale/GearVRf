@@ -39,7 +39,7 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
 RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
-    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, 1);
+    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
 }
     RenderData* VulkanRenderer::createRenderData()
 {
@@ -90,7 +90,7 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
                                                    int jcolor_format, int jdepth_format, bool resolve_depth,
                                                    const TextureParameters* texture_parameters, int number_views)
 {
-    return new VkRenderTexture(width, height, 1);
+    return new VkRenderTexture(width, height, sample_count);
 }
 
 Shader* VulkanRenderer::createShader(int id, const char* signature,
@@ -129,12 +129,12 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     if(vkRdata->isHashCodeDirty() || vkRdata->isDirty() || vkRdata->isDescriptorSetNull(pass)) {
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
 
-        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS,1);
-        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader);
+        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS, rstate.sampleCount);
+        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader) + to_string(rstate.sampleCount);
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
         if(pipeline == 0) {
-            vkRdata->createPipeline(shader, this, pass, render_pass);
+            vkRdata->createPipeline(shader, this, pass, render_pass, rstate.sampleCount);
             vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
         }
         else{
@@ -165,7 +165,7 @@ bool VulkanRenderer::renderWithPostEffectShader(RenderState& rstate, Shader* sha
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
         if(pipeline == 0) {
-            vkRdata->createPipeline(shader, this, 0, render_pass);
+            vkRdata->createPipeline(shader, this, 0, render_pass, 1);
             vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(0));
         }
         else{

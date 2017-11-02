@@ -84,6 +84,11 @@ public:
         mBackColor[3] = a;
 
     }
+
+    int getSampleCount(){
+        return mSampleCount;
+    }
+
 private:
     RenderTexture(const RenderTexture&);
     RenderTexture(RenderTexture&&);
