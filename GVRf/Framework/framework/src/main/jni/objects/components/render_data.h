@@ -75,7 +75,7 @@ public:
             rendering_order_(DEFAULT_RENDERING_ORDER),
             offset_factor_(0.0f), offset_units_(0.0f),
             sample_coverage_(1.0f),
-            source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_    MINUS_SRC_ALPHA),
+            source_alpha_blend_func_(GL_ONE), dest_alpha_blend_func_(GL_ONE_MINUS_SRC_ALPHA),
             texture_capturer(0),
             bones_ubo_(nullptr)
     {
