@@ -119,7 +119,7 @@ void RenderData::setStencilMask(unsigned int mask) {
 }
 
 void RenderData::setStencilTest(bool flag) {
-    stencilTestFlag_ = flag;
+    renderFlags.stencilTestFlag_ = flag;
 }
 
 
@@ -204,20 +204,20 @@ bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
 
 std::string RenderData::getHashCode()
 {
-    if (hash_code_dirty_)
+    if (renderFlags.hash_code_dirty_)
     {
         std::string render_data_string;
         uint ORedFlag = 0;
 
-        ORedFlag |= use_light_;
-        ORedFlag <<= 1;        ORedFlag |= use_lightmap_;
-        ORedFlag <<= 1;        ORedFlag |= offset_;
-        ORedFlag <<= 1;        ORedFlag |= depth_test_;
-        ORedFlag <<= 1;        ORedFlag |= depth_mask_;
-        ORedFlag <<= 1;        ORedFlag |= alpha_blend_;
-        ORedFlag <<= 1;        ORedFlag |= alpha_to_coverage_;
-        ORedFlag <<= 1;        ORedFlag |= invert_coverage_mask_;
-        ORedFlag <<= 1;        ORedFlag |= stencilTestFlag_;
+        ORedFlag |= renderFlags.use_light_;
+        ORedFlag <<= 1;        ORedFlag |= renderFlags.use_lightmap_;
+        ORedFlag <<= 1;        ORedFlag |= renderFlags.offset_;
+        ORedFlag <<= 1;        ORedFlag |= renderFlags.depth_test_;
+        ORedFlag <<= 1;        ORedFlag |= renderFlags.depth_mask_;
+        ORedFlag <<= 1;        ORedFlag |= renderFlags.alpha_blend_;
+        ORedFlag <<= 1;        ORedFlag |= renderFlags.alpha_to_coverage_;
+        ORedFlag <<= 1;        ORedFlag |= renderFlags.invert_coverage_mask_;
+        ORedFlag <<= 1;        ORedFlag |= renderFlags.stencilTestFlag_;
 
         render_data_string.append(to_string(ORedFlag));
         render_data_string.append(to_string(getComponentType()));
@@ -225,7 +225,7 @@ std::string RenderData::getHashCode()
         render_data_string.append(to_string(offset_factor_));
         render_data_string.append(to_string(offset_units_));
         render_data_string.append(to_string(sample_coverage_));
-        render_data_string.append(to_string(draw_mode_));
+        render_data_string.append(to_string(renderFlags.draw_mode_));
         render_data_string.append(to_string(stencilMaskMask_));
         render_data_string.append(to_string(stencilFuncFunc_));
         render_data_string.append(to_string(stencilFuncRef_));
@@ -235,7 +235,7 @@ std::string RenderData::getHashCode()
         render_data_string.append(to_string(stencilOpDppass_));
 
         hash_code = render_data_string;
-        hash_code_dirty_ = false;
+        renderFlags.hash_code_dirty_ = false;
     }
     return hash_code;
 }
