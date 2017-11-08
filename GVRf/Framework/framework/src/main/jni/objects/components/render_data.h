@@ -403,6 +403,10 @@ public:
     }
     void adjustRenderingOrderForTransparency(bool hasAlpha);
 
+    unsigned short getRenderDataFlagsHashCode(){
+        return render_data_flags.HashCode;
+    }
+
 private:
     RenderData(RenderData&& render_data) = delete;
     RenderData& operator=(const RenderData& render_data) = delete;
