@@ -19,7 +19,6 @@
 #include "util/jni_utils.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
-#include "render_data.h"
 
 namespace gvr {
 
