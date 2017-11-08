@@ -79,20 +79,21 @@ public:
             texture_capturer(0),
             bones_ubo_(nullptr)
     {
-        renderFlags.use_light_ = false;
-        renderFlags.use_lightmap_ = false;
-        renderFlags.batching_ = true;
-        renderFlags.offset_ = false;
-        renderFlags.depth_test_ = true;
-        renderFlags.depth_mask_ = true;
-        renderFlags.alpha_blend_ = true;
-        renderFlags.alpha_to_coverage_ = false;
-        renderFlags.hash_code_dirty_ = true;
-        renderFlags.cast_shadows_ = true;
-        renderFlags.dirty_ = false;
-        renderFlags.invert_coverage_mask_ = GL_FALSE;
-        renderFlags.stencilTestFlag_ = false;
-        renderFlags.draw_mode_ = GL_TRIANGLES;
+        render_data_flags.HashCode = 0;
+        render_data_flags.BitFields.use_light_ = false;
+        render_data_flags.BitFields.use_lightmap_ = false;
+        render_data_flags.BitFields.batching_ = true;
+        render_data_flags.BitFields.offset_ = false;
+        render_data_flags.BitFields.depth_test_ = true;
+        render_data_flags.BitFields.depth_mask_ = true;
+        render_data_flags.BitFields.alpha_blend_ = true;
+        render_data_flags.BitFields.alpha_to_coverage_ = false;
+        hash_code_dirty_ = true;
+        render_data_flags.BitFields.cast_shadows_ = true;
+        render_data_flags.BitFields.dirty_ = false;
+        render_data_flags.BitFields.invert_coverage_mask_ = GL_FALSE;
+        render_data_flags.BitFields.stencilTestFlag_ = false;
+        render_data_flags.BitFields.draw_mode_ = GL_TRIANGLES;
     }
 
     virtual JNIEnv* set_java(jobject javaObj, JavaVM* jvm);
@@ -100,35 +101,37 @@ public:
     RenderData(const RenderData& rdata) : JavaComponent(rdata.getComponentType())
     {
         hash_code = rdata.hash_code;
+        render_data_flags.HashCode = rdata.render_data_flags.HashCode;
+
         mesh_ = rdata.mesh_;
-        renderFlags.use_light_ = rdata.renderFlags.use_light_;
-        renderFlags.use_lightmap_ = rdata.renderFlags.use_lightmap_;
-        renderFlags.batching_ = rdata.renderFlags.batching_;
+        render_data_flags.BitFields.use_light_ = rdata.render_data_flags.BitFields.use_light_;
+        render_data_flags.BitFields.use_lightmap_ = rdata.render_data_flags.BitFields.use_lightmap_;
+        render_data_flags.BitFields.batching_ = rdata.render_data_flags.BitFields.batching_;
         render_mask_ = rdata.render_mask_;
         bones_ubo_ = rdata.bones_ubo_;
-        renderFlags.cast_shadows_ = rdata.renderFlags.cast_shadows_;
+        render_data_flags.BitFields.cast_shadows_ = rdata.render_data_flags.BitFields.cast_shadows_;
         batch_ = rdata.batch_;
         for(int i=0;i<rdata.render_pass_list_.size();i++) {
             render_pass_list_.push_back((rdata.render_pass_list_)[i]);
         }
         rendering_order_ = rdata.rendering_order_;
-        renderFlags.hash_code_dirty_ = rdata.renderFlags.hash_code_dirty_;
-        renderFlags.dirty_ = rdata.renderFlags.dirty_;
-        renderFlags.offset_ = rdata.renderFlags.offset_;
+        hash_code_dirty_ = rdata.hash_code_dirty_;
+        render_data_flags.BitFields.dirty_ = rdata.render_data_flags.BitFields.dirty_;
+        render_data_flags.BitFields.offset_ = rdata.render_data_flags.BitFields.offset_;
         offset_factor_ = rdata.offset_factor_;
         offset_units_ = rdata.offset_units_;
-        renderFlags.depth_test_ = rdata.renderFlags.depth_test_;
-        renderFlags.depth_mask_ = rdata.renderFlags.depth_mask_;
-        renderFlags.alpha_blend_ = rdata.renderFlags.alpha_blend_;
+        render_data_flags.BitFields.depth_test_ = rdata.render_data_flags.BitFields.depth_test_;
+        render_data_flags.BitFields.depth_mask_ = rdata.render_data_flags.BitFields.depth_mask_;
+        render_data_flags.BitFields.alpha_blend_ = rdata.render_data_flags.BitFields.alpha_blend_;
         source_alpha_blend_func_ = rdata.source_alpha_blend_func_;
         dest_alpha_blend_func_ = rdata.dest_alpha_blend_func_;
-        renderFlags.alpha_to_coverage_ = rdata.renderFlags.alpha_to_coverage_;
+        render_data_flags.BitFields.alpha_to_coverage_ = rdata.render_data_flags.BitFields.alpha_to_coverage_;
         sample_coverage_ = rdata.sample_coverage_;
-        renderFlags.invert_coverage_mask_ = rdata.renderFlags.invert_coverage_mask_;
-        renderFlags.draw_mode_ = rdata.renderFlags.draw_mode_;
+        render_data_flags.BitFields.invert_coverage_mask_ = rdata.render_data_flags.BitFields.invert_coverage_mask_;
+        render_data_flags.BitFields.draw_mode_ = rdata.render_data_flags.BitFields.draw_mode_;
         texture_capturer = rdata.texture_capturer;
 
-        renderFlags.stencilTestFlag_ = rdata.renderFlags.stencilTestFlag_;
+        render_data_flags.BitFields.stencilTestFlag_ = rdata.render_data_flags.BitFields.stencilTestFlag_;
         stencilMaskMask_ = rdata.stencilMaskMask_;
         stencilFuncFunc_ = rdata.stencilFuncFunc_;
         stencilFuncRef_ = rdata.stencilFuncRef_;
@@ -167,39 +170,39 @@ public:
      */
     void bindShader(JNIEnv* env, jobject localSceneObject, bool);
     void markDirty() {
-        renderFlags.dirty_ = true;
+        render_data_flags.BitFields.dirty_ = true;
     }
 
     bool isDirty() const {
-        return renderFlags.dirty_;
+        return render_data_flags.BitFields.dirty_;
     }
 
     void clearDirty() {
-        renderFlags.dirty_ = false;
+        render_data_flags.BitFields.dirty_ = false;
     }
 
     void enable_light() {
-        renderFlags.use_light_ = true;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.use_light_ = true;
+        hash_code_dirty_ = true;
     }
 
     void disable_light() {
-        renderFlags.use_light_ = false;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.use_light_ = false;
+        hash_code_dirty_ = true;
     }
 
     bool light_enabled() {
-        return renderFlags.use_light_;
+        return render_data_flags.BitFields.use_light_;
     }
 
     void enable_lightmap() {
-        renderFlags.use_lightmap_ = true;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.use_lightmap_ = true;
+        hash_code_dirty_ = true;
     }
 
     void disable_lightmap() {
-        renderFlags.use_lightmap_ = false;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.use_lightmap_ = false;
+        hash_code_dirty_ = true;
     }
 
     int render_mask() const {
@@ -208,7 +211,7 @@ public:
 
     void set_render_mask(int render_mask) {
         render_mask_ = render_mask;
-        renderFlags.hash_code_dirty_ = true;
+        hash_code_dirty_ = true;
     }
 
     int rendering_order() const {
@@ -220,11 +223,11 @@ public:
     }
 
     bool cast_shadows() {
-        return renderFlags.cast_shadows_;
+        return render_data_flags.BitFields.cast_shadows_;
     }
 
     void set_cast_shadows(bool cast_shadows) {
-        renderFlags.cast_shadows_ = cast_shadows;
+        render_data_flags.BitFields.cast_shadows_ = cast_shadows;
     }
 
     Batch* getBatch() {
@@ -232,11 +235,11 @@ public:
     }
 
     void set_batching(bool status) {
-        renderFlags.batching_ = status;
+        render_data_flags.BitFields.batching_ = status;
     }
 
     bool batching() {
-        return renderFlags.batching_;
+        return render_data_flags.BitFields.batching_;
     }
 
     void setBatch(Batch* batch) {
@@ -250,12 +253,12 @@ public:
     bool cull_face(int pass=0) const ;
 
     bool offset() const {
-        return renderFlags.offset_;
+        return render_data_flags.BitFields.offset_;
     }
 
     void set_offset(bool offset) {
-        renderFlags.offset_ = offset;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.offset_ = offset;
+        hash_code_dirty_ = true;
     }
 
     float offset_factor() const {
@@ -264,7 +267,7 @@ public:
 
     void set_offset_factor(float offset_factor) {
         offset_factor_ = offset_factor;
-        renderFlags.hash_code_dirty_ = true;
+        hash_code_dirty_ = true;
     }
 
     float offset_units() const {
@@ -273,25 +276,25 @@ public:
 
     void set_offset_units(float offset_units) {
         offset_units_ = offset_units;
-        renderFlags.hash_code_dirty_ = true;
+        hash_code_dirty_ = true;
     }
 
     bool depth_test() const {
-        return renderFlags.depth_test_;
+        return render_data_flags.BitFields.depth_test_;
     }
 
     bool depth_mask() const {
-        return renderFlags.depth_mask_;
+        return render_data_flags.BitFields.depth_mask_;
     }
 
     void set_depth_test(bool depth_test) {
-        renderFlags.depth_test_ = depth_test;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.depth_test_ = depth_test;
+        hash_code_dirty_ = true;
     }
 
     void set_depth_mask(bool depth_mask) {
-        renderFlags.depth_mask_ = depth_mask;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.depth_mask_ = depth_mask;
+        hash_code_dirty_ = true;
     }
 
     void set_alpha_blend_func(int sourceblend, int destblend) {
@@ -308,26 +311,26 @@ public:
     }
 
     bool alpha_blend() const {
-        return renderFlags.alpha_blend_;
+        return render_data_flags.BitFields.alpha_blend_;
     }
 
     void set_alpha_blend(bool alpha_blend) {
-        renderFlags.alpha_blend_ = alpha_blend;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.alpha_blend_ = alpha_blend;
+        hash_code_dirty_ = true;
     }
 
     bool alpha_to_coverage() const {
-        return renderFlags.alpha_to_coverage_;
+        return render_data_flags.BitFields.alpha_to_coverage_;
     }
 
     void set_alpha_to_coverage(bool alpha_to_coverage) {
-        renderFlags.alpha_to_coverage_ = alpha_to_coverage;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.alpha_to_coverage_ = alpha_to_coverage;
+        hash_code_dirty_ = true;
     }
 
     void set_sample_coverage(float sample_coverage) {
         sample_coverage_ = sample_coverage;
-        renderFlags.hash_code_dirty_ = true;
+        hash_code_dirty_ = true;
     }
 
     float sample_coverage() const {
@@ -335,16 +338,16 @@ public:
     }
 
     void set_invert_coverage_mask(GLboolean invert_coverage_mask) {
-        renderFlags.invert_coverage_mask_ = invert_coverage_mask;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.invert_coverage_mask_ = invert_coverage_mask;
+        hash_code_dirty_ = true;
     }
 
     GLboolean invert_coverage_mask() const {
-        return renderFlags.invert_coverage_mask_;
+        return render_data_flags.BitFields.invert_coverage_mask_;
     }
 
     GLenum draw_mode() const {
-        return renderFlags.draw_mode_;
+        return render_data_flags.BitFields.draw_mode_;
     }
 
     float camera_distance()
@@ -359,10 +362,10 @@ public:
 
     void set_draw_mode(GLenum draw_mode)
     {
-        renderFlags.draw_mode_ = draw_mode;
-        renderFlags.hash_code_dirty_ = true;
+        render_data_flags.BitFields.draw_mode_ = draw_mode;
+        hash_code_dirty_ = true;
     }
-    bool isHashCodeDirty()  { return renderFlags.hash_code_dirty_; }
+    bool isHashCodeDirty()  { return hash_code_dirty_; }
     void set_texture_capturer(TextureCapturer *capturer) { texture_capturer = capturer; }
 
     // TODO: need to consider texture_capturer in hash_code ?
@@ -388,7 +391,7 @@ public:
 
     unsigned int getStencilMask() { return stencilMaskMask_; }
 
-    bool stencil_test() { return renderFlags.stencilTestFlag_; }
+    bool stencil_test() { return render_data_flags.BitFields.stencilTestFlag_; }
     int stencil_func_func() { return stencilFuncFunc_; }
     int stencil_func_ref() { return stencilFuncRef_; }
     int stencil_func_mask() { return stencilFuncMask_; }
@@ -433,26 +436,27 @@ protected:
     int stencilOpDpfail_ = 0;
     int stencilOpDppass_ = 0;
     unsigned int stencilMaskMask_ = 0;
+    bool hash_code_dirty_;
 
-    struct render_data_flags{
-        bool use_light_:1;
-        bool use_lightmap_:1;
-        bool offset_:1;
-        bool depth_test_:1;
-        bool depth_mask_:1;
-        bool alpha_blend_:1;
-        bool alpha_to_coverage_:1;
+    union {
+        struct {
+            bool use_light_:1;
+            bool use_lightmap_:1;
+            bool offset_:1;
+            bool depth_test_:1;
+            bool depth_mask_:1;
+            bool alpha_blend_:1;
+            bool alpha_to_coverage_:1;
 
-        bool batching_:1;
-        bool hash_code_dirty_:1;
-        bool dirty_:1;
-        bool cast_shadows_:1;
-        GLboolean invert_coverage_mask_:1;
-        bool stencilTestFlag_:1;
-        GLenum draw_mode_:3;
-    };
-
-    render_data_flags renderFlags;
+            bool batching_:1;
+            bool dirty_:1;
+            bool cast_shadows_:1;
+            GLboolean invert_coverage_mask_:1;
+            bool stencilTestFlag_:1;
+            GLenum draw_mode_:3;
+        } BitFields;
+        unsigned short HashCode;
+    }render_data_flags;
 
 public:
     void setStencilTest(bool flag);

@@ -19,6 +19,7 @@
 #include "util/jni_utils.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
+#include "render_data.h"
 
 namespace gvr {
 
@@ -119,7 +120,7 @@ void RenderData::setStencilMask(unsigned int mask) {
 }
 
 void RenderData::setStencilTest(bool flag) {
-    renderFlags.stencilTestFlag_ = flag;
+    render_data_flags.BitFields.stencilTestFlag_ = flag;
 }
 
 
@@ -204,28 +205,14 @@ bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
 
 std::string RenderData::getHashCode()
 {
-    if (renderFlags.hash_code_dirty_)
-    {
+    if (hash_code_dirty_)    {
         std::string render_data_string;
-        uint ORedFlag = 0;
-
-        ORedFlag |= renderFlags.use_light_;
-        ORedFlag <<= 1;        ORedFlag |= renderFlags.use_lightmap_;
-        ORedFlag <<= 1;        ORedFlag |= renderFlags.offset_;
-        ORedFlag <<= 1;        ORedFlag |= renderFlags.depth_test_;
-        ORedFlag <<= 1;        ORedFlag |= renderFlags.depth_mask_;
-        ORedFlag <<= 1;        ORedFlag |= renderFlags.alpha_blend_;
-        ORedFlag <<= 1;        ORedFlag |= renderFlags.alpha_to_coverage_;
-        ORedFlag <<= 1;        ORedFlag |= renderFlags.invert_coverage_mask_;
-        ORedFlag <<= 1;        ORedFlag |= renderFlags.stencilTestFlag_;
-
-        render_data_string.append(to_string(ORedFlag));
+        render_data_string.append(to_string(render_data_flags.HashCode));
         render_data_string.append(to_string(getComponentType()));
         render_data_string.append(to_string(render_mask_));
         render_data_string.append(to_string(offset_factor_));
         render_data_string.append(to_string(offset_units_));
         render_data_string.append(to_string(sample_coverage_));
-        render_data_string.append(to_string(renderFlags.draw_mode_));
         render_data_string.append(to_string(stencilMaskMask_));
         render_data_string.append(to_string(stencilFuncFunc_));
         render_data_string.append(to_string(stencilFuncRef_));
@@ -235,8 +222,7 @@ std::string RenderData::getHashCode()
         render_data_string.append(to_string(stencilOpDppass_));
 
         hash_code = render_data_string;
-        renderFlags.hash_code_dirty_ = false;
-
+        hash_code_dirty_ = false;
     }
     return hash_code;
 }
