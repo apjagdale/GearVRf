@@ -229,6 +229,7 @@ std::string RenderData::getHashCode()
         render_data_string.append(to_string(stencilOpSfail_));
         render_data_string.append(to_string(stencilOpDpfail_));
         render_data_string.append(to_string(stencilOpDppass_));
+        render_data_string.append(to_string(mesh_->getVertexBuffer()->getDescriptor()));
         hash_code = render_data_string;
         hash_code_dirty_ = false;
 

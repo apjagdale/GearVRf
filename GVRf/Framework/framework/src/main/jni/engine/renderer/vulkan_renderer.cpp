@@ -130,7 +130,7 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
 
         VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS,1);
-        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader->getShaderID()) + rdata->mesh()->getVertexBuffer()->getDescriptor() ;
+        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(vkRdata->getRenderPass(pass)->getHashCode(rstate.is_multiview));
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
         if(pipeline == 0) {
