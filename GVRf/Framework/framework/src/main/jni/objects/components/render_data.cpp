@@ -119,7 +119,7 @@ void RenderData::setStencilMask(unsigned int mask) {
 }
 
 void RenderData::setStencilTest(bool flag) {
-    render_data_flags.BitFields.stencilTestFlag_ = flag;
+    render_data_flags.stencilTestFlag_ = flag;
 }
 
 
@@ -206,7 +206,7 @@ std::string RenderData::getHashCode()
 {
     if (hash_code_dirty_)    {
         std::string render_data_string;
-        render_data_string.append(to_string(render_data_flags.HashCode));
+        render_data_string.append(to_string(getRenderDataFlagsHashCode()));
         render_data_string.append(to_string(getComponentType()));
         render_data_string.append(to_string(render_mask_));
         render_data_string.append(to_string(offset_factor_));
