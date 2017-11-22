@@ -105,6 +105,7 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
          * Starts listening to the sensor.
          */
         mRotationSensor = new OvrRotationSensor(gvrActivity, this);
+        mRotationSensor.onResume();
 
         /*
          * Sets things with the numbers in the xml.

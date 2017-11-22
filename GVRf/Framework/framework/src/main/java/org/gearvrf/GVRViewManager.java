@@ -65,6 +65,11 @@ abstract class GVRViewManager extends GVRContext {
         mEventManager = new GVREventManager(this);
         mInputManager = new GVRInputManagerImpl(this, appSettings.useGazeCursorController(),
                 appSettings.useAndroidWearTouchpad());
+
+        mRenderBundle = makeRenderBundle();
+        final GVRScene scene = null == mMainScene ? new GVRScene(GVRViewManager.this) : mMainScene;
+        setMainSceneImpl(scene);
+
     }
 
     void onPause() {}
@@ -117,7 +122,7 @@ abstract class GVRViewManager extends GVRContext {
             if (mState == ViewManagerState.SHOWING_SPLASH) {
                 mPendingMainScene = scene;
             } else {
-                setMainSceneImpl(scene);
+               // setMainSceneImpl(scene);
             }
         } finally {
             mMainSceneLock.unlock();

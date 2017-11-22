@@ -81,10 +81,12 @@ class VkRenderTarget;
 class RenderTarget;
 
 class VulkanCore final {
+
 public:
     // Return NULL if Vulkan inititialisation failed. NULL denotes no Vulkan support for this device.
     static VulkanCore *getInstance(ANativeWindow *newNativeWindow = nullptr) {
         if (!theInstance) {
+
             theInstance = new VulkanCore(newNativeWindow);
             theInstance->initVulkanCore();
         }
@@ -109,6 +111,10 @@ public:
     void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*,RenderTarget*,VkRenderTexture*, bool);
     void BuildCmdBufferForRenderDataPE(VkCommandBuffer &cmdBuffer, ShaderManager*, Camera*, RenderData* rdata, VkRenderTexture*, int);
 
+    void SetImageLayout(const VkImage &image, VkCommandBuffer cmdBuffer,
+                            VkImageAspectFlagBits aspect, VkImageLayout oldLayout,
+                            VkImageLayout newLayout, VkPipelineStageFlagBits srcMask,
+                            VkPipelineStageFlagBits dstMask);
     VkRenderTexture* getRenderTexture(VkRenderTarget*);
     int waitForFence(VkFence fence);
 
@@ -159,6 +165,21 @@ public:
     }
 
     void renderToOculus(RenderTarget* renderTarget);
+    void InitSwapChain();
+
+    VkImage getSwapChainImage(){
+        return mSwapchainBuffers[swapChainImageIndex].image;
+    }
+
+    VkImageView getSwapChainView(){
+        return mSwapchainBuffers[swapChainImageIndex++].view;
+    }
+
+    int getSwapChainIndexToRender(){
+        return mSwapchainCurrentIdx;
+    }
+    void SetNextBackBuffer();
+    void PresentBackBuffer();
 private:
 
     static VulkanCore *theInstance;
@@ -204,7 +225,25 @@ private:
     uint32_t m_physicalDeviceCount;
     uint32_t m_queueFamilyIndex;
     VkQueue m_queue;
+
     VkSurfaceKHR m_surface;
+    VkSurfaceFormatKHR mSurfaceFormat;
+    VkSwapchainKHR mSwapchain;
+    struct SwapchainBuffer
+    {
+        VkImage image;
+        VkImageView view;
+    };
+
+    int swapChainImageIndex = 0;
+    SwapchainBuffer* mSwapchainBuffers;
+    // Vulkan Synchronization objects
+    VkSemaphore mBackBufferSemaphore;
+    VkSemaphore mRenderCompleteSemaphore;
+
+    uint32_t mSwapchainCurrentIdx = 0;
+    uint32_t mSwapchainImageCount;
+
     VkCommandPool m_commandPool;
     VkCommandPool m_commandPoolTrans;
 

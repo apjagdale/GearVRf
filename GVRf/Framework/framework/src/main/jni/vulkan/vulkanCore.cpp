@@ -244,21 +244,144 @@ namespace gvr {
 
     void VulkanCore::InitSurface() {
         VkResult ret = VK_SUCCESS;
-        // At this point, we create the android surface. This is because we want to
-        // ensure our device is capable of working with the created surface object.
         VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo = {};
         surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR;
         surfaceCreateInfo.pNext = nullptr;
         surfaceCreateInfo.flags = 0;
         surfaceCreateInfo.window = m_androidWindow;
-        LOGI("Vulkan Before surface creation");
-        if (m_androidWindow == NULL)
-            LOGI("Vulkan Before surface null");
-        else
-            LOGI("Vulkan Before not null surface creation");
         ret = vkCreateAndroidSurfaceKHR(m_instance, &surfaceCreateInfo, nullptr, &m_surface);
         GVR_VK_CHECK(!ret);
-        LOGI("Vulkan After surface creation");
+    }
+
+    void VulkanCore::InitSwapChain(){
+        VkResult ret = VK_SUCCESS;
+
+        uint32_t formatCount;
+        ret = vkGetPhysicalDeviceSurfaceFormatsKHR(m_physicalDevice, m_surface, &formatCount, nullptr);
+        GVR_VK_CHECK(!ret);
+
+        VkSurfaceFormatKHR *surfFormats = new VkSurfaceFormatKHR[formatCount];
+        ret = vkGetPhysicalDeviceSurfaceFormatsKHR(m_physicalDevice, m_surface, &formatCount, surfFormats);
+        GVR_VK_CHECK(!ret);
+
+        if (formatCount == 1 && surfFormats[0].format == VK_FORMAT_UNDEFINED) {
+            mSurfaceFormat.format = VK_FORMAT_B8G8R8A8_UNORM;
+            mSurfaceFormat.colorSpace = surfFormats[0].colorSpace;
+        }
+        else {
+            mSurfaceFormat = surfFormats[0];
+        }
+
+        delete[] surfFormats;
+
+        VkSurfaceCapabilitiesKHR surfaceCapabilities;
+        ret = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &surfaceCapabilities);
+        GVR_VK_CHECK(!ret);
+
+        VkSwapchainCreateInfoKHR swapchainCreateInfo = {};
+            swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+            swapchainCreateInfo.surface = m_surface;
+            swapchainCreateInfo.minImageCount = surfaceCapabilities.maxImageCount;
+            swapchainCreateInfo.imageFormat = mSurfaceFormat.format;
+            swapchainCreateInfo.imageColorSpace = mSurfaceFormat.colorSpace;
+            swapchainCreateInfo.imageExtent.width = surfaceCapabilities.currentExtent.width;
+            swapchainCreateInfo.imageExtent.height = surfaceCapabilities.currentExtent.height;
+            swapchainCreateInfo.imageUsage = surfaceCapabilities.supportedUsageFlags;
+            swapchainCreateInfo.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
+            swapchainCreateInfo.imageArrayLayers = 1;
+            swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+            swapchainCreateInfo.presentMode = VK_PRESENT_MODE_FIFO_KHR;
+            swapchainCreateInfo.clipped = VK_TRUE;
+
+        ret = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &mSwapchain);
+        GVR_VK_CHECK(!ret);
+
+        ret = vkGetSwapchainImagesKHR(m_device, mSwapchain, &mSwapchainImageCount, nullptr);
+        GVR_VK_CHECK(!ret);
+
+        LOGI("Swapchain Image Count: %d  and %d  %d\n", mSwapchainImageCount, surfaceCapabilities.currentExtent.width, surfaceCapabilities.currentExtent.height);
+
+        VkImage *pSwapchainImages = new VkImage[mSwapchainImageCount];
+        ret = vkGetSwapchainImagesKHR(m_device, mSwapchain, &mSwapchainImageCount, pSwapchainImages);
+        GVR_VK_CHECK(!ret);
+
+        mSwapchainBuffers = new SwapchainBuffer[mSwapchainImageCount];
+        GVR_VK_CHECK(mSwapchainBuffers);
+
+        VkImageViewCreateInfo imageViewCreateInfo = {};
+            imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            imageViewCreateInfo.pNext = nullptr;
+            imageViewCreateInfo.format = mSurfaceFormat.format;
+            imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+            imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+            imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+            imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+            imageViewCreateInfo.subresourceRange.levelCount = 1;
+            imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+            imageViewCreateInfo.subresourceRange.layerCount = 1;
+            imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            imageViewCreateInfo.flags = 0;
+
+
+        for (uint32_t i = 0; i < mSwapchainImageCount; i++){
+            mSwapchainBuffers[i].image = pSwapchainImages[i];
+            imageViewCreateInfo.image = pSwapchainImages[i];
+
+            VkResult err = vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &mSwapchainBuffers[i].view);
+            GVR_VK_CHECK(!err);
+        }
+
+        delete [] pSwapchainImages;
+    }
+
+    void VulkanCore::InitSync()
+    {
+        VkResult ret = VK_SUCCESS;
+
+        VkSemaphoreCreateInfo semaphoreCreateInfo = {};
+        semaphoreCreateInfo.sType               = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+        semaphoreCreateInfo.pNext               = nullptr;
+        semaphoreCreateInfo.flags               = 0;
+        ret = vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &mBackBufferSemaphore);
+        GVR_VK_CHECK(!ret);
+
+        ret = vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &mRenderCompleteSemaphore);
+        GVR_VK_CHECK(!ret);
+    }
+
+    void VulkanCore::SetNextBackBuffer()
+    {
+        VkResult ret = VK_SUCCESS;
+
+        ret  = vkAcquireNextImageKHR(m_device, mSwapchain, UINT64_MAX, mBackBufferSemaphore, VK_NULL_HANDLE, &mSwapchainCurrentIdx);
+        if (ret == VK_ERROR_OUT_OF_DATE_KHR)
+        {
+            LOGW("VK_ERROR_OUT_OF_DATE_KHR not handled in sample");
+        }
+        else if (ret == VK_SUBOPTIMAL_KHR)
+        {
+            LOGW("VK_SUBOPTIMAL_KHR not handled in sample");
+        }
+        GVR_VK_CHECK(!ret);
+    }
+
+    void VulkanCore::PresentBackBuffer()
+    {
+        VkResult ret = VK_SUCCESS;
+        VkPresentInfoKHR presentInfo = {};
+        presentInfo.sType                       = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.swapchainCount              = 1;
+        presentInfo.pSwapchains                 = &mSwapchain;
+        presentInfo.pImageIndices               = &mSwapchainCurrentIdx;
+        presentInfo.waitSemaphoreCount          = 1;
+        presentInfo.pWaitSemaphores             = &mRenderCompleteSemaphore;
+
+        ret = vkQueuePresentKHR(m_queue, &presentInfo);
+        GVR_VK_CHECK(!ret);
+        SetNextBackBuffer();
     }
 
     bool VulkanCore::InitDevice() {
@@ -297,7 +420,7 @@ namespace gvr {
             extensionNames[enabledExtensionCount++] = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
         }
 
-        //InitSurface();
+
 
         // Before we create our main Vulkan device, we must ensure our physical device
         // has queue families which can perform the actions we require. For this, we request
@@ -568,8 +691,8 @@ void VulkanCore::InitCommandPools(){
         attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment.finalLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
         attachmentDescriptions.push_back(attachment);
 
@@ -613,6 +736,7 @@ void VulkanCore::InitCommandPools(){
         subpassDescription.pDepthStencilAttachment = &depthReference;
         subpassDescription.preserveAttachmentCount = 0;
         subpassDescription.pPreserveAttachments = nullptr;
+
 
         VkResult ret = vkCreateRenderPass(m_device,
                            gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
@@ -857,6 +981,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         VkResult ret;
         std::vector<VkImageView> attachments;
+        VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
         if(sample_count > 1){
             vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
@@ -872,15 +997,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|
                                                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, 1);
-            colorImage->createImageView(true);
+            //colorImage->createImageView(true);
+            colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
             mAttachments[COLOR_IMAGE] = colorImage;
+            colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
             attachments.push_back(colorImage->getVkImageView());
         }
 
         if(image_type & DEPTH_IMAGE && mAttachments[DEPTH_IMAGE]== nullptr){
             vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D16_UNORM, mWidth,
-                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT,
-                                                      VK_IMAGE_LAYOUT_UNDEFINED,sample_count);
+                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ,
+                                                      VK_IMAGE_LAYOUT_UNDEFINED,1);
             depthImage->createImageView(false);
             mAttachments[DEPTH_IMAGE] = depthImage;
             attachments.push_back(depthImage->getVkImageView());
@@ -919,12 +1046,92 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkCommandBufferBeginInfo cmd_buf_info = {};
         cmd_buf_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         cmd_buf_info.pNext = nullptr;
-        cmd_buf_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+        cmd_buf_info.flags = 0;//VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
         cmd_buf_info.pInheritanceInfo = &cmd_buf_hinfo;
 
         // By calling vkBeginCommandBuffer, cmdBuffer is put into the recording state.
         vkBeginCommandBuffer(cmdBuffer, &cmd_buf_info);
         GVR_VK_CHECK(!err);
+    }
+
+    void VulkanCore::SetImageLayout(const VkImage &image, VkCommandBuffer cmdBuffer,
+                                        VkImageAspectFlagBits aspect, VkImageLayout oldLayout,
+                                        VkImageLayout newLayout, VkPipelineStageFlagBits srcMask,
+                                        VkPipelineStageFlagBits dstMask)
+    {
+        VkImageMemoryBarrier imageMemoryBarrier = {};
+        imageMemoryBarrier.sType                            = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        imageMemoryBarrier.pNext                            = nullptr;
+        imageMemoryBarrier.oldLayout                        = oldLayout;
+        imageMemoryBarrier.newLayout                        = newLayout;
+        imageMemoryBarrier.image                            = image;
+        imageMemoryBarrier.subresourceRange.aspectMask      = aspect;
+        imageMemoryBarrier.subresourceRange.baseMipLevel    = 0;
+        imageMemoryBarrier.subresourceRange.levelCount      = 0;
+        imageMemoryBarrier.subresourceRange.baseArrayLayer  = 0;
+        imageMemoryBarrier.subresourceRange.layerCount      = 1;
+        imageMemoryBarrier.srcAccessMask                    = 0;
+        imageMemoryBarrier.dstAccessMask                    = 0;
+        imageMemoryBarrier.srcQueueFamilyIndex              = VK_QUEUE_FAMILY_IGNORED;
+        imageMemoryBarrier.dstQueueFamilyIndex              = VK_QUEUE_FAMILY_IGNORED;
+
+        if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+        {
+            imageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        }
+        if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        {
+            imageMemoryBarrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        }
+        if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED)
+        {
+            imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+        }
+        if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+            imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        }
+        if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+            imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        }
+        if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+        {
+            imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        }
+
+        if (newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+        {
+            // Ensures reads can be made
+            imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        }
+        if (newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+        {
+            // Ensures writes can be made
+            imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        }
+        if (newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
+        {
+            // Ensure writes have completed
+            imageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        }
+        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
+        {
+            // Ensure writes have completed
+            imageMemoryBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        }
+        if (newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+        {
+            // Make sure any Copy or CPU writes to image are flushed
+            imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
+        }
+        if (newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
+        {
+            imageMemoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        }
+
+        // Barrier on image memory, with correct layouts set.
+        vkCmdPipelineBarrier(cmdBuffer, srcMask /*VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT*/, dstMask /*VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT*/, 0, 0, NULL, 0, NULL, 1, &imageMemoryBarrier);
     }
     void VulkanCore::BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector,
                                                  Camera *camera, ShaderManager* shader_manager, RenderTarget* renderTarget, VkRenderTexture* postEffectRenderTexture, bool postEffectFlag) {
@@ -941,12 +1148,30 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         beginCmdBuffer(cmdBuffer);
 
+        VkRenderTexture * renderTexture = (VkRenderTexture *) static_cast<VkRenderTarget*>(renderTarget)->getTexture();
+
+            renderTexture->bind();
+
+        VkImageAspectFlagBits b = (VkImageAspectFlagBits) (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+        SetImageLayout(renderTexture->getFBO()->getImage(COLOR_IMAGE), cmdBuffer,
+                       VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                       VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+        SetImageLayout(renderTexture->getFBO()->getImage(DEPTH_IMAGE), cmdBuffer,
+                       b,
+                       VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
+
+
         if(renderTarget!= NULL)
             renderTarget->beginRendering(Renderer::getInstance());
         else {
             postEffectRenderTexture->setBackgroundColor(camera->background_color_r(), camera->background_color_g(),camera->background_color_b(), camera->background_color_a());
             postEffectRenderTexture->beginRendering(Renderer::getInstance());
         }
+
         for (int j = 0; j < render_data_vector.size(); j++) {
 
             VulkanRenderData *rdata = static_cast<VulkanRenderData *>(render_data_vector[j]);
@@ -958,10 +1183,27 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 rdata->render(shader,cmdBuffer,curr_pass);
            }
         }
+
         if(renderTarget!= NULL)
             renderTarget->endRendering(Renderer::getInstance());
         else
             postEffectRenderTexture->endRendering(Renderer::getInstance());
+
+
+        VkImageAspectFlagBits a =  VkImageAspectFlagBits(VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
+
+
+        SetImageLayout(renderTexture->getFBO()->getImage(COLOR_IMAGE), cmdBuffer, VK_IMAGE_ASPECT_COLOR_BIT,
+                       VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                       VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+        SetImageLayout(renderTexture->getFBO()->getImage(DEPTH_IMAGE), cmdBuffer,
+                      a,
+                       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                       VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+                       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
 
         // By ending the command buffer, it is put out of record mode.
         err = vkEndCommandBuffer(cmdBuffer);
@@ -992,26 +1234,27 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     void VulkanCore::submitCmdBuffer(VkFence fence, VkCommandBuffer cmdBuffer){
-
         VkResult err;
         // Get the next image to render to, then queue a wait until the image is ready
         vkResetFences(m_device, 1, &fence);
+      //  const VkPipelineStageFlags WaitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext = nullptr;
-        submitInfo.waitSemaphoreCount = 0;
-        submitInfo.pWaitSemaphores = nullptr;
-        submitInfo.pWaitDstStageMask = nullptr;
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = &mBackBufferSemaphore;
+        submitInfo.pWaitDstStageMask = nullptr;//&WaitDstStageMask;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmdBuffer;
-        submitInfo.signalSemaphoreCount = 0;
-        submitInfo.pSignalSemaphores = nullptr;
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = &mRenderCompleteSemaphore;
 
-        err = vkQueueSubmit(m_queue, 1, &submitInfo,fence);
+        err = vkQueueSubmit(m_queue, 1, &submitInfo,VK_NULL_HANDLE);
         GVR_VK_CHECK(!err);
-
+        PresentBackBuffer();
     }
+
     VkRenderTexture* VulkanCore::getRenderTexture(VkRenderTarget* renderTarget) {
 
         VkFence fence =  static_cast<VkRenderTexture*>(renderTarget->getTexture())->getFenceObject();
@@ -1157,12 +1400,18 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             m_Vulkan_Initialised = false;
             return;
         }
-        createPipelineCache();
 
+        if(m_androidWindow != NULL) {
+            InitSurface();
+            InitSwapChain();
+            InitSync();
+            SetNextBackBuffer();
+        }
+
+        createPipelineCache();
     }
 
     VulkanCore::~VulkanCore() {
-
         vkDestroyDevice(getDevice(), nullptr);
         vkDestroyInstance(m_instance, nullptr);
     }

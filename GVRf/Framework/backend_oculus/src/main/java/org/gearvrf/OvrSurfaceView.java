@@ -30,6 +30,7 @@ import android.opengl.GLSurfaceView;
 import android.view.Choreographer;
 import android.view.KeyEvent;
 import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
 /**
  * This GVRSurfaceView class extends from {@link GLSurfaceView} which is used
@@ -38,14 +39,14 @@ import android.view.SurfaceHolder;
  * requires a valid {@link OvrMonoscopicViewManager} which holds the main scene details to
  * be rendered
  */
-class OvrSurfaceView extends GLSurfaceView implements
+class OvrSurfaceView extends SurfaceView implements
         android.view.Choreographer.FrameCallback {
     private OvrMonoscopicViewManager mViewManager = null;
 
     /**
      * Constructs a GVRSurfaceView given by current GVR context without
      * OvrMonoscopicViewManager
-     * 
+     *
      * @param context
      *            current context
      */
@@ -56,7 +57,7 @@ class OvrSurfaceView extends GLSurfaceView implements
     /**
      * Constructs a {@link OvrSurfaceView} given by current {@link GVRContext}
      * with {@link OvrMonoscopicViewManager}
-     * 
+     *
      * @param context
      *            current context
      * @param viewManager
@@ -76,6 +77,7 @@ class OvrSurfaceView extends GLSurfaceView implements
         /*
          * Avoids reloading the application every time it pauses.
          */
+        /*
         setEGLContextClientVersion(3);
         setPreserveEGLContextOnPause(true);
         setEGLContextFactory(new OvrContextFactory());
@@ -85,13 +87,18 @@ class OvrSurfaceView extends GLSurfaceView implements
             setRenderer(renderer);
         } else {
             setRenderer(new OvrSurfaceViewRenderer(viewManager));
-        }
+        }*/
         /*
          * requestRender() will be called efficiently with VSync.
          */
-        setRenderMode(RENDERMODE_WHEN_DIRTY);
+       // setRenderMode(RENDERMODE_WHEN_DIRTY);
     }
 
+    @Override
+    public void doFrame(long l) {
+
+    }
+/*
     @Override
     public void doFrame(long frameTimeNanos) {
         requestRender();
@@ -116,7 +123,7 @@ class OvrSurfaceView extends GLSurfaceView implements
     public void surfaceDestroyed(SurfaceHolder holder) {
         Choreographer.getInstance().removeFrameCallback(this);
         super.surfaceDestroyed(holder);
-    }
+    }*/
 }
 
 /*

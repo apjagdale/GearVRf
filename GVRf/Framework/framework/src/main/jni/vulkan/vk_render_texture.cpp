@@ -46,7 +46,7 @@ const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
 
 void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
-    VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
+    VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, 1);
     clear_values.resize(3);
     fbo->addRenderPass(renderPass);
 }
@@ -68,6 +68,7 @@ bool VkRenderTexture::isReady(){
 }
 void VkRenderTexture::initVkData(){
     VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+   // LOGE("vulkan abhijit rendertexture ");
     mCmdBuffer = renderer->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     mWaitFence = renderer->createFenceObject();
 }

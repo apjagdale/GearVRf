@@ -97,7 +97,7 @@ void vkImageBase::createImageView(bool host_accessible) {
             device,
             gvr::ImageViewCreateInfo(image, imageType,
                                      format_, 1, mLayers,
-                                     VK_IMAGE_ASPECT_COLOR_BIT),
+                                     VK_IMAGE_ASPECT_DEPTH_BIT),
             nullptr, &imageView
     );
     GVR_VK_CHECK(!ret);

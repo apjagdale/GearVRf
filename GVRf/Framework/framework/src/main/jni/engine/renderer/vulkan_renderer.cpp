@@ -134,12 +134,12 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
 
     if(vkRdata->isDirty(pass)) {
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata);
-        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS, rstate.sampleCount);
-        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader->getShaderID()) + rdata->mesh()->getVertexBuffer()->getDescriptor() + to_string(rstate.sampleCount);
+        VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS, 1);
+        std::string vkPipelineHashCode = vkRdata->getHashCode() + to_string(shader->getShaderID()) + rdata->mesh()->getVertexBuffer()->getDescriptor() + to_string(1);
 
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
         if(pipeline == 0) {
-            vkRdata->createPipeline(shader, this, pass, render_pass, rstate.sampleCount);
+            vkRdata->createPipeline(shader, this, pass, render_pass, 1);
             vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
         }
         else{
@@ -174,6 +174,7 @@ void VulkanRenderer::updatePostEffectMesh(Mesh* copy_mesh)
 
 }
 void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<RenderData*>& render_data_vector, std::vector<RenderData*>& render_data_list){
+    //LOGE("Abhijit count %d", render_data_vector.size());
     for (auto rdata = render_data_vector.begin(); rdata != render_data_vector.end(); ++rdata)
     {
         if (!(rstate.render_mask & (*rdata)->render_mask()))
@@ -198,6 +199,7 @@ void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<Rend
 void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                 RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){
 
+    //LOGE("Vulkan renderRenderTaget called");
 
     std::vector<RenderData*> render_data_list;
     Camera* camera = renderTarget->getCamera();
@@ -217,6 +219,11 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
         rstate.material_override = NULL;
     }
+
+    /*if(render_data_vector->size() == 0){
+        LOGE("vulkan still no render data");
+        return;
+    }*/
     renderRenderDataVector(rstate,*render_data_vector,render_data_list);
     VkRenderTarget *vk_renderTarget = static_cast<VkRenderTarget *>(renderTarget);
 
