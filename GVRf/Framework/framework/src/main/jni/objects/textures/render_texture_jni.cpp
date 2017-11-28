@@ -56,7 +56,7 @@ JNIEXPORT jlong JNICALL
 Java_org_gearvrf_NativeRenderTexture_ctor(JNIEnv * env, jobject obj,
                                           jint width, jint height)
 {
-    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, 0, ColorFormat::COLOR_8888, DepthFormat::DEPTH_24_STENCIL_8, 0, NULL,1);
+    RenderTexture* tex = Renderer::getInstance()->createRenderTexture(width, height, 1, ColorFormat::COLOR_8888, DepthFormat::DEPTH_24_STENCIL_8, 0, NULL,1);
     return reinterpret_cast<jlong>(tex);
 }
 

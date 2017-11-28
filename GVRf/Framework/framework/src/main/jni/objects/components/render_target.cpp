@@ -44,7 +44,7 @@ void RenderTarget::beginRendering(Renderer *renderer) {
     mRenderTexture->useStencil(renderer->useStencilBuffer());
     mRenderState.viewportWidth = mRenderTexture->width();
     mRenderState.viewportHeight = mRenderTexture->height();
-    mRenderState.sampleCount = 1;//mRenderTexture->getSampleCount();
+    mRenderState.sampleCount = mRenderTexture->getSampleCount();
     if (-1 != mRenderState.camera->background_color_r())
     {
         mRenderTexture->setBackgroundColor(mRenderState.camera->background_color_r(),
