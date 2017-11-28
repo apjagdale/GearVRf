@@ -150,7 +150,7 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
 
     @Override
     public void onSetScript() {
-       /* mSurfaceView = new GLSurfaceView(mActivity);
+        mSurfaceView = new GLSurfaceView(mActivity);
 
         final DisplayMetrics metrics = new DisplayMetrics();
         mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -183,7 +183,8 @@ class OvrVrapiActivityHandler implements OvrActivityHandler {
         mSurfaceView.setRenderer(mRenderer);
         mSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
-        mActivity.setContentView(mSurfaceView);*/
+
+        mActivity.setContentView(mSurfaceView);
     }
 
     private final EGLContextFactory mContextFactory = new EGLContextFactory() {

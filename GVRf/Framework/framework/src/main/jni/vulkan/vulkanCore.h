@@ -175,6 +175,9 @@ public:
         return mSwapchainBuffers[swapChainImageIndex++].view;
     }
 
+    bool isSwapChainPresent(){
+        return swapChainFlag;
+    }
     int getSwapChainIndexToRender(){
         return mSwapchainCurrentIdx;
     }
@@ -237,6 +240,7 @@ private:
 
     int swapChainImageIndex = 0;
     SwapchainBuffer* mSwapchainBuffers;
+    bool swapChainFlag = false;
     // Vulkan Synchronization objects
     VkSemaphore mBackBufferSemaphore;
     VkSemaphore mRenderCompleteSemaphore;

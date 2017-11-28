@@ -55,7 +55,7 @@ Renderer* Renderer::getInstance(std::string type){
                 LOGI("OpenGL ES renderer: debug.gearvrf.vulkan is \"%s\".", buffer );
             }
         }
-        if( 1 ) {
+        if( useVulkan ) {
             instance = new VulkanRenderer();
             if(static_cast<VulkanRenderer*>(instance)->getCore() != NULL)
                 isVulkan_ = true;

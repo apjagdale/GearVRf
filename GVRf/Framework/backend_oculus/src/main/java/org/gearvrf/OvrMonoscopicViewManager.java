@@ -24,6 +24,11 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.widget.FrameLayout;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Properties;
+
 /*
  * This is the most important part of gvrf.
  * Initialization can be told as 2 parts. A General part and the GL part.
@@ -88,9 +93,8 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
         FrameLayout frameLayout = new FrameLayout(mActivity);
         mRenderTarget[0] = null;
-        mRenderTarget[1] = null;
 
-       // mView = new OvrSurfaceView(gvrActivity, this, null);
+        mView = new OvrSurfaceView(gvrActivity, this, null);
         //gvrActivity.setContentView(mView);
 
         DisplayMetrics metrics = new DisplayMetrics();
@@ -138,62 +142,67 @@ class OvrMonoscopicViewManager extends OvrViewManager {
             mViewportY = (screenHeightPixels / 2) - (fboHeight / 2);
         }
 
-      //  frameLayout.addView(mView);
 
-        vulkanSurfaceView = new SurfaceView(mActivity);
 
-        vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder surfaceHolder) {
-                Log.d("Vulkan", "surfaceCreated");
+        Process proc = null;
+        try {
+            proc = Runtime.getRuntime().exec(new String[]{"/system/bin/getprop", "debug.gearvrf.vulkan"});
+            BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+           // Log.e("so_test", "my prop is: " + reader.readLine());
 
-                long vulkanCoreObj;
-                vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
-                Thread currentThread = Thread.currentThread();
+            if(reader.readLine().equals("1")){
+                vulkanSurfaceView = new SurfaceView(mActivity);
+                vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+                    @Override
+                    public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                        Log.d("Vulkan", "surfaceCreated");
 
-                // Reduce contention with other Android processes
-                currentThread.setPriority(Thread.MAX_PRIORITY);
+                        mRenderBundle = makeRenderBundle();
+                        final GVRScene scene = null == mMainScene ? new GVRScene(OvrMonoscopicViewManager.this) : mMainScene;
+                        setMainSceneImpl(scene);
+                        mRotationSensor.onResume();
+                        long vulkanCoreObj;
+                        vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
+                        Thread currentThread = Thread.currentThread();
 
-                if (vulkanCoreObj != 0) {
-                    Log.i("Vulkan", "Vulkan Instance On surface created at Vulkan Java Side");
-                } else {
-                    Log.i("Vulkan", "Error : On surface  No Instance created at Vulkan Java Side");
-                }
+                        // Reduce contention with other Android processes
+                        currentThread.setPriority(Thread.MAX_PRIORITY);
 
-                Worker w = new Worker();
-                w.start();
+                        if (vulkanCoreObj != 0) {
+                            Log.i("Vulkan", "Vulkan Instance On surface created at Vulkan Java Side");
+                        } else {
+                            Log.i("Vulkan", "Error : On surface  No Instance created at Vulkan Java Side");
+                        }
+
+                        Worker w = new Worker();
+                        w.start();
+                    }
+
+                    @Override
+                    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+                        Log.d("Vulkan", "surfaceChanged");
+                        mRotationSensor.onResume();
+                    }
+
+                    @Override
+                    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+                        Log.d("Vulkan", "surfaceDestroyed");
+                        mRotationSensor.onDestroy();
+                    }
+                });
+
+                frameLayout.addView(vulkanSurfaceView);
             }
+            else{
 
-            @Override
-            public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
-                Log.d("Vulkan", "surfaceChanged");
-
-                /*
-                long vulkanCoreObj;
-                vulkanCoreObj = NativeVulkanCore.getInstance(surfaceHolder.getSurface());
-                if (vulkanCoreObj != 0) {
-                    Log.i("Vulkan", "Vulkan Instance On surface created at Vulkan Java Side");
-
-
-
-
-                } else {
-                    Log.i("Vulkan", "Error : On surface  No Instance created at Vulkan Java Side");
-                }*/
+                frameLayout.addView(mView);
             }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-                Log.d("Vulkan", "surfaceDestroyed");
-            }
-        });
-
-
-        frameLayout.addView(vulkanSurfaceView);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         gvrActivity.setContentView(frameLayout);
-
     }
+
     GVRRenderTarget getRenderTarget(){
         if(mRenderTarget[0] == null) {
             mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight), getMainScene());
@@ -209,19 +218,16 @@ class OvrMonoscopicViewManager extends OvrViewManager {
      */
     @Override
     protected void onDrawFrame() {
-        // Log.v(TAG, "onDrawFrame");
-      //  beforeDrawEyes();
-       // drawEyes();
-       // afterDrawEyes();
+        Log.v("Abhijit", "Abhijit onDrawFrame");
+        beforeDrawEyes();
+        drawEyes();
+        afterDrawEyes();
     }
-
 
     public class Worker extends Thread {
 
         @Override
         public void run() {
-
-
             while(true){
                 beforeDrawEyes();
                 drawEyes();

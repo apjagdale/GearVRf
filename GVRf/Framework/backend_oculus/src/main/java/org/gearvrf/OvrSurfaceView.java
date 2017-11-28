@@ -39,7 +39,7 @@ import android.view.SurfaceView;
  * requires a valid {@link OvrMonoscopicViewManager} which holds the main scene details to
  * be rendered
  */
-class OvrSurfaceView extends SurfaceView implements
+class OvrSurfaceView extends GLSurfaceView implements
         android.view.Choreographer.FrameCallback {
     private OvrMonoscopicViewManager mViewManager = null;
 
@@ -77,7 +77,7 @@ class OvrSurfaceView extends SurfaceView implements
         /*
          * Avoids reloading the application every time it pauses.
          */
-        /*
+
         setEGLContextClientVersion(3);
         setPreserveEGLContextOnPause(true);
         setEGLContextFactory(new OvrContextFactory());
@@ -87,18 +87,13 @@ class OvrSurfaceView extends SurfaceView implements
             setRenderer(renderer);
         } else {
             setRenderer(new OvrSurfaceViewRenderer(viewManager));
-        }*/
+        }
         /*
          * requestRender() will be called efficiently with VSync.
          */
-       // setRenderMode(RENDERMODE_WHEN_DIRTY);
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
     }
 
-    @Override
-    public void doFrame(long l) {
-
-    }
-/*
     @Override
     public void doFrame(long frameTimeNanos) {
         requestRender();
@@ -123,7 +118,7 @@ class OvrSurfaceView extends SurfaceView implements
     public void surfaceDestroyed(SurfaceHolder holder) {
         Choreographer.getInstance().removeFrameCallback(this);
         super.surfaceDestroyed(holder);
-    }*/
+    }
 }
 
 /*

@@ -334,6 +334,7 @@ namespace gvr {
             GVR_VK_CHECK(!err);
         }
 
+        swapChainFlag = true;
         delete [] pSwapchainImages;
     }
 
@@ -651,7 +652,6 @@ void VulkanCore::InitCommandPools(){
     }
 
     VkRenderPass VulkanCore::createVkRenderPass(RenderPassType render_pass_type, int sample_count){
-
 
         if(mRenderPassMap[render_pass_type + sample_count])
             return mRenderPassMap[render_pass_type + sample_count];
@@ -977,11 +977,12 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         LOGE("sampler not found");
         return  0;
     }
-    void VKFramebuffer::createFrameBuffer(VkDevice& device, int image_type, int sample_count){
 
+    void VKFramebuffer::createFrameBuffer(VkDevice& device, int image_type, int sample_count){
         VkResult ret;
         std::vector<VkImageView> attachments;
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
+        sample_count = 1;
 
         if(sample_count > 1){
             vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
@@ -997,10 +998,16 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT|
                                                                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, 1);
-            //colorImage->createImageView(true);
-            colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
+
             mAttachments[COLOR_IMAGE] = colorImage;
-            colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
+            if(vk_renderer->getCore()->isSwapChainPresent()) {
+                colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
+                colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
+            }
+            else{
+                colorImage->createImageView(true);
+            }
+
             attachments.push_back(colorImage->getVkImageView());
         }
 
@@ -1237,21 +1244,21 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkResult err;
         // Get the next image to render to, then queue a wait until the image is ready
         vkResetFences(m_device, 1, &fence);
-      //  const VkPipelineStageFlags WaitDstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext = nullptr;
-        submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = &mBackBufferSemaphore;
-        submitInfo.pWaitDstStageMask = nullptr;//&WaitDstStageMask;
+        submitInfo.waitSemaphoreCount = (swapChainFlag ? 1 : 0);
+        submitInfo.pWaitSemaphores = (swapChainFlag ? &mBackBufferSemaphore : nullptr);
+        submitInfo.pWaitDstStageMask = nullptr;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmdBuffer;
-        submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = &mRenderCompleteSemaphore;
+        submitInfo.signalSemaphoreCount = (swapChainFlag ? 1 : 0);
+        submitInfo.pSignalSemaphores = (swapChainFlag ? &mRenderCompleteSemaphore : nullptr);
 
-        err = vkQueueSubmit(m_queue, 1, &submitInfo,VK_NULL_HANDLE);
+        err = vkQueueSubmit(m_queue, 1, &submitInfo,(swapChainFlag ? VK_NULL_HANDLE : fence));
         GVR_VK_CHECK(!err);
+        if(swapChainFlag)
         PresentBackBuffer();
     }
 
