@@ -897,7 +897,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                                                        VK_FALSE,
                                                                                        VK_POLYGON_MODE_FILL,
                                                                                        cull_face,
-                                                                                       VK_FRONT_FACE_CLOCKWISE,
+                                                                                       VK_FRONT_FACE_COUNTER_CLOCKWISE,
                                                                                        VK_FALSE,
                                                                                        0, 0, 0,
                                                                                        1.0);

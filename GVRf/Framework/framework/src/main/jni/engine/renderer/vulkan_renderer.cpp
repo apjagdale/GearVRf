@@ -119,7 +119,6 @@ IndexBuffer* VulkanRenderer::createIndexBuffer(int bytesPerIndex, int icount)
 
 bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, RenderData* rdata, ShaderData* shaderData,  int pass)
 {
-
     VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
     UniformBlock& transformUBO = vkRdata->getTransformUbo();
     VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(shaderData);
@@ -241,7 +240,6 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
         postEffectCount = post_effects->pass_count();
         // Call Post Effect
         for (int i = 0; i < postEffectCount-1; i++) {
-
             if (i % 2 == 0)
             {
                 renderTexture = static_cast<VkRenderTexture*>(post_effect_render_texture_b);
@@ -260,6 +258,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
             vulkanCore_->waitForFence(renderTexture->getFenceObject());
             input_texture = renderTexture;
         }
+
         render_data_list.clear();
         render_data_list.push_back(post_effects);
 

@@ -70,6 +70,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     private OvrSurfaceView mView;
     private int mViewportX, mViewportY, mViewportWidth, mViewportHeight;
     private GVRRenderTarget mRenderTarget[] = new GVRRenderTarget[3];
+    private int sampleCount = 1;
 
 
 
@@ -144,6 +145,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
 
 
+        sampleCount = gvrActivity.getAppSettings().getEyeBufferParams().getMultiSamples();
         Process proc = null;
         try {
             proc = Runtime.getRuntime().exec(new String[]{"/system/bin/getprop", "debug.gearvrf.vulkan"});
@@ -205,9 +207,10 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
     GVRRenderTarget getRenderTarget(){
         if(mRenderTarget[0] == null) {
-            mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight), getMainScene());
-            mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight), getMainScene());
-            mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight), getMainScene());
+
+            mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount), getMainScene());
+            mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount), getMainScene());
+            mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount), getMainScene());
         }
      //   Log.e("Abhijit", "Abhijit " + NativeVulkanCore.getSwapChainIndexToRender());
 
@@ -218,7 +221,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
      */
     @Override
     protected void onDrawFrame() {
-        Log.v("Abhijit", "Abhijit onDrawFrame");
+        Log.v("Abhijit", "Abhijit onDrawFrame " + sampleCount);
         beforeDrawEyes();
         drawEyes();
         afterDrawEyes();
