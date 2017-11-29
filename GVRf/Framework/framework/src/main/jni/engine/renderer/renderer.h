@@ -91,6 +91,7 @@ struct RenderState {
     bool                    shadow_map;
     bool                    is_multiview;
     Camera*                 camera;
+    int                     sampleCount;
 };
 enum EYE{
     LEFT, RIGHT, MULTIVIEW
@@ -130,6 +131,7 @@ public:
     }
     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc) = 0;
     virtual RenderData* createRenderData() = 0;
+    virtual RenderData* createRenderData(RenderData*) = 0;
     virtual UniformBlock* createUniformBlock(const char* desc, int, const char* name, int) = 0;
     virtual Image* createImage(int type, int format) = 0;
     virtual RenderPass* createRenderPass() = 0;
