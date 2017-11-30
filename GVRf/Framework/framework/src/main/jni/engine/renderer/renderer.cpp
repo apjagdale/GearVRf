@@ -360,7 +360,6 @@ void Renderer::updateTransforms(RenderState& rstate, UniformBlock* transform_ubo
     }
     else
     {
-        rstate.uniforms.u_proj = glm::mat4(1,0,0,0,  0,-1,0,0, 0,0,0.5,0, 0,0,0.5,1) * rstate.uniforms.u_proj;
         rstate.uniforms.u_mv = rstate.uniforms.u_view * rstate.uniforms.u_model;
         rstate.uniforms.u_mv_it = glm::inverseTranspose(rstate.uniforms.u_mv);
         rstate.uniforms.u_mvp = rstate.uniforms.u_proj * rstate.uniforms.u_mv;

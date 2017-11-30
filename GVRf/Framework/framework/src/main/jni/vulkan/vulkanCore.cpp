@@ -24,6 +24,7 @@
 #include "vulkan/vk_render_to_texture.h"
 #include "vk_imagebase.h"
 #include "vk_render_target.h"
+#include "vk_render_texture_offscreen.h"
 #include <array>
 
 #define TEXTURE_BIND_START 4
@@ -978,7 +979,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         return  0;
     }
 
-    void VKFramebuffer::createFrameBuffer(VkDevice& device, int image_type, int sample_count){
+    void VKFramebuffer::createFrameBuffer(VkDevice& device, int image_type, int sample_count, bool monoscopic){
         VkResult ret;
         std::vector<VkImageView> attachments;
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
@@ -999,7 +1000,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                       VK_IMAGE_LAYOUT_UNDEFINED, 1);
 
             mAttachments[COLOR_IMAGE] = colorImage;
-            if(vk_renderer->getCore()->isSwapChainPresent()) {
+//            if(vk_renderer->getCore()->isSwapChainPresent()) {
+            if(monoscopic) {
                 colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
                 colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
             }
@@ -1153,7 +1155,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             cmdBuffer = postEffectRenderTexture->getCommandBuffer();
 
         beginCmdBuffer(cmdBuffer);
-
+/*
         VkRenderTexture * renderTexture = (VkRenderTexture *) static_cast<VkRenderTarget*>(renderTarget)->getTexture();
 
             renderTexture->bind();
@@ -1169,7 +1171,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
                        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-
+*/
 
         if(renderTarget!= NULL)
             renderTarget->beginRendering(Renderer::getInstance());
@@ -1195,7 +1197,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         else
             postEffectRenderTexture->endRendering(Renderer::getInstance());
 
-
+/*
         VkImageAspectFlagBits a =  VkImageAspectFlagBits(VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
 
 
@@ -1210,7 +1212,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
                        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
                        VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
-
+*/
         // By ending the command buffer, it is put out of record mode.
         err = vkEndCommandBuffer(cmdBuffer);
         GVR_VK_CHECK(!err);
@@ -1301,7 +1303,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     }
     void VulkanCore::renderToOculus(RenderTarget* renderTarget){
-        VkRenderTexture* renderTexture = getRenderTexture(static_cast<VkRenderTarget*>(renderTarget));
+        VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(getRenderTexture(static_cast<VkRenderTarget*>(renderTarget)));
         renderTexture->readRenderResult(&oculusTexData);
     }
 

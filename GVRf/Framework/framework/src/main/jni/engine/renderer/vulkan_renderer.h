@@ -112,6 +112,9 @@ public:
                                                const TextureParameters* texture_parameters, int number_views);
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) { }
     virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
+    RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                                       int jcolor_format, int jdepth_format, bool resolve_depth,
+                                                       const TextureParameters* texture_parameters, int number_views, bool monoscopic);
     virtual VertexBuffer* createVertexBuffer(const char* desc, int vcount);
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
     virtual Shader* createShader(int id, const char* signature,

@@ -153,6 +153,7 @@ class OvrMonoscopicViewManager extends OvrViewManager {
            // Log.e("so_test", "my prop is: " + reader.readLine());
 
             if(reader.readLine().equals("1")){
+                //mRenderBundle = makeRenderBundle();
                 vulkanSurfaceView = new SurfaceView(mActivity);
                 vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
                     @Override
@@ -208,9 +209,9 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     GVRRenderTarget getRenderTarget(){
         if(mRenderTarget[0] == null) {
 
-            mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount), getMainScene());
-            mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount), getMainScene());
-            mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount), getMainScene());
+            mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
+            mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
+            mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
         }
      //   Log.e("Abhijit", "Abhijit " + NativeVulkanCore.getSwapChainIndexToRender());
 

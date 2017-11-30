@@ -19,9 +19,10 @@
 #include "../engine/renderer/vulkan_renderer.h"
 #include "vk_texture.h"
 namespace gvr{
-VkRenderTexture::VkRenderTexture(int width, int height, int sample_count):RenderTexture(sample_count), fbo(nullptr),mWidth(width), mHeight(height){
+VkRenderTexture::VkRenderTexture(int width, int height, int sample_count):RenderTexture(sample_count), fbo(nullptr),mWidth(width), mHeight(height), mSamples(sample_count){
     initVkData();
 }
+    /*
 void VkRenderTexture::bind() {
     if(fbo == nullptr){
         fbo = new VKFramebuffer(mWidth,mHeight);
@@ -31,7 +32,7 @@ void VkRenderTexture::bind() {
         fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mSampleCount);
     }
 
-}
+}*/
 const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
     mImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     mImageInfo.imageView = fbo->getImageView(COLOR_IMAGE);
@@ -50,6 +51,7 @@ void VkRenderTexture::createRenderPass(){
     clear_values.resize(3);
     fbo->addRenderPass(renderPass);
 }
+    /*
 bool VkRenderTexture::isReady(){
     VkResult err;
     VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
@@ -66,6 +68,7 @@ bool VkRenderTexture::isReady(){
     }
     return true;
 }
+   */
 void VkRenderTexture::initVkData(){
     VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
    // LOGE("vulkan abhijit rendertexture ");
@@ -126,7 +129,7 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     vkCmdSetViewport(mCmdBuffer,0,1,&viewport);
     vkCmdBeginRenderPass(mCmdBuffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }
-
+/*
 bool VkRenderTexture::readRenderResult(uint8_t **readback_buffer) {
 
     if(!fbo)
@@ -172,5 +175,5 @@ bool VkRenderTexture::readRenderResult(uint8_t **readback_buffer) {
     GVR_VK_CHECK(!err);
 
     vkUnmapMemory(device, mem);
-}
+}*/
 }

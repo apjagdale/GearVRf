@@ -139,6 +139,9 @@ public:
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views) = 0;
+    /*RenderTexture* createRenderTexture(int width, int height, int sample_count,
+                                               int jcolor_format, int jdepth_format, bool resolve_depth,
+                                               const TextureParameters* texture_parameters, int number_views, bool monoscopic){};*/
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers) = 0;
     virtual RenderTexture* createRenderTexture(const RenderTextureInfo&)=0;
     virtual Shader* createShader(int id, const char* signature,

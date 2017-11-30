@@ -22,6 +22,8 @@
 #include <vulkan/vk_cubemap_image.h>
 #include <vulkan/vk_render_to_texture.h>
 #include <vulkan/vk_render_target.h>
+#include <vulkan/vk_render_texture_onscreen.h>
+#include <vulkan/vk_render_texture_offscreen.h>
 #include "renderer.h"
 #include "glm/gtc/matrix_inverse.hpp"
 
@@ -39,9 +41,10 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
 RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
-    return new VkRenderTexture(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
+    return new VkRenderTextureOffScreen(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
 }
-    RenderData* VulkanRenderer::createRenderData()
+
+RenderData* VulkanRenderer::createRenderData()
 {
     return new VulkanRenderData();
 }
@@ -96,7 +99,14 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
                                                    int jcolor_format, int jdepth_format, bool resolve_depth,
                                                    const TextureParameters* texture_parameters, int number_views)
 {
-    return new VkRenderTexture(width, height, sample_count);
+    return new VkRenderTextureOffScreen(width, height, sample_count);
+}
+
+RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count,
+                                                   int jcolor_format, int jdepth_format, bool resolve_depth,
+                                                   const TextureParameters* texture_parameters, int number_views, bool monoscopic)
+{
+    return new VkRenderTextureOnScreen(width, height, sample_count);
 }
 
 Shader* VulkanRenderer::createShader(int id, const char* signature,
@@ -208,6 +218,11 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
     rstate.shader_manager = shader_manager;
     rstate.uniforms.u_view = camera->getViewMatrix();
     rstate.uniforms.u_proj = camera->getProjectionMatrix();
+
+    if(vulkanCore_->isSwapChainPresent())
+        rstate.uniforms.u_proj = glm::mat4(1,0,0,0,  0,-1,0,0, 0,0,0.5,0, 0,0,0.5,1) * rstate.uniforms.u_proj;
+  //  else
+   //     LOGE("Abhijit no swap chain");
 
 
     std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
