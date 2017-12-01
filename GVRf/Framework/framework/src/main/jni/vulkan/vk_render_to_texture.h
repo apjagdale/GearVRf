@@ -42,7 +42,6 @@ public:
     virtual void initVkData() = 0;
     virtual const VkDescriptorImageInfo& getDescriptorImage();
     // isReady() for renderTexture is blocking call, we will wait till command buffer rendering is complete
-   // virtual bool isReady();
     VkRenderPassBeginInfo getRenderPassBeginInfo();
     VKFramebuffer* getFBO(){
         return fbo;
@@ -64,7 +63,6 @@ public:
     virtual unsigned int getDepthBufferId() const {
         return 0;
     }
-    //virtual void bind();
     virtual void beginRendering(Renderer* renderer);
     virtual void endRendering(Renderer*){
         vkCmdEndRenderPass(mCmdBuffer);
@@ -78,7 +76,6 @@ public:
     // Copy data in pixel buffer to client memory. This function is synchronous. When
     // it returns, the pixels have been copied to PBO and then to the client memory.
     virtual bool readRenderResult(uint8_t *readback_buffer){}
-    //virtual bool readRenderResult(uint8_t **readback_buffer);
     virtual void setLayerIndex(int layer_index) {}
     // Copy data in pixel buffer to client memory. This function is synchronous. When
     // it returns, the pixels have been copied to PBO and then to the client memory.
