@@ -161,29 +161,32 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
 
 void VulkanRenderer::updatePostEffectMesh(Mesh* copy_mesh)
 {
-    float positions[] = { -1.0f, 1.0f,  1.0f,
-                          -1.0f, -1.0f,  1.0f,
-                          1.0f,  -1.0f,  1.0f,
-                          1.0f,  1.0f,  1.0f,
-                          -1.0f, 1.0f,  1.0f,
-                          1.0f,  -1.0f,  1.0f};
+      float positions[] = { -1.0f, +1.0f, 1.0f,
+                            +1.0f, -1.0f, 1.0f,
+                            -1.0f, -1.0f, 1.0f,
+
+                            +1.0f, +1.0f, 1.0f,
+                            +1.0f, -1.0f, 1.0f,
+                            -1.0f, +1.0f, 1.0f,
+      };
 
     float uvs[] = { 0.0f, 1.0f,
-                    0.0f, 0.0f,
                     1.0f, 0.0f,
+                    0.0f, 0.0f,
+
                     1.0f, 1.0f,
+                    1.0f, 0.0f,
                     0.0f, 1.0f,
-                    1.0f, 0.0f};
+    };
 
     const int position_size = sizeof(positions)/ sizeof(positions[0]);
     const int uv_size = sizeof(uvs)/ sizeof(uvs[0]);
 
     copy_mesh->setVertices(positions, position_size);
     copy_mesh->setFloatVec("a_texcoord", uvs, uv_size);
-
 }
+
 void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<RenderData*>& render_data_vector, std::vector<RenderData*>& render_data_list){
-    //LOGE("Abhijit count %d", render_data_vector.size());
     for (auto rdata = render_data_vector.begin(); rdata != render_data_vector.end(); ++rdata)
     {
         if (!(rstate.render_mask & (*rdata)->render_mask()))
@@ -207,9 +210,6 @@ void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<Rend
 }
 void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                 RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b){
-
-    //LOGE("Vulkan renderRenderTaget called");
-
     std::vector<RenderData*> render_data_list;
     Camera* camera = renderTarget->getCamera();
     RenderState rstate = renderTarget->getRenderState();
@@ -221,9 +221,6 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
 
     if(vulkanCore_->isSwapChainPresent())
         rstate.uniforms.u_proj = glm::mat4(1,0,0,0,  0,-1,0,0, 0,0,0.5,0, 0,0,0.5,1) * rstate.uniforms.u_proj;
-  //  else
-   //     LOGE("Abhijit no swap chain");
-
 
     std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
     int postEffectCount = 0;
@@ -234,10 +231,6 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
         rstate.material_override = NULL;
     }
 
-    /*if(render_data_vector->size() == 0){
-        LOGE("vulkan still no render data");
-        return;
-    }*/
     renderRenderDataVector(rstate,*render_data_vector,render_data_list);
     VkRenderTarget *vk_renderTarget = static_cast<VkRenderTarget *>(renderTarget);
 
@@ -249,6 +242,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget
         VkRenderTexture* input_texture = renderTexture;
         vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager,
                                                  nullptr, renderTexture, false);
+
         vulkanCore_->submitCmdBuffer(renderTexture->getFenceObject(), renderTexture->getCommandBuffer());
         vulkanCore_->waitForFence(renderTexture->getFenceObject());
 

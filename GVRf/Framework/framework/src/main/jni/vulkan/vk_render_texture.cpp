@@ -20,7 +20,7 @@
 #include "vk_texture.h"
 namespace gvr{
 VkRenderTexture::VkRenderTexture(int width, int height, int sample_count):RenderTexture(sample_count), fbo(nullptr),mWidth(width), mHeight(height), mSamples(sample_count){
-    initVkData();
+
 }
     /*
 void VkRenderTexture::bind() {
@@ -69,12 +69,13 @@ bool VkRenderTexture::isReady(){
     return true;
 }
    */
+    /*
 void VkRenderTexture::initVkData(){
     VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
    // LOGE("vulkan abhijit rendertexture ");
     mCmdBuffer = renderer->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     mWaitFence = renderer->createFenceObject();
-}
+}*/
 
 VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     VkClearValue clear_color;

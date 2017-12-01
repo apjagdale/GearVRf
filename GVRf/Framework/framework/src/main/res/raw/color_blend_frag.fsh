@@ -15,4 +15,5 @@ void main()
     vec3 color = tex.rgb * (1.0 - u_factor) + vec3(u_color.xyz) * u_factor;
     float alpha = tex.a;
     outColor = vec4(color, alpha);
+ //   outColor = vec4(1,0,0, 1);
 }

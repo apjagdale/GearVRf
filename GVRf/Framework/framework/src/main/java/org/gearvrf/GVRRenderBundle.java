@@ -142,13 +142,13 @@ final class GVRRenderBundle implements IRenderBundle {
 
     public GVRRenderTexture getPostEffectRenderTextureA() {
         if(mPostEffectRenderTextureA == null)
-            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, mGVRContext.getActivity().getAppSettings().isMultiviewSet() ? 2 : 1);
+            mPostEffectRenderTextureA = new GVRRenderTexture(mGVRContext, 2560 , 1440, 1, mGVRContext.getActivity().getAppSettings().isMultiviewSet() ? 2 : 1);
         return mPostEffectRenderTextureA;
     }
 
     public GVRRenderTexture getPostEffectRenderTextureB() {
         if(mPostEffectRenderTextureB == null)
-            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, mWidth , mHeight, mSampleCount, mGVRContext.getActivity().getAppSettings().isMultiviewSet() ? 2 : 1);
+            mPostEffectRenderTextureB = new GVRRenderTexture(mGVRContext, 2560 , 1440, 1, mGVRContext.getActivity().getAppSettings().isMultiviewSet() ? 2 : 1);
 
         return mPostEffectRenderTextureB;
     }

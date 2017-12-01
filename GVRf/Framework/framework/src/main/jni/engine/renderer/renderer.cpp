@@ -383,6 +383,7 @@ bool Renderer::renderPostEffectData(RenderState& rstate, RenderTexture* input_te
     if(material == NULL)
         return false;
 
+
     material->setTexture("u_texture", input_texture);
     int nativeShader = rpass->get_shader(rstate.is_multiview);
     Shader* shader = rstate.shader_manager->getShader(nativeShader);

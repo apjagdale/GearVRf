@@ -6,7 +6,7 @@
 
 namespace gvr{
     VkRenderTextureOnScreen::VkRenderTextureOnScreen(int width, int height, int sample_count):VkRenderTexture(width, height, sample_count){
-
+        initVkData();
     }
 
     void VkRenderTextureOnScreen::bind() {
@@ -18,5 +18,13 @@ namespace gvr{
             fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mSamples, true);
         }
 
+    }
+
+    void VkRenderTextureOnScreen::initVkData(){
+        VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+        // LOGE("vulkan abhijit rendertexture ");
+        mWaitFence = NULL;
+        mCmdBuffer = renderer->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        //mWaitFence = renderer->createFenceObject();
     }
 }

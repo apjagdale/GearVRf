@@ -984,6 +984,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         std::vector<VkImageView> attachments;
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
+        LOGE("Abhijit width hieght %d %d  and mono %d  sample %d", mWidth, mHeight, monoscopic, sample_count);
         if(sample_count > 1){
             vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -1244,22 +1245,27 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     void VulkanCore::submitCmdBuffer(VkFence fence, VkCommandBuffer cmdBuffer){
         VkResult err;
         // Get the next image to render to, then queue a wait until the image is ready
+        if(fence)
         vkResetFences(m_device, 1, &fence);
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext = nullptr;
-        submitInfo.waitSemaphoreCount = (swapChainFlag ? 1 : 0);
-        submitInfo.pWaitSemaphores = (swapChainFlag ? &mBackBufferSemaphore : nullptr);
+        submitInfo.waitSemaphoreCount = (fence ? 0 : 1);
+        submitInfo.pWaitSemaphores = (fence ? nullptr : &mBackBufferSemaphore);
         submitInfo.pWaitDstStageMask = nullptr;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmdBuffer;
-        submitInfo.signalSemaphoreCount = (swapChainFlag ? 1 : 0);
-        submitInfo.pSignalSemaphores = (swapChainFlag ? &mRenderCompleteSemaphore : nullptr);
+        submitInfo.signalSemaphoreCount = (fence ? 0 : 1);
+        submitInfo.pSignalSemaphores = (fence ? nullptr : &mRenderCompleteSemaphore);
 
-        err = vkQueueSubmit(m_queue, 1, &submitInfo,(swapChainFlag ? VK_NULL_HANDLE : fence));
+        err = vkQueueSubmit(m_queue, 1, &submitInfo,(fence ? fence : VK_NULL_HANDLE));
         GVR_VK_CHECK(!err);
-        if(swapChainFlag)
+
+       // LOGE("Abhijit fence %d",vkQueueWaitIdle(m_queue));
+
+        //LOGE("Abhijit swapchain flags %d", swapChainFlag);
+        if(!fence)
         PresentBackBuffer();
     }
 
