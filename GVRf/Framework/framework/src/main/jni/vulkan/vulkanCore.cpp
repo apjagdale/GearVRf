@@ -984,7 +984,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         std::vector<VkImageView> attachments;
         VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
-        LOGE("Abhijit width hieght %d %d  and mono %d  sample %d", mWidth, mHeight, monoscopic, sample_count);
         if(sample_count > 1){
             vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
@@ -1001,7 +1000,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                       VK_IMAGE_LAYOUT_UNDEFINED, 1);
 
             mAttachments[COLOR_IMAGE] = colorImage;
-//            if(vk_renderer->getCore()->isSwapChainPresent()) {
             if(monoscopic) {
                 colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
                 colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());

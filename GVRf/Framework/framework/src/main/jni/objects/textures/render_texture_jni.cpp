@@ -84,7 +84,11 @@ Java_org_gearvrf_NativeRenderTexture_ctorWithMonoscopic(JNIEnv* env, jobject obj
 
     if(number_views > 1) // multiview doesn't work with stencil attachment
         depth_format = DepthFormat::DEPTH_24;
-    RenderTexture* tex = static_cast<VulkanRenderer*>(Renderer::getInstance())->createRenderTexture(width, height, sample_count, ColorFormat::COLOR_8888, depth_format , 0, NULL, number_views, monoscopic);
+    RenderTexture* tex;
+    if(Renderer::getInstance()->isVulkanInstance())
+        tex = static_cast<VulkanRenderer*>(Renderer::getInstance())->createRenderTexture(width, height, sample_count, ColorFormat::COLOR_8888, depth_format , 0, NULL, number_views, monoscopic);
+    else
+        tex = Renderer::getInstance()->createRenderTexture(width, height, sample_count, ColorFormat::COLOR_8888, depth_format , 0, NULL, number_views);
     return reinterpret_cast<jlong>(tex);
 }
 

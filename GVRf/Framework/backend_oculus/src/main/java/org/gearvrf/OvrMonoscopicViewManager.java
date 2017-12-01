@@ -92,11 +92,9 @@ class OvrMonoscopicViewManager extends OvrViewManager {
          * Sets things with the numbers in the xml.
          */
 
-        FrameLayout frameLayout = new FrameLayout(mActivity);
         mRenderTarget[0] = null;
 
         mView = new OvrSurfaceView(gvrActivity, this, null);
-        //gvrActivity.setContentView(mView);
 
         DisplayMetrics metrics = new DisplayMetrics();
         gvrActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -143,17 +141,16 @@ class OvrMonoscopicViewManager extends OvrViewManager {
             mViewportY = (screenHeightPixels / 2) - (fboHeight / 2);
         }
 
-
-
         sampleCount = gvrActivity.getAppSettings().getEyeBufferParams().getMultiSamples();
-        Process proc = null;
+
         try {
-            proc = Runtime.getRuntime().exec(new String[]{"/system/bin/getprop", "debug.gearvrf.vulkan"});
+            Process proc = Runtime.getRuntime().exec(new String[]{"/system/bin/getprop", "debug.gearvrf.vulkan"});
             BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-           // Log.e("so_test", "my prop is: " + reader.readLine());
 
             if(reader.readLine().equals("1")){
-                //mRenderBundle = makeRenderBundle();
+                gvrActivity.getAppSettings().getEyeBufferParams().setResolutionWidth(mViewportWidth);
+                gvrActivity.getAppSettings().getEyeBufferParams().setResolutionHeight(mViewportHeight);
+                gvrActivity.getAppSettings().getEyeBufferParams().setMultiSamples(sampleCount);
                 vulkanSurfaceView = new SurfaceView(mActivity);
                 vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
                     @Override
@@ -194,16 +191,14 @@ class OvrMonoscopicViewManager extends OvrViewManager {
                     }
                 });
 
-                frameLayout.addView(vulkanSurfaceView);
+                gvrActivity.setContentView(vulkanSurfaceView);
             }
             else{
-
-                frameLayout.addView(mView);
+                gvrActivity.setContentView(mView);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        gvrActivity.setContentView(frameLayout);
     }
 
     GVRRenderTarget getRenderTarget(){
@@ -213,8 +208,6 @@ class OvrMonoscopicViewManager extends OvrViewManager {
             mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
             mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
         }
-     //   Log.e("Abhijit", "Abhijit " + NativeVulkanCore.getSwapChainIndexToRender());
-
         return mRenderTarget[NativeVulkanCore.getSwapChainIndexToRender()];
     }
     /*
@@ -222,7 +215,6 @@ class OvrMonoscopicViewManager extends OvrViewManager {
      */
     @Override
     protected void onDrawFrame() {
-        Log.v("Abhijit", "Abhijit onDrawFrame " + sampleCount);
         beforeDrawEyes();
         drawEyes();
         afterDrawEyes();
@@ -248,7 +240,6 @@ class OvrMonoscopicViewManager extends OvrViewManager {
         renderTarget.render(mMainScene,mMainScene
                         .getMainCameraRig().getLeftCamera(),mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
                 mRenderBundle.getPostEffectRenderTextureB());
-
     }
 
 }
