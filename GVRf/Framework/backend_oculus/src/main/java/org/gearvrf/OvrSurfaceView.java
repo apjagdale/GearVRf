@@ -30,7 +30,6 @@ import android.opengl.GLSurfaceView;
 import android.view.Choreographer;
 import android.view.KeyEvent;
 import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 
 /**
  * This GVRSurfaceView class extends from {@link GLSurfaceView} which is used
@@ -77,7 +76,6 @@ class OvrSurfaceView extends GLSurfaceView implements
         /*
          * Avoids reloading the application every time it pauses.
          */
-
         setEGLContextClientVersion(3);
         setPreserveEGLContextOnPause(true);
         setEGLContextFactory(new OvrContextFactory());
@@ -143,7 +141,7 @@ class OvrContextFactory implements GLSurfaceView.EGLContextFactory {
 
     @Override
     public EGLContext createContext(EGL10 egl, EGLDisplay display,
-            EGLConfig eglConfig) {
+                                    EGLConfig eglConfig) {
         int[] attrib_list = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE };
         EGLContext context = egl.eglCreateContext(display, eglConfig,
                 EGL10.EGL_NO_CONTEXT, attrib_list);
@@ -160,7 +158,7 @@ class OvrConfigChooser implements GLSurfaceView.EGLConfigChooser {
 
     /**
      * Constructs a OvrConfigChooser class with initial set-ups for EGL
-     * 
+     *
      * @param r
      *            size of red in bits
      * @param g
@@ -221,7 +219,7 @@ class OvrConfigChooser implements GLSurfaceView.EGLConfigChooser {
     }
 
     public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display,
-            EGLConfig[] configs) {
+                                  EGLConfig[] configs) {
         for (EGLConfig config : configs) {
             int d = findConfigAttrib(egl, display, config,
                     EGL10.EGL_DEPTH_SIZE, 0);
@@ -250,7 +248,7 @@ class OvrConfigChooser implements GLSurfaceView.EGLConfigChooser {
     }
 
     private int findConfigAttrib(EGL10 egl, EGLDisplay display,
-            EGLConfig config, int attribute, int defaultValue) {
+                                 EGLConfig config, int attribute, int defaultValue) {
 
         if (egl.eglGetConfigAttrib(display, config, attribute, mValue)) {
             return mValue[0];

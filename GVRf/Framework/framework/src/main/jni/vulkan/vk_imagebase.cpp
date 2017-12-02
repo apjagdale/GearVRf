@@ -414,6 +414,7 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
                                                              VK_IMAGE_ASPECT_COLOR_BIT), NULL,
                             &imageView);
     assert(!err);
+    
 }
 
 }

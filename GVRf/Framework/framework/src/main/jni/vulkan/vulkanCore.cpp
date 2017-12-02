@@ -850,6 +850,19 @@ VkCommandBuffer VulkanCore::createCommandBuffer(VkCommandBufferLevel level){
     GVR_VK_CHECK(!ret);
     return cmdBuffer;
 }
+
+VkCullModeFlagBits VulkanCore::getVulkanCullFace(int cull_type){
+    switch(cull_type){
+        case 0:
+                return VK_CULL_MODE_BACK_BIT;
+        case 1:
+                return VK_CULL_MODE_FRONT_BIT;
+        case 2:
+                return VK_CULL_MODE_NONE;
+    }
+}
+
+
 void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, VulkanRenderData *rdata, VulkanShader* shader, int pass, VkRenderPass renderPass, int sampleCount) {
     VkResult err;
 
@@ -893,12 +906,12 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.pVertexInputState = &vi;
     pipelineCreateInfo.pInputAssemblyState = gvr::PipelineInputAssemblyStateCreateInfo(
             getTopology(rdata->draw_mode()));
-    VkCullModeFlagBits cull_face = (rdata->cull_face(pass) ==  RenderData::CullBack) ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
+    VkCullModeFlagBits cull_face = getVulkanCullFace(rdata->cull_face(pass));
     pipelineCreateInfo.pRasterizationState = gvr::PipelineRasterizationStateCreateInfo(VK_FALSE,
                                                                                        VK_FALSE,
                                                                                        VK_POLYGON_MODE_FILL,
                                                                                        cull_face,
-                                                                                       VK_FRONT_FACE_COUNTER_CLOCKWISE,
+                                                                                       (swapChainFlag ? VK_FRONT_FACE_COUNTER_CLOCKWISE : VK_FRONT_FACE_CLOCKWISE),
                                                                                        VK_FALSE,
                                                                                        0, 0, 0,
                                                                                        1.0);
@@ -1061,85 +1074,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         GVR_VK_CHECK(!err);
     }
 
-    void VulkanCore::SetImageLayout(const VkImage &image, VkCommandBuffer cmdBuffer,
-                                        VkImageAspectFlagBits aspect, VkImageLayout oldLayout,
-                                        VkImageLayout newLayout, VkPipelineStageFlagBits srcMask,
-                                        VkPipelineStageFlagBits dstMask)
-    {
-        VkImageMemoryBarrier imageMemoryBarrier = {};
-        imageMemoryBarrier.sType                            = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        imageMemoryBarrier.pNext                            = nullptr;
-        imageMemoryBarrier.oldLayout                        = oldLayout;
-        imageMemoryBarrier.newLayout                        = newLayout;
-        imageMemoryBarrier.image                            = image;
-        imageMemoryBarrier.subresourceRange.aspectMask      = aspect;
-        imageMemoryBarrier.subresourceRange.baseMipLevel    = 0;
-        imageMemoryBarrier.subresourceRange.levelCount      = 0;
-        imageMemoryBarrier.subresourceRange.baseArrayLayer  = 0;
-        imageMemoryBarrier.subresourceRange.layerCount      = 1;
-        imageMemoryBarrier.srcAccessMask                    = 0;
-        imageMemoryBarrier.dstAccessMask                    = 0;
-        imageMemoryBarrier.srcQueueFamilyIndex              = VK_QUEUE_FAMILY_IGNORED;
-        imageMemoryBarrier.dstQueueFamilyIndex              = VK_QUEUE_FAMILY_IGNORED;
-
-        if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-        {
-            imageMemoryBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        }
-        if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-        {
-            imageMemoryBarrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        }
-        if (oldLayout == VK_IMAGE_LAYOUT_PREINITIALIZED)
-        {
-            imageMemoryBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-        }
-        if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-        {
-            imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        }
-        if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-        {
-            imageMemoryBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        }
-        if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
-        {
-            imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        }
-
-        if (newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
-        {
-            // Ensures reads can be made
-            imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
-        }
-        if (newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
-        {
-            // Ensures writes can be made
-            imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-        }
-        if (newLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL)
-        {
-            // Ensure writes have completed
-            imageMemoryBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        }
-        if (newLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL)
-        {
-            // Ensure writes have completed
-            imageMemoryBarrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        }
-        if (newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
-        {
-            // Make sure any Copy or CPU writes to image are flushed
-            imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
-        }
-        if (newLayout == VK_IMAGE_LAYOUT_PRESENT_SRC_KHR)
-        {
-            imageMemoryBarrier.dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        }
-
-        // Barrier on image memory, with correct layouts set.
-        vkCmdPipelineBarrier(cmdBuffer, srcMask /*VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT*/, dstMask /*VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT*/, 0, 0, NULL, 0, NULL, 1, &imageMemoryBarrier);
-    }
     void VulkanCore::BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector,
                                                  Camera *camera, ShaderManager* shader_manager, RenderTarget* renderTarget, VkRenderTexture* postEffectRenderTexture, bool postEffectFlag) {
 
@@ -1154,23 +1088,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             cmdBuffer = postEffectRenderTexture->getCommandBuffer();
 
         beginCmdBuffer(cmdBuffer);
-/*
-        VkRenderTexture * renderTexture = (VkRenderTexture *) static_cast<VkRenderTarget*>(renderTarget)->getTexture();
-
-            renderTexture->bind();
-
-        VkImageAspectFlagBits b = (VkImageAspectFlagBits) (VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
-        SetImageLayout(renderTexture->getFBO()->getImage(COLOR_IMAGE), cmdBuffer,
-                       VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-                       VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-        SetImageLayout(renderTexture->getFBO()->getImage(DEPTH_IMAGE), cmdBuffer,
-                       b,
-                       VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-                       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-*/
 
         if(renderTarget!= NULL)
             renderTarget->beginRendering(Renderer::getInstance());
@@ -1196,22 +1113,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         else
             postEffectRenderTexture->endRendering(Renderer::getInstance());
 
-/*
-        VkImageAspectFlagBits a =  VkImageAspectFlagBits(VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT);
-
-
-        SetImageLayout(renderTexture->getFBO()->getImage(COLOR_IMAGE), cmdBuffer, VK_IMAGE_ASPECT_COLOR_BIT,
-                       VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                       VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-                       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
-        SetImageLayout(renderTexture->getFBO()->getImage(DEPTH_IMAGE), cmdBuffer,
-                      a,
-                       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-                       VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-                       VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                       VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
-*/
         // By ending the command buffer, it is put out of record mode.
         err = vkEndCommandBuffer(cmdBuffer);
         GVR_VK_CHECK(!err);

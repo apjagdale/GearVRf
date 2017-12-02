@@ -22,12 +22,10 @@ import android.app.Activity;
 import android.util.DisplayMetrics;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.widget.FrameLayout;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Properties;
 
 /*
  * This is the most important part of gvrf.
@@ -68,11 +66,8 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     // Log.tag(OvrMonoscopicViewManager.class);
 
     private OvrSurfaceView mView;
-    private int mViewportX, mViewportY, mViewportWidth, mViewportHeight;
+    private int mViewportX, mViewportY, mViewportWidth, mViewportHeight, sampleCount;
     private GVRRenderTarget mRenderTarget[] = new GVRRenderTarget[3];
-    private int sampleCount = 1;
-
-
 
     SurfaceView vulkanSurfaceView;
     /**

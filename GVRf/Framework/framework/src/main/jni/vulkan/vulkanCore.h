@@ -111,10 +111,6 @@ public:
     void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*,RenderTarget*,VkRenderTexture*, bool);
     void BuildCmdBufferForRenderDataPE(VkCommandBuffer &cmdBuffer, ShaderManager*, Camera*, RenderData* rdata, VkRenderTexture*, int);
 
-    void SetImageLayout(const VkImage &image, VkCommandBuffer cmdBuffer,
-                            VkImageAspectFlagBits aspect, VkImageLayout oldLayout,
-                            VkImageLayout newLayout, VkPipelineStageFlagBits srcMask,
-                            VkPipelineStageFlagBits dstMask);
     VkRenderTexture* getRenderTexture(VkRenderTarget*);
     int waitForFence(VkFence fence);
 
@@ -216,6 +212,7 @@ private:
                      std::vector<uint32_t>& result_vert, std::vector<uint32_t>& result_frag);
 
     void GetDescriptorPool(VkDescriptorPool& descriptorPool);
+    VkCullModeFlagBits getVulkanCullFace(int);
 
     ANativeWindow *m_androidWindow;
 

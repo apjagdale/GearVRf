@@ -35,7 +35,7 @@ namespace gvr{
 
     void VkRenderTextureOnScreen::initVkData(){
         VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
-        mWaitFence = NULL;
+        mWaitFence = 0;
         mCmdBuffer = renderer->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
     }
 }
