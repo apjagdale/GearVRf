@@ -957,8 +957,10 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                         rdata->get_shader(false,curr_pass)));
 
                 float line_width;
-                if(!rdata->pass(curr_pass)->material()->getFloat("line_width", line_width))
+                ShaderData* material = rdata->pass(curr_pass)->material();
+                if(!material || !material->getFloat("line_width", line_width)){
                     line_width = 1.0;
+                }
                 vkCmdSetLineWidth(cmdBuffer, line_width);
 
                 rdata->render(shader,cmdBuffer,curr_pass);

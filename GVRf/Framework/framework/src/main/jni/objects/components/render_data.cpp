@@ -40,6 +40,7 @@ RenderPass* RenderData::pass(int pass) {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass];
     }
+    return nullptr;
 }
 
 const RenderPass* RenderData::pass(int pass) const {
