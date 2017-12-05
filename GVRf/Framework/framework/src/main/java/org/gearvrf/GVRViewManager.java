@@ -124,7 +124,7 @@ abstract class GVRViewManager extends GVRContext {
         }
     }
 
-    protected void setMainSceneImpl(GVRScene scene) {
+    private void setMainSceneImpl(GVRScene scene) {
         mMainScene = scene;
         NativeScene.setMainScene(scene.getNative());
         getActivity().setCameraRig(scene.getMainCameraRig());

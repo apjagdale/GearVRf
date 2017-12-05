@@ -68,8 +68,13 @@ class OvrMonoscopicViewManager extends OvrViewManager {
     private OvrSurfaceView mView;
     private int mViewportX, mViewportY, mViewportWidth, mViewportHeight, sampleCount;
     private GVRRenderTarget mRenderTarget[] = new GVRRenderTarget[3];
+    private boolean isVulkanInstance = false;
+    volatile boolean  activeFlag = true;
+    boolean initialized = false;
+    private Worker workerObj;
+    private Thread vulkanDrawThread;
+    private SurfaceView vulkanSurfaceView;
 
-    SurfaceView vulkanSurfaceView;
     /**
      * Constructs OvrMonoscopicViewManager object with GVRMain which controls
      * GL activities
@@ -88,7 +93,6 @@ class OvrMonoscopicViewManager extends OvrViewManager {
          */
 
         mRenderTarget[0] = null;
-
         mView = new OvrSurfaceView(gvrActivity, this, null);
 
         DisplayMetrics metrics = new DisplayMetrics();
@@ -143,47 +147,63 @@ class OvrMonoscopicViewManager extends OvrViewManager {
             BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 
             if(reader.readLine().equals("1")){
+                isVulkanInstance = true;
+                mRenderTarget[0] = null;
                 gvrActivity.getAppSettings().getEyeBufferParams().setResolutionWidth(mViewportWidth);
                 gvrActivity.getAppSettings().getEyeBufferParams().setResolutionHeight(mViewportHeight);
                 gvrActivity.getAppSettings().getEyeBufferParams().setMultiSamples(sampleCount);
                 vulkanSurfaceView = new SurfaceView(mActivity);
+
                 vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
                     @Override
                     public void surfaceCreated(SurfaceHolder surfaceHolder) {
                         Log.d("Vulkan", "surfaceCreated");
+                        workerObj = new Worker();
+                        vulkanDrawThread = new Thread(workerObj, "vulkanThread");
+                        if(!initialized) {
+                            mRenderBundle = makeRenderBundle();
+                            final GVRScene scene = null == mMainScene ? new GVRScene(OvrMonoscopicViewManager.this) : mMainScene;
+                            mMainScene = scene;
+                            NativeScene.setMainScene(scene.getNative());
+                            getActivity().setCameraRig(scene.getMainCameraRig());
+                            mInputManager.setScene(scene);
+                            mRotationSensor.onResume();
+                            long vulkanCoreObj;
+                            vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
+                            Thread currentThread = Thread.currentThread();
 
-                        mRenderBundle = makeRenderBundle();
-                        final GVRScene scene = null == mMainScene ? new GVRScene(OvrMonoscopicViewManager.this) : mMainScene;
-                        setMainSceneImpl(scene);
-                        mRotationSensor.onResume();
-                        long vulkanCoreObj;
-                        vulkanCoreObj = NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
-                        Thread currentThread = Thread.currentThread();
+                            // Reduce contention with other Android processes
+                            currentThread.setPriority(Thread.MAX_PRIORITY);
 
-                        // Reduce contention with other Android processes
-                        currentThread.setPriority(Thread.MAX_PRIORITY);
+                            if (vulkanCoreObj != 0) {
+                                Log.i("Vulkan", "Vulkan Instance On surface created at Vulkan Java Side");
+                            } else {
+                                Log.i("Vulkan", "Error : On surface  No Instance created at Vulkan Java Side");
+                            }
 
-                        if (vulkanCoreObj != 0) {
-                            Log.i("Vulkan", "Vulkan Instance On surface created at Vulkan Java Side");
-                        } else {
-                            Log.i("Vulkan", "Error : On surface  No Instance created at Vulkan Java Side");
+                            initialized = true;
                         }
-
-                        Worker w = new Worker();
-                        w.start();
+                        else{
+                            NativeVulkanCore.resetTheInstance();
+                            NativeVulkanCore.getInstance(vulkanSurfaceView.getHolder().getSurface());
+                        }
                     }
 
                     @Override
                     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
                         Log.d("Vulkan", "surfaceChanged");
+                        vulkanDrawThread.start();
+                        activeFlag = true;
                         mRotationSensor.onResume();
                     }
 
                     @Override
                     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
                         Log.d("Vulkan", "surfaceDestroyed");
+                        activeFlag = false;
                         mRotationSensor.onDestroy();
                     }
+
                 });
 
                 gvrActivity.setContentView(vulkanSurfaceView);
@@ -198,12 +218,14 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 
     GVRRenderTarget getRenderTarget(){
         if(mRenderTarget[0] == null) {
-
             mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
-            mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
-            mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
+            if(isVulkanInstance) {
+                mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
+                mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(), mViewportWidth, mViewportHeight, sampleCount, true), getMainScene());
+            }
         }
-        return mRenderTarget[NativeVulkanCore.getSwapChainIndexToRender()];
+
+        return (isVulkanInstance ? mRenderTarget[NativeVulkanCore.getSwapChainIndexToRender()] : mRenderTarget[0]);
     }
     /*
      * GL life cycle
@@ -215,26 +237,25 @@ class OvrMonoscopicViewManager extends OvrViewManager {
         afterDrawEyes();
     }
 
-    public class Worker extends Thread {
-
-        @Override
+    public class Worker implements Runnable {
         public void run() {
-            while(true){
+            while(activeFlag){
                 beforeDrawEyes();
                 drawEyes();
                 afterDrawEyes();
             }
+            mRenderTarget[0] = null;
         }
-
     }
 
     private void drawEyes() {
         mMainScene.getMainCameraRig().updateRotation();
         GVRRenderTarget renderTarget = getRenderTarget();
-        renderTarget.cullFromCamera(mMainScene,mMainScene.getMainCameraRig().getCenterCamera(),mRenderBundle.getMaterialShaderManager());
-        renderTarget.render(mMainScene,mMainScene
-                        .getMainCameraRig().getLeftCamera(),mRenderBundle.getMaterialShaderManager(),mRenderBundle.getPostEffectRenderTextureA(),
+        renderTarget.cullFromCamera(mMainScene, mMainScene.getMainCameraRig().getCenterCamera(), mRenderBundle.getMaterialShaderManager());
+        renderTarget.render(mMainScene, mMainScene
+                        .getMainCameraRig().getLeftCamera(), mRenderBundle.getMaterialShaderManager(), mRenderBundle.getPostEffectRenderTextureA(),
                 mRenderBundle.getPostEffectRenderTextureB());
+
     }
 
 }
@@ -243,4 +264,5 @@ class OvrMonoscopicViewManager extends OvrViewManager {
 class NativeVulkanCore {
     static native long getInstance(Object surface);
     static native int getSwapChainIndexToRender();
+    static native void resetTheInstance();
 }

@@ -27,6 +27,9 @@ extern "C" {
 
     JNIEXPORT jint JNICALL
         Java_org_gearvrf_NativeVulkanCore_getSwapChainIndexToRender(JNIEnv* env, jobject obj);
+
+    JNIEXPORT void JNICALL
+        Java_org_gearvrf_NativeVulkanCore_resetTheInstance(JNIEnv* env, jobject obj);
 };
 
 JNIEXPORT jlong JNICALL
@@ -43,6 +46,12 @@ Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv * env, jobject obj, jobject
     Java_org_gearvrf_NativeVulkanCore_getSwapChainIndexToRender(JNIEnv * env, jobject obj){
         VulkanCore * vulkanCore = VulkanCore::getInstance();
         return vulkanCore->getSwapChainIndexToRender();
+    }
+
+    JNIEXPORT void JNICALL
+    Java_org_gearvrf_NativeVulkanCore_resetTheInstance(JNIEnv * env, jobject obj){
+        VulkanCore * vulkanCore = VulkanCore::getInstance();
+        return vulkanCore->releaseInstance();
     }
 
 }
