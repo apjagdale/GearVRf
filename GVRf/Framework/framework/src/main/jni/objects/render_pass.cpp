@@ -74,7 +74,7 @@ int RenderPass::isValid(Renderer* renderer, const RenderState& rstate, RenderDat
     return !dirty;
 }
 
-std::string RenderPass::getHashCode(bool is_multiview){
+const std::string& RenderPass::getHashCode(bool is_multiview){
     if (hash_code_dirty_) {
         std::string render_data_string;
         render_data_string.append(to_string(cull_face_));

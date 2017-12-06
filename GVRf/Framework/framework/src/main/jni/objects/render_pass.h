@@ -74,7 +74,7 @@ public:
      * @returns -1 = material not ready, 0 = dirty, 1 = clean
      */
     int isValid(Renderer* renderer, const RenderState& rstate, RenderData* rdata);
-    std::string getHashCode(bool is_multiview);
+    const std::string& getHashCode(bool is_multiview);
 
 private:
     static const int DEFAULT_CULL_FACE = CullBack;

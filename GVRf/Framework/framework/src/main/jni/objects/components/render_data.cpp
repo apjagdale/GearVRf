@@ -203,7 +203,7 @@ bool compareRenderDataByOrderShaderDistance(RenderData *i, RenderData *j) {
     return i->rendering_order() < j->rendering_order();
 }
 
-std::string RenderData::getHashCode()
+const std::string& RenderData::getHashCode()
 {
     if (hash_code_dirty_)    {
         std::string render_data_string;
