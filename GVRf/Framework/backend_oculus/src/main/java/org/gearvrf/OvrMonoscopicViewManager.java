@@ -192,7 +192,8 @@ class OvrMonoscopicViewManager extends OvrViewManager {
                     @Override
                     public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
                         Log.d("Vulkan", "surfaceChanged");
-                        vulkanDrawThread.start();
+                        if(!vulkanDrawThread.isAlive())
+                            vulkanDrawThread.start();
                         activeFlag = true;
                         mRotationSensor.onResume();
                     }
@@ -244,7 +245,8 @@ class OvrMonoscopicViewManager extends OvrViewManager {
                 drawEyes();
                 afterDrawEyes();
             }
-            mRenderTarget[0] = null;
+            for(int i = 0; i < 3; i++)
+                mRenderTarget[i] = null;
         }
     }
 

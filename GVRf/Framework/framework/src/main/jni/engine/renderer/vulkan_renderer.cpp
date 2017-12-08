@@ -102,11 +102,13 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
     return new VkRenderTextureOffScreen(width, height, sample_count);
 }
 
-RenderTexture* VulkanRenderer::createMonoscopicRenderTexture(int width, int height, int sample_count,
+RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count,
                                                    int jcolor_format, int jdepth_format, bool resolve_depth,
-                                                   const TextureParameters* texture_parameters, int number_views)
+                                                   const TextureParameters* texture_parameters, int number_views, bool monoscopic)
 {
-    return new VkRenderTextureOnScreen(width, height, sample_count);
+    if(monoscopic)
+        return new VkRenderTextureOnScreen(width, height, sample_count);
+    return createRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texture_parameters, number_views);
 }
 
 Shader* VulkanRenderer::createShader(int id, const char* signature,
