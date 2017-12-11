@@ -129,6 +129,7 @@ public:
             instance = NULL;
         }
     }
+    static bool useVulkanInstance();
     virtual ShaderData* createMaterial(const char* uniform_desc, const char* texture_desc) = 0;
     virtual RenderData* createRenderData() = 0;
     virtual RenderData* createRenderData(RenderData*) = 0;

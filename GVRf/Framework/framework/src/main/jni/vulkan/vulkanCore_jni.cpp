@@ -18,6 +18,7 @@
  * JNI
  ***************************************************************************/
 
+#include <engine/renderer/renderer.h>
 #include "vulkan_headers.h"
 
 namespace gvr {
@@ -30,6 +31,9 @@ extern "C" {
 
     JNIEXPORT void JNICALL
         Java_org_gearvrf_NativeVulkanCore_resetTheInstance(JNIEnv* env, jobject obj);
+
+    JNIEXPORT bool JNICALL
+        Java_org_gearvrf_NativeVulkanCore_useVulkanInstance(JNIEnv* env, jobject obj);
 };
 
 JNIEXPORT jlong JNICALL
@@ -54,4 +58,8 @@ Java_org_gearvrf_NativeVulkanCore_getInstance(JNIEnv * env, jobject obj, jobject
         return vulkanCore->releaseInstance();
     }
 
+    JNIEXPORT bool JNICALL
+    Java_org_gearvrf_NativeVulkanCore_useVulkanInstance(JNIEnv * env, jobject obj){
+        return Renderer::useVulkanInstance();
+    }
 }
