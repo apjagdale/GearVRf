@@ -1081,7 +1081,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         // For the triangle sample, we pre-record our command buffer, as it is static.
         // We have a buffer per swap chain image, so loop over the creation process.
         VkCommandBuffer cmdBuffer;
-
         if(renderTarget != NULL)
             cmdBuffer= (static_cast<VkRenderTarget*>(renderTarget))->getCommandBuffer();
         else
@@ -1144,28 +1143,29 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     void VulkanCore::submitCmdBuffer(VkFence fence, VkCommandBuffer cmdBuffer){
         VkResult err;
         // Get the next image to render to, then queue a wait until the image is ready
-        if(fence)
         vkResetFences(m_device, 1, &fence);
 
         VkSubmitInfo submitInfo = {};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submitInfo.pNext = nullptr;
-        submitInfo.waitSemaphoreCount = (fence ? 0 : 1);
-        submitInfo.pWaitSemaphores = (fence ? nullptr : &mBackBufferSemaphore);
+        submitInfo.waitSemaphoreCount = (swapChainFlag ? 1 : 0);
+        submitInfo.pWaitSemaphores = (swapChainFlag ? &mBackBufferSemaphore : nullptr);
         submitInfo.pWaitDstStageMask = nullptr;
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &cmdBuffer;
-        submitInfo.signalSemaphoreCount = (fence ? 0 : 1);
-        submitInfo.pSignalSemaphores = (fence ? nullptr : &mRenderCompleteSemaphore);
+        submitInfo.signalSemaphoreCount = (swapChainFlag ? 1 : 0);
+        submitInfo.pSignalSemaphores = (swapChainFlag ? &mRenderCompleteSemaphore : nullptr);
 
-        err = vkQueueSubmit(m_queue, 1, &submitInfo,(fence ? fence : VK_NULL_HANDLE));
+        err = vkQueueSubmit(m_queue, 1, &submitInfo, fence);
         GVR_VK_CHECK(!err);
 
-       // LOGE("Abhijit fence %d",vkQueueWaitIdle(m_queue));
-
-        //LOGE("Abhijit swapchain flags %d", swapChainFlag);
-        if(!fence)
-        PresentBackBuffer();
+        if(swapChainFlag) {
+            VkResult success = VK_INCOMPLETE;
+            while(success){
+                success = vkGetFenceStatus(m_device, fence);
+            }
+            PresentBackBuffer();
+        }
     }
 
     VkRenderTexture* VulkanCore::getRenderTexture(VkRenderTarget* renderTarget) {

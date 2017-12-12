@@ -37,5 +37,6 @@ namespace gvr{
         VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
         mWaitFence = 0;
         mCmdBuffer = renderer->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        mWaitFence = renderer->createFenceObject();
     }
 }

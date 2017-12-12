@@ -23,10 +23,6 @@ import android.util.DisplayMetrics;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 /*
  * This is the most important part of gvrf.
  * Initialization can be told as 2 parts. A General part and the GL/Vulkan part.
