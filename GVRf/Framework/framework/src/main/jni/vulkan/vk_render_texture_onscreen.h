@@ -23,8 +23,6 @@ namespace gvr {
      public:
          explicit VkRenderTextureOnScreen(int width, int height, int sample_count = 1);
          void bind();
-         void initVkData();
-
     };
 
 }

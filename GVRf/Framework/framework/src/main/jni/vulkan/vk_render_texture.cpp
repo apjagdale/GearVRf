@@ -20,7 +20,7 @@
 #include "vk_texture.h"
 namespace gvr{
 VkRenderTexture::VkRenderTexture(int width, int height, int sample_count):RenderTexture(sample_count), fbo(nullptr),mWidth(width), mHeight(height), mSamples(sample_count){
-
+    initVkData();
 }
 
 const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
@@ -40,6 +40,13 @@ void VkRenderTexture::createRenderPass(){
     VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
     clear_values.resize(3);
     fbo->addRenderPass(renderPass);
+}
+
+void VkRenderTexture::initVkData(){
+    VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+    mWaitFence = 0;
+    mCmdBuffer = renderer->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+    mWaitFence = renderer->createFenceObject();
 }
 
 VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){

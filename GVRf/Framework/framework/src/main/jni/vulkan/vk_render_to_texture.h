@@ -39,7 +39,7 @@ public:
     VkFence& getFenceObject(){
         return mWaitFence;
     }
-    virtual void initVkData() = 0;
+    void initVkData();
     virtual const VkDescriptorImageInfo& getDescriptorImage();
     // isReady() for renderTexture is blocking call, we will wait till command buffer rendering is complete
     VkRenderPassBeginInfo getRenderPassBeginInfo();

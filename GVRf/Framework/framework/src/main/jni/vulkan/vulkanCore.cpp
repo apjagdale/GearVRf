@@ -1160,9 +1160,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         GVR_VK_CHECK(!err);
 
         if(swapChainFlag) {
-            VkResult success = VK_INCOMPLETE;
-            while(success){
-                success = vkGetFenceStatus(m_device, fence);
+            int success = 0;
+            while(success != 1){
+                success = waitForFence(fence);
             }
             PresentBackBuffer();
         }

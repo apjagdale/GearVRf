@@ -20,7 +20,6 @@
 
 namespace gvr{
     VkRenderTextureOnScreen::VkRenderTextureOnScreen(int width, int height, int sample_count):VkRenderTexture(width, height, sample_count){
-        initVkData();
     }
 
     void VkRenderTextureOnScreen::bind() {
@@ -33,10 +32,4 @@ namespace gvr{
         }
     }
 
-    void VkRenderTextureOnScreen::initVkData(){
-        VulkanRenderer* renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
-        mWaitFence = 0;
-        mCmdBuffer = renderer->createCommandBuffer(VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-        mWaitFence = renderer->createFenceObject();
-    }
 }

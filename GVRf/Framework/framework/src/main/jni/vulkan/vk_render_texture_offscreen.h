@@ -26,7 +26,6 @@ namespace gvr {
         void bind();
         bool isReady();
         bool readRenderResult(uint8_t **readback_buffer);
-        void initVkData();
     };
 
 }
