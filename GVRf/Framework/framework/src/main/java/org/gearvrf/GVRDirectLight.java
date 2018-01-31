@@ -82,6 +82,7 @@ public class GVRDirectLight extends GVRLightBase
     {
         super(ctx, uniformDesc, vertexDesc);
         setLightClass(getClass().getSimpleName());
+        setFloat("shadow_map_index", -1.0f);
         setAmbientIntensity(0.0f, 0.0f, 0.0f, 1.0f);
         setDiffuseIntensity(1.0f, 1.0f, 1.0f, 1.0f);
         setSpecularIntensity(1.0f, 1.0f, 1.0f, 1.0f);

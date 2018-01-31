@@ -621,6 +621,15 @@ public class GVRScene extends GVRHybridObject implements PrettyPrint, IScriptabl
         }
     };
 
+    void makeDepthShaders()
+    {
+        GVRContext ctx = getGVRContext();
+        GVRMaterial shadowMtl = GVRShadowMap.getShadowMaterial(ctx);
+        GVRShader depthShader = shadowMtl.getShaderType().getTemplate(ctx);
+        depthShader.bindShader(ctx, shadowMtl, "float3 a_position");
+        depthShader.bindShader(ctx, shadowMtl, "float3 a_position float4 a_bone_weights int4 a_bone_indices");
+    }
+
     private static int getCameraRigType(final GVRContext gvrContext) {
         int cameraRigType = -1;
         try {

@@ -506,7 +506,7 @@ public class GVRShaderTemplate extends GVRShader
 
                 updateDescriptors(material, meshDesc, uniformDescriptor, textureDescriptor, vertexDescriptor);
                 nativeShader = shaderManager.addShader(signature, uniformDescriptor.toString(),
-                                                       textureDescriptor.toString(), mVertexDescriptor,
+                                                       textureDescriptor.toString(), vertexDescriptor.toString(),
                                                        vertexShaderSource, fragmentShaderSource);
                 bindCalcMatrixMethod(shaderManager, nativeShader);
                 if (mWriteShadersToDisk)

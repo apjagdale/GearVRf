@@ -561,8 +561,13 @@ namespace gvr
 
             if (shader == nullptr)
             {
-                LOGE("Renderer::renderMesh cannot find depth shader %s", depthShaderName);
-                return;
+                rstate.scene->makeDepthShaders();
+                shader = rstate.shader_manager->findShader(depthShaderName);
+                if (shader == nullptr)
+                {
+                    LOGE("Renderer::renderMesh cannot find depth shader %s", depthShaderName);
+                    return;
+                }
             }
             if (curr_material->updateGPU(this,render_data) >= 0)
             {
