@@ -134,7 +134,7 @@ bool LightList::removeLight(Light* light)
     return true;
 }
 
-ShadowMap* LightList::updateLights(Renderer* renderer, Shader* shader)
+ShadowMap* LightList::updateLights(Renderer* renderer)
 {
     bool dirty = (mDirty & 2) != 0;
     bool updated = false;
@@ -174,22 +174,26 @@ ShadowMap* LightList::updateLights(Renderer* renderer, Shader* shader)
     {
         mLightBlock->updateGPU(renderer);
     }
-    mLightBlock->bindBuffer(shader, renderer);
     return shadowMap;
+}
+
+void LightList::useLights(Renderer* renderer, Shader* shader)
+{
+    mLightBlock->bindBuffer(shader, renderer);
 }
 
 void LightList::makeShadowMaps(Scene* scene, ShaderManager* shaderManager)
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
-    int texIndex = 0;
+    int layerIndex = 0;
 
     for (auto it = mLightList.begin(); it != mLightList.end(); ++it)
     {
         Light* l = (*it);
         if (l->enabled())
         {
-            l->makeShadowMap(scene, shaderManager, texIndex);
-            ++texIndex;
+            l->makeShadowMap(scene, shaderManager, layerIndex);
+            ++layerIndex;
         }
     }
 }

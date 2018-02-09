@@ -78,12 +78,6 @@ public:
     void clearLights();
 
     /*
-     * Executes a Java function which regenerates all the
-     * shaders which depend on light sources.
-     */
-    void bindShaders();
-
-    /*
      * Executes a Java function which generates the
      * depth shaders for shadow mapping.
      */
@@ -180,7 +174,7 @@ public:
     }
 
     JavaVM* getJavaVM() const { return javaVM_; }
-    
+
 
     /**
      * @return new local reference to the java object or nullptr if the object has been collected
@@ -211,7 +205,6 @@ private:
     static Scene* main_scene_;
     JavaVM* javaVM_;
     jobject javaObj_;
-    jmethodID bindShadersMethod_;
     jmethodID makeDepthShadersMethod_;
     SceneObject scene_root_;
     CameraRig* main_camera_rig_;

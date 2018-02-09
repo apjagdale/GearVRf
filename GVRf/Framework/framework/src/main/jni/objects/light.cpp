@@ -54,7 +54,7 @@ namespace gvr
         return nullptr;
     }
 
-    bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex)
+    bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int layerIndex)
     {
         ShadowMap* shadowMap = getShadowMap();
         float shadow_map_index = -1;
@@ -70,15 +70,15 @@ namespace gvr
             }
             return false;
         }
-        else if (shadow_map_index != texIndex)
+        else if (shadow_map_index != layerIndex)
         {
             #ifdef DEBUG_LIGHT
-                LOGD("LIGHT: %s shadow_map_index = %d", getLightClass(), texIndex);
+                LOGD("LIGHT: %s shadow_map_index = %d", getLightClass(), layerIndex);
             #endif
-            setFloat("shadow_map_index", (float) texIndex);
+            setFloat("shadow_map_index", (float) layerIndex);
         }
         Renderer* renderer = gRenderer->getInstance();
-        shadowMap->setLayerIndex(texIndex);
+        shadowMap->setLayerIndex(layerIndex);
         shadowMap->setMainScene(scene);
         shadowMap->cullFromCamera(scene, shadowMap->getCamera(),renderer, shader_manager);
         shadowMap->beginRendering(renderer);

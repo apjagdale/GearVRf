@@ -222,19 +222,20 @@ namespace gvr
         GL(glCullFace(GL_BACK));
         GL(glDisable(GL_POLYGON_OFFSET_FILL));
         Camera* camera = renderTarget->getCamera();
-        RenderState rstate = renderTarget->getRenderState();
+        RenderState& rstate = renderTarget->getRenderState();
         RenderData* post_effects = camera->post_effect_data();
         rstate.scene = scene;
         rstate.shader_manager = shader_manager;
         rstate.uniforms.u_view = camera->getViewMatrix();
         rstate.uniforms.u_proj = camera->getProjectionMatrix();
-
+        rstate.shadow_map = nullptr;
+        rstate.lightsChanged = false;
         std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
 
-        if (!rstate.shadow_map)
+        if (!rstate.is_shadow)
         {
             rstate.render_mask = camera->render_mask();
-            if(rstate.is_multiview)
+            if (rstate.is_multiview)
                 rstate.render_mask = RenderData::RenderMaskBit::Right | RenderData::RenderMaskBit::Left;
 
             rstate.uniforms.u_right = ((camera->render_mask() & RenderData::RenderMaskBit::Right) != 0) ? 1 : 0;
@@ -243,6 +244,8 @@ namespace gvr
             GL(glBlendEquation (GL_FUNC_ADD));
             GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
             GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
+            rstate.lightsChanged = scene->getLights().isDirty();
+            rstate.shadow_map = scene->getLights().updateLights(this);
         }
         if ((post_effects == NULL) ||
             (post_effect_render_texture_a == nullptr) ||
@@ -255,7 +258,7 @@ namespace gvr
                  ++it)
             {
                 RenderData* rdata = *it;
-                if (!rstate.shadow_map || rdata->cast_shadows())
+                if (!rstate.is_shadow || rdata->cast_shadows())
                 {
                     GL(renderRenderData(rstate, rdata));
                 }
@@ -279,7 +282,7 @@ namespace gvr
                  ++it)
             {
                 RenderData* rdata = *it;
-                if (!rstate.shadow_map || rdata->cast_shadows())
+                if (!rstate.is_shadow || rdata->cast_shadows())
                 {
                     GL(renderRenderData(rstate, rdata));
                 }
@@ -554,7 +557,7 @@ namespace gvr
          * If updateGPU returns -1, some textures are not ready
          * yet and we do not render this mesh.
          */
-        if (rstate.shadow_map && curr_material)
+        if (rstate.is_shadow && curr_material)
         {
             const char* depthShaderName = mesh->hasBones() ? "GVRDepthShader$a_bone_weights$a_bone_indices" : "GVRDepthShader";
             shader = rstate.shader_manager->findShader(depthShaderName);
@@ -643,7 +646,19 @@ namespace gvr
             }
             if (shader->useLights())
             {
-                updateLights(rstate, shader, texIndex);
+                rstate.scene->getLights().useLights(this, shader);
+                if (rstate.shadow_map)
+                {
+                    GLShader* glshader = static_cast<GLShader*>(shader);
+                    int loc = glGetUniformLocation(glshader->getProgramId(), "u_shadow_maps");
+                    if (loc >= 0)
+                    {
+#ifdef DEBUG_LIGHT
+                        LOGV("LIGHT: binding shadow map loc=%d texIndex = %d", loc, texIndex);
+#endif
+                        rstate.shadow_map->bindTexture(loc, texIndex);
+                    }
+                }
             }
             checkGLError("renderMesh:before render");
             rdata->render(shader, this);
@@ -667,24 +682,6 @@ namespace gvr
         return  false;
     }
 
-    void GLRenderer::updateLights(RenderState& rstate, Shader* shader, int texIndex)
-    {
-        ShadowMap* shadowMap = rstate.scene->getLights().updateLights(this, shader);
-
-        if (shadowMap)
-        {
-            GLShader* glshader = static_cast<GLShader*>(shader);
-            int loc = glGetUniformLocation(glshader->getProgramId(), "u_shadow_maps");
-            if (loc >= 0)
-            {
-#ifdef DEBUG_LIGHT
-                LOGV("LIGHT: binding shadow map loc=%d texIndex = %d", loc, texIndex);
-#endif
-                shadowMap->bindTexture(loc, texIndex);
-            }
-        }
-        checkGLError("GLRenderer::updateLights");
-    }
 
     void GLRenderer::updatePostEffectMesh(Mesh* copy_mesh)
     {

@@ -64,7 +64,7 @@ public:
 
     void makeShaderBlock(std::string& layout) const;
 
-    ShadowMap* updateLights(Renderer* renderer, Shader* shader);
+    ShadowMap* updateLights(Renderer* renderer);
 
     bool createLightBlock(Renderer* renderer);
 
@@ -74,6 +74,7 @@ public:
     }
 
     void makeShadowMaps(Scene* scene, ShaderManager* shaderManager);
+    void useLights(Renderer* renderer, Shader* shader);
 
 private:
     LightList(const LightList& lights) = delete;

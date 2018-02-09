@@ -56,6 +56,8 @@ class Image;
 class RenderPass;
 class Texture;
 class RenderTarget;
+class ShadowMap;
+
 extern uint8_t *oculusTexData;
 /*
  * These uniforms are commonly used in shaders.
@@ -83,12 +85,13 @@ struct RenderState {
     int                     viewportY;
     int                     viewportWidth;
     int                     viewportHeight;
-    bool                    invalidateShaders;
+    bool                    lightsChanged;
     Scene*                  scene;
     ShaderData*             material_override;
     ShaderUniformsPerObject uniforms;
     ShaderManager*          shader_manager;
-    bool                    shadow_map;
+    ShadowMap*              shadow_map;
+    bool                    is_shadow;
     bool                    is_multiview;
     Camera*                 camera;
     int                     sampleCount;

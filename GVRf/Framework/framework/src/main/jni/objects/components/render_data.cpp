@@ -135,8 +135,8 @@ void RenderData::bindShader(JNIEnv* env, jobject localSceneObject, bool isMultiv
     {
         LOGE("SHADER: RenderData::bindShader could not call bindShaderNative");
     }
-
-    if (nullptr != localJavaObject && nullptr != localSceneObject) {
+    else
+    {
         env->CallVoidMethod(localJavaObject, bindShaderMethod_, localSceneObject, isMultiview);
     }
 }
@@ -251,6 +251,7 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
         return -1;
     }
     dirty |= m->isDirty();
+    dirty |= (rstate.lightsChanged && light_enabled());
     for (int p = 0; p < pass_count(); ++p)
     {
         RenderPass* rpass = pass(p);
@@ -274,8 +275,11 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
         //@todo implementation details leaked; unify common JNI reqs of Scene and RenderData
         JNIEnv* env = nullptr;
         int rc = rstate.scene->get_java_env(&env);
-        bindShader(env, rstate.scene->getJavaObj(*env), rstate.is_multiview);
-        if (rc > 0) {
+        jobject jscene = rstate.scene->getJavaObj(*env);
+        bindShader(env, jscene, rstate.is_multiview);
+        env->DeleteLocalRef(jscene);
+        if (rc > 0)
+        {
             rstate.scene->detach_java_env();
         }
 

@@ -51,7 +51,8 @@ class Renderer;
     {
         GLRenderTarget::beginRendering(renderer);
         mRenderState.render_mask = 1;
-        mRenderState.shadow_map = true;
+        mRenderState.is_shadow = true;
+        mRenderState.shadow_map = nullptr;
         mRenderState.material_override = mShadowMaterial;
         LOGV("ShadowMap::beginRendering %s", mRenderState.material_override->getUniformDescriptor());
     }

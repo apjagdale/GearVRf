@@ -32,7 +32,6 @@ Scene::Scene() :
         HybridObject(),
         javaVM_(NULL),
         javaObj_(0),
-        bindShadersMethod_(0),
         makeDepthShadersMethod_(0),
         main_camera_rig_(),
         frustum_flag_(false),
@@ -62,11 +61,6 @@ void Scene::set_java(JavaVM* javaVM, jobject javaScene)
     {
         javaObj_ = env->NewWeakGlobalRef(javaScene);
         jclass sceneClass = env->GetObjectClass(javaScene);
-        bindShadersMethod_ = env->GetMethodID(sceneClass, "bindShadersNative", "()V");
-        if (bindShadersMethod_ == 0)
-        {
-            LOGE("Scene::set_java ERROR cannot find 'GVRScene.bindShadersNative()' Java method");
-        }
         makeDepthShadersMethod_ = env->GetMethodID(sceneClass, "makeDepthShaders", "()V");
         if (makeDepthShadersMethod_ == 0)
         {
@@ -95,27 +89,6 @@ int Scene::get_java_env(JNIEnv** envptr)
     return 0;
 }
 
-/**
- * Called when the shaders need to be generated on the Java side
- * (usually because a light is added or removed).
- */
-void Scene::bindShaders()
-{
-    if ((bindShadersMethod_ == NULL) || (javaObj_ == NULL))
-    {
-        LOGE("SHADER: Could not call GVRScene::bindShadersNative");
-    }
-    JNIEnv* env = NULL;
-    int rc = get_java_env(&env);
-    if (env && (rc >= 0))
-    {
-        env->CallVoidMethod(javaObj_, bindShadersMethod_, getJavaObj(*env));
-        if (rc > 0)
-        {
-            getJavaVM()->DetachCurrentThread();
-        }
-    }
-}
 
 /**
  * Called when the depth shaders for shadow mapping are required.
@@ -131,7 +104,9 @@ void Scene::makeDepthShaders()
     int rc = get_java_env(&env);
     if (env && (rc >= 0))
     {
-        env->CallVoidMethod(javaObj_, makeDepthShadersMethod_, getJavaObj(*env));
+        jobject jscene = getJavaObj(*env);
+        env->CallVoidMethod(javaObj_, makeDepthShadersMethod_, jscene);
+        env->DeleteLocalRef(jscene);
         if (rc > 0)
         {
             getJavaVM()->DetachCurrentThread();
