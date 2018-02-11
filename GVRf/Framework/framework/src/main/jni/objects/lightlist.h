@@ -31,8 +31,7 @@ namespace gvr {
 class LightList
 {
 public:
-    static const int DEFAULT_BLOCK_SIZE = 1024;
-    LightList() : mDirty(0), mLightBlock(NULL) { }
+    LightList() : mDirty(0), mLightBlock(NULL), mNumShadowMaps(0) { }
 
     virtual ~LightList();
 
@@ -87,6 +86,7 @@ private:
     std::vector<Light*> mLightList;
     std::map<std::string, int> mClassMap;
     UniformBlock* mLightBlock;
+    int mNumShadowMaps;
     int mDirty;
 };
 

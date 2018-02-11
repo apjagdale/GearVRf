@@ -186,15 +186,24 @@ void LightList::makeShadowMaps(Scene* scene, ShaderManager* shaderManager)
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
     int layerIndex = 0;
+    int numShadowMaps = 0;
 
     for (auto it = mLightList.begin(); it != mLightList.end(); ++it)
     {
         Light* l = (*it);
         if (l->enabled())
         {
-            l->makeShadowMap(scene, shaderManager, layerIndex);
-            ++layerIndex;
+            if (l->makeShadowMap(scene, shaderManager, layerIndex))
+            {
+                ++numShadowMaps;
+                ++layerIndex;
+            }
         }
+    }
+    if (mNumShadowMaps != numShadowMaps)
+    {
+        mDirty |= 4;
+        mNumShadowMaps = numShadowMaps;
     }
 }
 

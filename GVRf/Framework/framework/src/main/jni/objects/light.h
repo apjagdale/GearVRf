@@ -195,6 +195,7 @@ public:
     /**
      * Internal function called at the start of each frame
      * to update the shadow map.
+     * @returns true if shadow map in use, else false
      */
     bool makeShadowMap(Scene* scene, ShaderManager* shader_manager, int texIndex);
 

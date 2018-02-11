@@ -236,8 +236,10 @@ namespace gvr
         {
             rstate.render_mask = camera->render_mask();
             if (rstate.is_multiview)
-                rstate.render_mask = RenderData::RenderMaskBit::Right | RenderData::RenderMaskBit::Left;
-
+            {
+                rstate.render_mask = RenderData::RenderMaskBit::Right |
+                                     RenderData::RenderMaskBit::Left;
+            }
             rstate.uniforms.u_right = ((camera->render_mask() & RenderData::RenderMaskBit::Right) != 0) ? 1 : 0;
             rstate.material_override = NULL;
             GL(glEnable (GL_BLEND));
@@ -251,7 +253,6 @@ namespace gvr
             (post_effect_render_texture_a == nullptr) ||
             (post_effects->pass_count() == 0))
         {
-
             clearBuffers(*camera);
             for (auto it = render_data_vector->begin();
                  it != render_data_vector->end();
@@ -263,7 +264,6 @@ namespace gvr
                     GL(renderRenderData(rstate, rdata));
                 }
             }
-
         }
         else
         {
