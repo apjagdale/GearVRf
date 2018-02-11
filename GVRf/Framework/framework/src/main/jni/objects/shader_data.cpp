@@ -172,24 +172,28 @@ bool  ShaderData::getIntVec(const char* name, int* val, int n)
 bool  ShaderData::setVec2(const char* name, const glm::vec2& v)
 {
     std::lock_guard<std::mutex> lock(mLock);
+    makeDirty(MAT_DATA);
     return uniforms().setVec2(name, v);
 }
 
 bool  ShaderData::setVec3(const char* name, const glm::vec3& v)
 {
     std::lock_guard<std::mutex> lock(mLock);
+    makeDirty(MAT_DATA);
     return uniforms().setVec3(name, v);
 }
 
 bool  ShaderData::setVec4(const char* name, const glm::vec4& v)
 {
     std::lock_guard<std::mutex> lock(mLock);
+    makeDirty(MAT_DATA);
     return uniforms().setVec4(name, v);
 }
 
 bool  ShaderData::setMat4(const char* name, const glm::mat4& m)
 {
     std::lock_guard<std::mutex> lock(mLock);
+    makeDirty(MAT_DATA);
     return uniforms().setMat4(name, m);
 }
 

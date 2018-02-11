@@ -18,10 +18,13 @@
  * Holds scene objects. Can be used by engines.
  ***************************************************************************/
 
-#include <glslang/Include/Common.h>
 #include "engine/renderer/renderer.h"
 #include "objects/lightlist.h"
 #include "objects/scene.h"
+
+#define LIGHT_ADDED 1
+#define LIGHT_REMOVED 2
+#define SHADOW_CHANGED 4
 
 namespace gvr {
 
@@ -72,7 +75,7 @@ bool LightList::addLight(Light* light)
         light->setLightIndex(0);
         mClassMap[light->getLightClass()] = 1;
     }
-    mDirty |= 1;
+    mDirty |= LIGHT_ADDED;
 #ifdef DEBUG_LIGHT
     LOGD("LIGHT: %s added to scene", light->getLightClass());
 #endif
@@ -130,18 +133,18 @@ bool LightList::removeLight(Light* light)
 #ifdef DEBUG_LIGHT
     LOGD("LIGHT: %s removed from scene", light->getLightClass());
 #endif
-    mDirty |= 2;
+    mDirty |= LIGHT_REMOVED;
     return true;
 }
 
 ShadowMap* LightList::updateLights(Renderer* renderer)
 {
-    bool dirty = (mDirty & 2) != 0;
+    std::lock_guard < std::recursive_mutex > lock(mLock);
+    bool dirty = mDirty != 0;
     bool updated = false;
     ShadowMap* shadowMap = NULL;
-    std::lock_guard < std::recursive_mutex > lock(mLock);
 
-    if (mDirty & 1)
+    if (mDirty & LIGHT_ADDED)
     {
         createLightBlock(renderer);
     }
@@ -202,7 +205,7 @@ void LightList::makeShadowMaps(Scene* scene, ShaderManager* shaderManager)
     }
     if (mNumShadowMaps != numShadowMaps)
     {
-        mDirty |= 4;
+        mDirty |= SHADOW_CHANGED;
         mNumShadowMaps = numShadowMaps;
 #ifdef DEBUG_LIGHT
         LOGD("LIGHT: %d shadow maps", mNumShadowMaps);
@@ -247,7 +250,7 @@ void LightList::clear()
     std::lock_guard < std::recursive_mutex > lock(mLock);
     mClassMap.clear();
     mLightList.clear();
-    mDirty = 2;
+    mDirty = LIGHT_REMOVED;
 #ifdef DEBUG_LIGHT
     LOGD("LIGHT: clearing lights");
 #endif
@@ -255,6 +258,7 @@ void LightList::clear()
 
 void LightList::makeShaderBlock(std::string& layout) const
 {
+    std::lock_guard < std::recursive_mutex > lock(mLock);
     std::ostringstream stream;
     stream << "layout (std140) uniform Lights_ubo\n{" << std::endl;
     for (auto it = mClassMap.begin(); it != mClassMap.end(); ++it)
