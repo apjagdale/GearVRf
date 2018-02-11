@@ -29,7 +29,7 @@ LightList::~LightList()
 {
     if (mLightBlock)
     {
-        delete mLightBlock;
+        //delete mLightBlock;
         mLightBlock = nullptr;
     }
 #ifdef DEBUG_LIGHT
@@ -204,6 +204,9 @@ void LightList::makeShadowMaps(Scene* scene, ShaderManager* shaderManager)
     {
         mDirty |= 4;
         mNumShadowMaps = numShadowMaps;
+#ifdef DEBUG_LIGHT
+        LOGD("LIGHT: %d shadow maps", mNumShadowMaps);
+#endif
     }
 }
 
@@ -241,7 +244,7 @@ bool LightList::createLightBlock(Renderer* renderer)
  */
 void LightList::clear()
 {
-//    std::lock_guard < std::mutex > lock(mLock);
+    std::lock_guard < std::recursive_mutex > lock(mLock);
     mClassMap.clear();
     mLightList.clear();
     mDirty = 2;
