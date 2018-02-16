@@ -220,7 +220,7 @@ Java_org_gearvrf_NativeScene_getLightList(JNIEnv* env, jobject obj, jlong jscene
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     std::vector<Light*> lights;
     int nlights = scene->getLights().getLights(lights);
-    jclass elemClass = env->FindClass("org/gearvrf/GVRLightBase");
+    jclass elemClass = env->FindClass("org/gearvrf/GVRLight");
 
     jobjectArray jlights = env->NewObjectArray(nlights, elemClass, NULL);
     int i = 0;

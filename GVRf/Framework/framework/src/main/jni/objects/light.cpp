@@ -35,6 +35,25 @@ namespace gvr
         scene->removeLight(this);
     }
 
+    ShadowMap* Light::getShadowMap()
+    {
+        SceneObject* owner = owner_object();
+        ShadowMap* shadowMap = nullptr;
+
+        if (owner == nullptr)
+        {
+            return nullptr;
+        }
+        shadowMap = (ShadowMap*) owner->getComponent(RenderTarget::getComponentType());
+        if ((shadowMap != nullptr) &&
+            shadowMap->enabled() &&
+            (shadowMap->getCamera() != nullptr))
+        {
+            return shadowMap;
+        }
+        return nullptr;
+    }
+
     bool Light::makeShadowMap(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager, int layerIndex)
     {
         ShadowMap* shadowMap = getShadowMap();

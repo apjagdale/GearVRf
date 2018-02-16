@@ -196,7 +196,7 @@ void LightList::makeShadowMaps(Scene* scene, jobject jscene, ShaderManager* shad
         Light* l = (*it);
         if (l->enabled())
         {
-            if (l->makeShadowMap(scene, shaderManager, layerIndex))
+            if (l->makeShadowMap(scene, jscene, shaderManager, layerIndex))
             {
                 ++numShadowMaps;
                 ++layerIndex;
