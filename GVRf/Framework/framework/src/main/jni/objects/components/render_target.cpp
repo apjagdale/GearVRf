@@ -16,6 +16,8 @@
 #include "render_target.h"
 #include "component.inl"
 #include "objects/textures/render_texture.h"
+#include "objects/light.h" // for DEBUG_LIGHT
+
 namespace gvr {
 
 /**
@@ -35,7 +37,8 @@ RenderTarget::RenderTarget(RenderTexture* tex, bool is_multiview)
 : Component(RenderTarget::getComponentType()),mNextRenderTarget(nullptr),
   mRenderTexture(tex),mRenderDataVector(std::make_shared< std::vector<RenderData*>>())
 {
-    mRenderState.shadow_map = false;
+    mRenderState.is_shadow = false;
+    mRenderState.shadow_map = nullptr;
     mRenderState.material_override = NULL;
     mRenderState.is_multiview = is_multiview;
     if (nullptr != mRenderTexture) {
@@ -59,7 +62,8 @@ void RenderTarget::endRendering(Renderer *renderer) {
 }
 RenderTarget::RenderTarget(Scene* scene)
 : Component(RenderTarget::getComponentType()), mNextRenderTarget(nullptr), mRenderTexture(nullptr),mRenderDataVector(std::make_shared< std::vector<RenderData*>>()){
-    mRenderState.shadow_map = false;
+    mRenderState.is_shadow = false;
+    mRenderState.shadow_map = nullptr;
     mRenderState.material_override = NULL;
     mRenderState.is_multiview = false;
     mRenderState.scene = scene;
@@ -69,7 +73,8 @@ RenderTarget::RenderTarget(RenderTexture* tex, const RenderTarget* source)
         : Component(RenderTarget::getComponentType()),mNextRenderTarget(nullptr),
           mRenderTexture(tex), mRenderDataVector(source->mRenderDataVector)
 {
-    mRenderState.shadow_map = false;
+    mRenderState.is_shadow = false;
+    mRenderState.shadow_map = nullptr;
     mRenderState.material_override = NULL;
     mRenderState.is_multiview = false;
 }
@@ -83,7 +88,8 @@ RenderTarget::RenderTarget()
     mRenderTexture(nullptr),mNextRenderTarget(nullptr), mRenderDataVector(std::make_shared< std::vector<RenderData*>>())
 {
     mRenderState.is_multiview = false;
-    mRenderState.shadow_map = false;
+    mRenderState.shadow_map = nullptr;
+    mRenderState.is_shadow = false;
     mRenderState.material_override = NULL;
 }
 

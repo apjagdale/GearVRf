@@ -805,7 +805,6 @@ public final class GVRRenderData extends GVRComponent implements IRenderable, Pr
             sb.append("Mesh: ");
             mMesh.prettyPrint(sb, indent);
         }
-
         sb.append(Log.getSpaces(indent));
         sb.append("Light enabled: " + isLightEnabled);
         sb.append(System.lineSeparator());

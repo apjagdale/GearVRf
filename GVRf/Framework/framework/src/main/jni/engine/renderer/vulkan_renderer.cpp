@@ -228,7 +228,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
     std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
     int postEffectCount = 0;
 
-    if (!rstate.shadow_map) {
+    if (!rstate.is_shadow) {
         rstate.render_mask = camera->render_mask();
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
         rstate.material_override = NULL;

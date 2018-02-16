@@ -113,8 +113,8 @@ public:
     virtual RenderTexture* createRenderTexture(int width, int height, int sample_count,
                                                int jcolor_format, int jdepth_format, bool resolve_depth,
                                                const TextureParameters* texture_parameters, int number_views, bool monoscopic);
-    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int depthformat) { }
-    virtual RenderTexture* createRenderTexture(const RenderTextureInfo*);
+    virtual RenderTexture* createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format) { }
+    virtual RenderTexture* createRenderTexture(const RenderTextureInfo&);
     virtual VertexBuffer* createVertexBuffer(const char* desc, int vcount);
     virtual IndexBuffer* createIndexBuffer(int bytesPerIndex, int icount);
     virtual Shader* createShader(int id, const char* signature,
@@ -122,7 +122,7 @@ public:
                                  const char* vertexDescriptor, const char* vertexShader,
                                  const char* fragmentShader);
     virtual void renderRenderTarget(Scene*, jobject javaSceneObject, RenderTarget* renderTarget, ShaderManager* shader_manager,
-                                    RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b);
+    virtual Light* createLight(const char* uniformDescriptor, const char* textureDescriptor) { return NULL; }
     virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
     virtual void updatePostEffectMesh(Mesh*);
 private:
