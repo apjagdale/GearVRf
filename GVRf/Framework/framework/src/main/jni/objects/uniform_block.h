@@ -322,18 +322,18 @@ namespace gvr
          * of all the uniforms in the block.
          * @return string describing the uniform block.
          */
-        std::string toString();
+        std::string toString() const;
 
         /*
          * Dumps the entire uniform block as raw floats
          */
-        std::string dumpFloats();
+        std::string dumpFloats() const;
 
         /**
          * Get a pointer to the entire uniform data area.
          * @returns -> uniform block data if it exists, else NULL
          */
-        const void *getData()
+        const void *getData() const
         {
             return mUniformData;
         }
@@ -345,7 +345,7 @@ namespace gvr
 
         virtual std::string makeShaderLayout();
         const char* getDataAt(int elemIndex);
-        bool setAt(int elemIndex, UniformBlock& srcBlock);
+        bool setAt(int elemIndex, const UniformBlock& srcBlock);
         bool setRange(int elemIndex, const void* srcData, int numElems);
 
     protected:

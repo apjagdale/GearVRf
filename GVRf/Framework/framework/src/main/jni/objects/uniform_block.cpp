@@ -276,7 +276,7 @@ namespace gvr
         return stream.str();
     }
 
-    std::string UniformBlock::dumpFloats()
+    std::string UniformBlock::dumpFloats() const
     {
         std::ostringstream os;
         const float* ptr = (const float*) mUniformData;
@@ -297,7 +297,7 @@ namespace gvr
         return os.str();
     }
 
-    std::string UniformBlock::toString()
+    std::string UniformBlock::toString() const
     {
         std::ostringstream os;
         for (int i = 0; i < mNumElems; ++i)
@@ -309,7 +309,7 @@ namespace gvr
                 {
                     char* d = ((char*) mUniformData) + e.Offset + (i * mElemSize);
                     os << " ";
-                    if (e.Name[0] == 'i')
+                    if (e.IsInt)
                     {
                         int* ip = ((int*) d) + j;
                         os << *ip;
@@ -382,7 +382,7 @@ namespace gvr
         return false;
     }
 
-    bool UniformBlock::setAt(int elemIndex, UniformBlock& srcBlock)
+    bool UniformBlock::setAt(int elemIndex, const UniformBlock& srcBlock)
     {
         int nelems = srcBlock.getTotalSize() / mElemSize;
         if ((elemIndex >= 0) &&

@@ -83,8 +83,7 @@ private:
 
 private:
     mutable std::recursive_mutex mLock;
-    std::vector<Light*> mLightList;
-    std::map<std::string, int> mClassMap;
+    std::map<std::string, std::vector<Light*>> mClassMap;
     UniformBlock* mLightBlock;
     int mNumShadowMaps;
     int mDirty;

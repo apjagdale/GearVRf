@@ -146,7 +146,10 @@ namespace gvr {
          */
         bool isDirty() const { return mIsDirty; }
         virtual void markDirty() { mIsDirty = true; }
+
         virtual std::string makeShaderType(const char* type, int byteSize);
+
+        std::string layoutString() const;
 
         /**
          * Calculate the byte size of the given type.

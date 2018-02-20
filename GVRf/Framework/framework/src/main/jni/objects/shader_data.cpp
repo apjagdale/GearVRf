@@ -157,13 +157,13 @@ bool  ShaderData::setFloatVec(const char* name, const float* val, int n)
     return uniforms().setFloatVec(name, val, n);
 }
 
-bool  ShaderData::getFloatVec(const char* name, float* val, int n)
+bool  ShaderData::getFloatVec(const char* name, float* val, int n) const
 {
     std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getFloatVec(name, val, n);
 }
 
-bool  ShaderData::getIntVec(const char* name, int* val, int n)
+bool  ShaderData::getIntVec(const char* name, int* val, int n) const
 {
     std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getIntVec(name, val, n);
@@ -197,7 +197,7 @@ bool  ShaderData::setMat4(const char* name, const glm::mat4& m)
     return uniforms().setMat4(name, m);
 }
 
-bool  ShaderData::getMat4(const char* name, glm::mat4& m)
+bool  ShaderData::getMat4(const char* name, glm::mat4& m) const
 {
     std::lock_guard<std::mutex> lock(mLock);
     return uniforms().getMat4(name, m);
@@ -210,7 +210,7 @@ void ShaderData::makeDirty(DIRTY_BITS bits)
     mDirty = static_cast<DIRTY_BITS>(temp);
 }
 
-bool ShaderData::isDirty(DIRTY_BITS bits)
+bool ShaderData::isDirty(DIRTY_BITS bits) const
 {
     return (bits & mDirty) != 0;
 }

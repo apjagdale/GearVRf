@@ -40,11 +40,19 @@ LightList::~LightList()
 #endif
 }
 
-int LightList::getLights(std::vector<Light*>& lights) const
+int LightList::getLights(std::vector<Light*>& lightList) const
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
-    lights.assign(mLightList.begin(), mLightList.end());
-    return mLightList.size();
+    for (auto itc = mClassMap.begin(); itc != mClassMap.end(); ++itc)
+    {
+        const std::vector<Light*>& lights = itc->second;
+        for (auto itl = lights.begin(); itl != lights.end(); ++itl)
+        {
+            Light* light = *itl;
+            lightList.push_back(*itl);
+        }
+    }
+    return lightList.size();
 }
 
 /*
@@ -54,26 +62,22 @@ int LightList::getLights(std::vector<Light*>& lights) const
 bool LightList::addLight(Light* light)
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
-    auto it = std::find(mLightList.begin(), mLightList.end(), light);
 
-    if (it != mLightList.end())
-        return false;
-    if (mLightList.size() >= Scene::MAX_LIGHTS)
-    {
-        LOGE("SHADER: light not added, more than %d lights not allowed", Scene::MAX_LIGHTS);
-        return false;
-    }
-    mLightList.push_back(light);
     auto it2 = mClassMap.find(light->getLightClass());
     if (it2 != mClassMap.end())
     {
-        light->setLightIndex(it2->second);
-        ++(it2->second);
+        std::vector<Light*>& lights = it2->second;
+        light->setLightIndex(lights.size());
+        lights.push_back(light);
     }
     else
     {
+        std::pair<std::string, std::vector<Light*>> pair;
+
         light->setLightIndex(0);
-        mClassMap[light->getLightClass()] = 1;
+        pair.first = light->getLightClass();
+        pair.second.push_back(light);
+        mClassMap.insert(pair);
     }
     mDirty |= LIGHT_ADDED;
 #ifdef DEBUG_LIGHT
@@ -89,27 +93,28 @@ bool LightList::addLight(Light* light)
 bool LightList::removeLight(Light* light)
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
-    auto it2 = std::find(mLightList.begin(), mLightList.end(), light);
-    if (it2 == mLightList.end())
-    {
-        return false;
-    }
-    mLightList.erase(it2);
+
     /*
-     * Decrement the number of lights of this type in
-     * the light class map.
+     * Find the list of lights of this type in the light class map.
      */
     auto it3 = mClassMap.find(light->getLightClass());
     if (it3 != mClassMap.end())
     {
+        std::vector<Light*>& lights = it3->second;
+        auto it2 = std::find(lights.begin(), lights.end(), light);
+        if (it2 == lights.end())
+        {
+            return false;
+        }
         light->setLightIndex(-1);
         /*
          * If all lights in the class are gone,
          * remove the class from the map.
          */
-        if (--(it3->second) <= 0)
+        if (lights.size() == 0)
         {
             mClassMap.erase(it3);
+            return true;
         }
         /*
          * Removed a light, recompute light indices for all
@@ -118,15 +123,13 @@ bool LightList::removeLight(Light* light)
         else
         {
             int index = 0;
-            for (auto it = mLightList.begin();
-                 it != mLightList.end();
+            lights.erase(it2);
+            for (auto it = lights.begin();
+                 it != lights.end();
                  ++it)
             {
                 Light* l = *it;
-                if ((l != NULL) && (light->getLightClass() == l->getLightClass()))
-                {
-                    l->setLightIndex(index++);
-                }
+                l->setLightIndex(index++);
             }
         }
     }
@@ -148,13 +151,14 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
     {
         createLightBlock(renderer);
     }
-    for (auto it = mLightList.begin();
-        it != mLightList.end();
-        ++it)
+    for (auto it1 = mClassMap.begin();
+        it1 != mClassMap.end();
+        ++it1)
     {
-        Light* light = *it;
-        if (light != NULL)
+        const std::vector<Light*>& lights = it1->second;
+        for (auto it2 = lights.begin(); it2 != lights.end(); ++it2)
         {
+            Light* light = *it2;
             ShadowMap* sm = light->getShadowMap();
             if (sm && sm->enabled())
             {
@@ -163,11 +167,15 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
             if (dirty || light->uniforms().isDirty(ShaderData::MAT_DATA))
             {
                 int offset = light->getBlockOffset();
-                mLightBlock->setAt(offset, light->uniforms().uniforms());
+                const UniformBlock& uniforms = light->uniforms().uniforms();
+                mLightBlock->setAt(offset, uniforms);
                 updated = true;
                 light->uniforms().clearDirty();
 #ifdef DEBUG_LIGHT
-                LOGD("LIGHT: %s updated offset = %d", light->getLightClass(), offset);
+                std::string s = uniforms.dumpFloats();
+                LOGD("LIGHT: %s updated offset = %d\n%s", light->getLightClass(), offset, s.c_str());
+                s = uniforms.toString();
+                LOGD("LIGHT:\n%s", s.c_str());
 #endif
             }
         }
@@ -176,6 +184,10 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
     if (updated)
     {
         mLightBlock->updateGPU(renderer);
+#ifdef DEBUG_LIGHT
+        std::string s = mLightBlock->dumpFloats();
+        LOGD("LIGHT: light block updated\n%s", s.c_str());
+#endif
     }
     return shadowMap;
 }
@@ -191,15 +203,19 @@ void LightList::makeShadowMaps(Scene* scene, ShaderManager* shaderManager)
     int layerIndex = 0;
     int numShadowMaps = 0;
 
-    for (auto it = mLightList.begin(); it != mLightList.end(); ++it)
+    for (auto it2 = mClassMap.begin(); it2 != mClassMap.end(); ++it2)
     {
-        Light* l = (*it);
-        if (l->enabled())
+        const std::vector<Light*>& lights = it2->second;
+        for (auto it = lights.begin(); it != lights.end(); ++it)
         {
-            if (l->makeShadowMap(scene, shaderManager, layerIndex))
+            Light *l = (*it);
+            if (l->enabled())
             {
-                ++numShadowMaps;
-                ++layerIndex;
+                if (l->makeShadowMap(scene, shaderManager, layerIndex))
+                {
+                    ++numShadowMaps;
+                    ++layerIndex;
+                }
             }
         }
     }
@@ -217,13 +233,12 @@ bool LightList::createLightBlock(Renderer* renderer)
 {
     int numFloats = 0;
 
-    for (auto it = mLightList.begin();
-         it != mLightList.end();
-         ++it)
+    for (auto it = mClassMap.begin(); it != mClassMap.end(); ++it)
     {
-        Light* light = *it;
-        if (light != NULL)
+        const std::vector<Light*>& lights = it->second;
+        for (auto it2 = lights.begin(); it2 != lights.end(); ++it2)
         {
+            Light *light = (*it2);
             light->setBlockOffset(numFloats);
             numFloats += light->getTotalSize() / sizeof(float);
         }
@@ -249,7 +264,6 @@ void LightList::clear()
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
     mClassMap.clear();
-    mLightList.clear();
     mDirty = LIGHT_REMOVED;
 #ifdef DEBUG_LIGHT
     LOGD("LIGHT: clearing lights");
@@ -263,7 +277,8 @@ void LightList::makeShaderBlock(std::string& layout) const
     stream << "layout (std140) uniform Lights_ubo\n{" << std::endl;
     for (auto it = mClassMap.begin(); it != mClassMap.end(); ++it)
     {
-        stream << 'U' << it->first << " " << it->first << "s[" << it->second << "];" << std::endl;
+        const std::vector<Light*>& lights = it->second;
+        stream << 'U' << it->first << " " << it->first << "s[" << lights.size() << "];" << std::endl;
     }
     stream << "};" << std::endl;
     layout = stream.str();
