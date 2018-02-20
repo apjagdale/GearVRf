@@ -81,7 +81,7 @@ public:
      * Executes a Java function which generates the
      * depth shaders for shadow mapping.
      */
-    void makeDepthShaders();
+    void makeDepthShaders(jobject jscene);
 
     void resetStats() {
         gRenderer = Renderer::getInstance();
@@ -175,12 +175,6 @@ public:
 
     JavaVM* getJavaVM() const { return javaVM_; }
 
-
-    /**
-     * @return new local reference to the java object or nullptr if the object has been collected
-     */
-    jobject getJavaObj(JNIEnv& env) const { return env.NewLocalRef(javaObj_); }
-
     int get_java_env(JNIEnv** envptr);
 
     static Scene* main_scene() {
@@ -204,7 +198,6 @@ private:
 private:
     static Scene* main_scene_;
     JavaVM* javaVM_;
-    jobject javaObj_;
     jmethodID makeDepthShadersMethod_;
     SceneObject scene_root_;
     CameraRig* main_camera_rig_;

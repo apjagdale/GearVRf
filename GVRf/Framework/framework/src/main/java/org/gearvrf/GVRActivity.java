@@ -262,12 +262,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                 return;
             }
 
-            boolean isMonoscopicMode = mAppSettings.getMonoscopicModeParams().isMonoscopicMode();
-            if (!isMonoscopicMode) {
-                mViewManager = mDelegate.makeViewManager();
-            } else {
-                mViewManager = mDelegate.makeMonoscopicViewManager();
-            }
+            mViewManager = mDelegate.makeViewManager();
             mDelegate.setViewManager(mViewManager);
 
             if (mConfigurationManager.isDockListenerRequired()) {
@@ -283,18 +278,16 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
                     "onSetMain", gvrMain);
 
             final GVRConfigurationManager localConfigurationManager = mConfigurationManager;
-            if (!isMonoscopicMode) {
-                if (null != mDockEventReceiver && localConfigurationManager.isDockListenerRequired()) {
-                    getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
-                        @Override
-                        public void onDrawFrame(float frameTime) {
-                            if (localConfigurationManager.isHmtConnected()) {
-                                handleOnDock();
-                                getGVRContext().unregisterDrawFrameListener(this);
-                            }
+            if (null != mDockEventReceiver && localConfigurationManager.isDockListenerRequired()) {
+                getGVRContext().registerDrawFrameListener(new GVRDrawFrameListener() {
+                    @Override
+                    public void onDrawFrame(float frameTime) {
+                        if (localConfigurationManager.isHmtConnected()) {
+                            handleOnDock();
+                            getGVRContext().unregisterDrawFrameListener(this);
                         }
-                    });
-                }
+                    }
+                });
             }
         } else {
             throw new IllegalArgumentException(
@@ -547,8 +540,7 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
     /**
      * It is a convenient function to add a {@link GVRView} to Android hierarchy
-     * view. UI thread will call {@link GVRView#draw(android.graphics.Canvas)}
-     * to refresh the view when necessary.
+     * view. UI thread will refresh the view when necessary.
      *
      * @param view Is a {@link GVRView} that draw itself into some
      *            {@link GVRViewSceneObject}.
@@ -696,7 +688,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
         VrAppSettings makeVrAppSettings();
         IActivityNative getActivityNative();
         GVRViewManager makeViewManager();
-        GVRViewManager makeMonoscopicViewManager();
         GVRCameraRig makeCameraRig(GVRContext context);
         GVRConfigurationManager makeConfigurationManager(GVRActivity activity);
         void parseXmlSettings(AssetManager assetManager, String dataFilename);
@@ -773,11 +764,6 @@ public class GVRActivity extends Activity implements IEventReceiver, IScriptable
 
         @Override
         public GVRViewManager makeViewManager() {
-            return null;
-        }
-
-        @Override
-        public GVRViewManager makeMonoscopicViewManager() {
             return null;
         }
 

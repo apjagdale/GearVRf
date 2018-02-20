@@ -31,7 +31,6 @@ Scene* Scene::main_scene_ = NULL;
 Scene::Scene() :
         HybridObject(),
         javaVM_(NULL),
-        javaObj_(0),
         makeDepthShadersMethod_(0),
         main_camera_rig_(),
         frustum_flag_(false),
@@ -42,15 +41,6 @@ Scene::Scene() :
 { }
 
 Scene::~Scene() {
-    if (javaVM_ && javaObj_)
-    {
-        JNIEnv* env;
-        //@todo strictly speaking if you attach you must detach
-        jint rs = javaVM_->AttachCurrentThread(&env, NULL);
-        if (rs == JNI_OK) {
-            env->DeleteWeakGlobalRef(javaObj_);
-        }
-    }
 }
 
 void Scene::set_java(JavaVM* javaVM, jobject javaScene)
@@ -59,7 +49,6 @@ void Scene::set_java(JavaVM* javaVM, jobject javaScene)
     javaVM_ = javaVM;
     if (env)
     {
-        javaObj_ = env->NewWeakGlobalRef(javaScene);
         jclass sceneClass = env->GetObjectClass(javaScene);
         makeDepthShadersMethod_ = env->GetMethodID(sceneClass, "makeDepthShaders", "()V");
         if (makeDepthShadersMethod_ == 0)
@@ -94,9 +83,9 @@ int Scene::get_java_env(JNIEnv** envptr)
  * Called when the depth shaders for shadow mapping are required.
  * Typically it will only be called once per scene.
  */
-void Scene::makeDepthShaders()
+void Scene::makeDepthShaders(jobject jscene)
 {
-    if ((makeDepthShadersMethod_ == NULL) || (javaObj_ == NULL))
+    if (makeDepthShadersMethod_ == NULL)
     {
         LOGE("SHADER: Could not call GVRScene::makeDepthShadersMethod_");
     }
@@ -104,9 +93,7 @@ void Scene::makeDepthShaders()
     int rc = get_java_env(&env);
     if (env && (rc >= 0))
     {
-        jobject jscene = getJavaObj(*env);
-        env->CallVoidMethod(javaObj_, makeDepthShadersMethod_, jscene);
-        env->DeleteLocalRef(jscene);
+        env->CallVoidMethod(jscene, makeDepthShadersMethod_);
         if (rc > 0)
         {
             getJavaVM()->DetachCurrentThread();

@@ -198,7 +198,7 @@ void LightList::useLights(Renderer* renderer, Shader* shader)
     mLightBlock->bindBuffer(shader, renderer);
 }
 
-void LightList::makeShadowMaps(Scene* scene, ShaderManager* shaderManager)
+void LightList::makeShadowMaps(Scene* scene, jobject jscene, ShaderManager* shaderManager)
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
     int layerIndex = 0;
@@ -212,7 +212,7 @@ void LightList::makeShadowMaps(Scene* scene, ShaderManager* shaderManager)
             Light *l = (*it);
             if (l->enabled())
             {
-                if (l->makeShadowMap(scene, shaderManager, layerIndex))
+                if (l->makeShadowMap(scene, jscene, shaderManager, layerIndex))
                 {
                     ++numShadowMaps;
                     ++layerIndex;

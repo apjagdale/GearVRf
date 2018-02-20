@@ -206,7 +206,7 @@ namespace gvr
     }
 
 
-    void GLRenderer::renderRenderTarget(Scene* scene, RenderTarget* renderTarget,
+    void GLRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, RenderTarget* renderTarget,
                             ShaderManager* shader_manager,
                             RenderTexture* post_effect_render_texture_a,
                             RenderTexture* post_effect_render_texture_b)
@@ -222,8 +222,10 @@ namespace gvr
         GL(glCullFace(GL_BACK));
         GL(glDisable(GL_POLYGON_OFFSET_FILL));
         Camera* camera = renderTarget->getCamera();
-        RenderState& rstate = renderTarget->getRenderState();
         RenderData* post_effects = camera->post_effect_data();
+        RenderState& rstate = renderTarget->getRenderState();
+        //@todo makes it clear this is a hack
+        rstate.javaSceneObject = javaSceneObject;
         rstate.scene = scene;
         rstate.shader_manager = shader_manager;
         rstate.uniforms.u_view = camera->getViewMatrix();
@@ -419,21 +421,20 @@ namespace gvr
         }
     }
 
-
     /**
      * Generate shadow maps for all the lights that cast shadows.
      * The scene is rendered from the viewpoint of the light using a
      * special depth shader (GVRDepthShader) to create the shadow map.
      * @see Renderer::renderShadowMap Light::makeShadowMap
      */
-    void GLRenderer::makeShadowMaps(Scene* scene, ShaderManager* shader_manager)
+    void GLRenderer::makeShadowMaps(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager)
     {
         checkGLError("makeShadowMaps");
         GLint drawFB, readFB;
 
         glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFB);
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readFB);
-        scene->getLights().makeShadowMaps(scene, shader_manager);
+        scene->getLights().makeShadowMaps(scene, javaSceneObject, shader_manager);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, readFB);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFB);
     }
@@ -564,7 +565,7 @@ namespace gvr
 
             if (shader == nullptr)
             {
-                rstate.scene->makeDepthShaders();
+                rstate.scene->makeDepthShaders(rstate.javaSceneObject);
                 shader = rstate.shader_manager->findShader(depthShaderName);
                 if (shader == nullptr)
                 {

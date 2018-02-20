@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.gearvrf.shaders.GVRPhongShader;
 import org.gearvrf.utility.Log;
 
 /**
@@ -54,12 +55,12 @@ import org.gearvrf.utility.Log;
  * (e.g. "sampler2D u_texture; samplerCube u_cubemap")
  * <p>
  * Multiple lights are supported by specifying light shader source code segments
- * in GVRLightBase. You can define different light implementations with
+ * in GVRLight. You can define different light implementations with
  * their own data structures and these will be included in the generated
  * fragment shader.
  * 
  * @see GVRPhongShader
- * @see GVRLightBase
+ * @see GVRLight
  */
 public class GVRShaderTemplate extends GVRShader
 {
@@ -157,14 +158,14 @@ public class GVRShaderTemplate extends GVRShader
      *            list of lights used with this shader
      * @return light string signature for shader
      */
-    protected String generateLightSignature(GVRLightBase[] lightlist)
+    protected String generateLightSignature(GVRLight[] lightlist)
     {
         String sig = "";
-        HashMap<Class<? extends GVRLightBase>, Integer> lightCount = new HashMap<Class<? extends GVRLightBase>, Integer>();
+        HashMap<Class<? extends GVRLight>, Integer> lightCount = new HashMap<Class<? extends GVRLight>, Integer>();
 
         if (lightlist != null)
         {
-            for (GVRLightBase light : lightlist)
+            for (GVRLight light : lightlist)
             {
                 Integer n = lightCount.get(light.getClass());
 
@@ -173,7 +174,7 @@ public class GVRShaderTemplate extends GVRShader
                 else
                     lightCount.put(light.getClass(), ++n);
             }
-            for (Map.Entry<Class<? extends GVRLightBase>, Integer> entry : lightCount.entrySet())
+            for (Map.Entry<Class<? extends GVRLight>, Integer> entry : lightCount.entrySet())
                 sig += "$" + entry.getKey().getSimpleName() + entry.getValue().toString();
         }
         return sig.trim();
@@ -425,7 +426,7 @@ public class GVRShaderTemplate extends GVRShader
     {
         GVRMesh mesh = rdata.getMesh();
         GVRShaderData material = rdata.getMaterial();
-        GVRLightBase[] lightlist = (scene != null) ? scene.getLightList() : null;
+        GVRLight[] lightlist = (scene != null) ? scene.getLightList() : null;
         HashMap<String, Integer> variantDefines = getRenderDefines(rdata, scene);
 
         if(isMultiview)
@@ -436,7 +437,7 @@ public class GVRShaderTemplate extends GVRShader
         String meshDesc = mesh.getVertexBuffer().getDescriptor();
         String signature = generateVariantDefines(variantDefines, meshDesc, material);
         signature += generateLightSignature(lightlist);
-        GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
+        GVRShaderManager shaderManager = context.getShaderManager();
         int nativeShader = shaderManager.getShader(signature);
 
         synchronized (shaderManager)
@@ -489,7 +490,7 @@ public class GVRShaderTemplate extends GVRShader
     {
         HashMap<String, Integer> variantDefines = new HashMap<String, Integer>();
         String signature = generateVariantDefines(variantDefines, meshDesc, material);
-        GVRMaterialShaderManager shaderManager = context.getMaterialShaderManager();
+        GVRShaderManager shaderManager = context.getShaderManager();
         int nativeShader = shaderManager.getShader(signature);
 
         synchronized (shaderManager)
@@ -532,12 +533,12 @@ public class GVRShaderTemplate extends GVRShader
      * @param scene scene being rendered
      * @return list of symbols to be defined (value 1) or undefined (value 0) in the shader
      * 
-     * @see GVRLightBase#setCastShadow(boolean) setCastShadow
+     * @see GVRLight#setCastShadow(boolean) setCastShadow
      */
     public HashMap<String, Integer> getRenderDefines(IRenderable renderable, GVRScene scene) {
         HashMap<String, Integer> defines = new HashMap<String, Integer>();
         int castShadow = 0;
-        GVRLightBase[] lights = (scene != null) ? scene.getLightList() : null;
+        GVRLight[] lights = (scene != null) ? scene.getLightList() : null;
 
         if (renderable.getGVRContext().getActivity().getAppSettings().isMultiviewSet())
         {
@@ -549,7 +550,7 @@ public class GVRShaderTemplate extends GVRShader
             return defines;
         }
         defines.put("LIGHTSOURCES", 1);
-        for (GVRLightBase light : lights)
+        for (GVRLight light : lights)
             if (light.getCastShadow())
                 castShadow = 1;
         defines.put("SHADOWS", castShadow);
@@ -578,7 +579,7 @@ public class GVRShaderTemplate extends GVRShader
                                + "    vec4 c;\n"
                                + "    Radiance r;\n";
         String lightDefs = "\n";
-        String lightSources = GVRLightBase.makeShaderBlock(scene);
+        String lightSources = GVRLight.makeShaderBlock(scene);
         String addLightFunc = "            c = AddLight(s, r);\n";
 
         addLightFunc += "            color.xyz += c.xyz;\n";
@@ -649,7 +650,7 @@ public class GVRShaderTemplate extends GVRShader
 
             if (lightSources.equals(""))
             {
-                lightSources = GVRLightBase.makeShaderBlock(scene);
+                lightSources = GVRLight.makeShaderBlock(scene);
             }
             lightDefs += "\n" + lclass.FragmentUniforms + "\n";
             if (lightShader == null)
@@ -697,7 +698,7 @@ public class GVRShaderTemplate extends GVRShader
         return lightShader;
     }
 
-    private Map<String, LightClass> scanLights(GVRLightBase[] lightlist)
+    private Map<String, LightClass> scanLights(GVRLight[] lightlist)
     {
         Map<String, LightClass> lightClasses = new HashMap<String, LightClass>();
 
@@ -705,7 +706,7 @@ public class GVRShaderTemplate extends GVRShader
         {
             return lightClasses;
         }
-        for (GVRLightBase light : lightlist)
+        for (GVRLight light : lightlist)
         {
             String lightShader = light.getFragmentShaderSource();
 
@@ -759,7 +760,7 @@ public class GVRShaderTemplate extends GVRShader
         return structDesc;
     }
 
-    private String makeUniformStruct(GVRLightBase light)
+    private String makeUniformStruct(GVRLight light)
     {
         String structDesc = "struct U" + light.getLightClass() + "\n{\n";
         structDesc += light.makeShaderLayout();
@@ -767,7 +768,7 @@ public class GVRShaderTemplate extends GVRShader
         return structDesc;
     }
 
-    private String makeVertexOutputsLoop(GVRLightBase light)
+    private String makeVertexOutputsLoop(GVRLight light)
     {
         String lightClassName = light.getLightClass();
         Pattern pattern = Pattern.compile("[ ]*([a-zA-Z0-9_]+)[ ]+([A-Za-z0-9_]+)[,;:]*");

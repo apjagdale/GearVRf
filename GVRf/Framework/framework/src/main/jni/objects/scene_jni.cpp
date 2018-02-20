@@ -27,7 +27,7 @@ extern "C" {
     Java_org_gearvrf_NativeScene_ctor(JNIEnv * env, jobject obj);
 
     JNIEXPORT void JNICALL
-    Java_org_gearvrf_NativeScene_setJava(JNIEnv* env, jlong nativeScene, jobject javaScene);
+    Java_org_gearvrf_NativeScene_setJava(JNIEnv *env, jclass, jlong nativeScene, jobject javaScene);
 
     JNIEXPORT void JNICALL
     Java_org_gearvrf_NativeScene_addSceneObject(JNIEnv * env,
@@ -102,7 +102,7 @@ Java_org_gearvrf_NativeScene_ctor(JNIEnv* env, jobject obj) {
 }
 
 JNIEXPORT void JNICALL
-Java_org_gearvrf_NativeScene_setJava(JNIEnv* env, jlong nativeScene, jobject javaScene) {
+Java_org_gearvrf_NativeScene_setJava(JNIEnv *env, jclass, jlong nativeScene, jobject javaScene) {
     JavaVM* jvm;
     env->GetJavaVM(&jvm);
     Scene* scene = reinterpret_cast<Scene*>(nativeScene);
@@ -220,7 +220,7 @@ Java_org_gearvrf_NativeScene_getLightList(JNIEnv* env, jobject obj, jlong jscene
     Scene* scene = reinterpret_cast<Scene*>(jscene);
     std::vector<Light*> lights;
     int nlights = scene->getLights().getLights(lights);
-    jclass elemClass = env->FindClass("org/gearvrf/GVRLightBase");
+    jclass elemClass = env->FindClass("org/gearvrf/GVRLight");
 
     jobjectArray jlights = env->NewObjectArray(nlights, elemClass, NULL);
     int i = 0;

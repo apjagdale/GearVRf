@@ -72,7 +72,7 @@ public:
         return mDirty != 0;
     }
 
-    void makeShadowMaps(Scene* scene, ShaderManager* shaderManager);
+    void makeShadowMaps(Scene* scene, jobject jscene, ShaderManager* shaderManager);
     void useLights(Renderer* renderer, Shader* shader);
 
 private:

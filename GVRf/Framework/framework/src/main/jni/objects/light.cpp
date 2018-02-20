@@ -54,7 +54,7 @@ namespace gvr
         return nullptr;
     }
 
-    bool Light::makeShadowMap(Scene* scene, ShaderManager* shader_manager, int layerIndex)
+    bool Light::makeShadowMap(Scene* scene, jobject javaSceneObject, ShaderManager* shader_manager, int layerIndex)
     {
         ShadowMap* shadowMap = getShadowMap();
         float shadow_map_index = -1;
@@ -80,9 +80,9 @@ namespace gvr
         Renderer* renderer = gRenderer->getInstance();
         shadowMap->setLayerIndex(layerIndex);
         shadowMap->setMainScene(scene);
-        shadowMap->cullFromCamera(scene, shadowMap->getCamera(),renderer, shader_manager);
+        shadowMap->cullFromCamera(scene, javaSceneObject, shadowMap->getCamera(),renderer, shader_manager);
         shadowMap->beginRendering(renderer);
-        renderer->renderRenderTarget(scene, shadowMap,shader_manager, nullptr, nullptr);
+        renderer->renderRenderTarget(scene, javaSceneObject, shadowMap,shader_manager, nullptr, nullptr);
         shadowMap->endRendering(renderer);
         return true;
     }
