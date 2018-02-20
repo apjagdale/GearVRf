@@ -390,6 +390,7 @@ namespace gvr
         {
             const char* src = (const char*) srcBlock.getData();
             memcpy(mUniformData + mElemSize * elemIndex, src, nelems * mElemSize);
+            markDirty();
             elemIndex += nelems;
             if (elemIndex >= mNumElems)
             {
