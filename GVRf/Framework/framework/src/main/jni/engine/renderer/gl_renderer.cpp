@@ -236,6 +236,7 @@ namespace gvr
 
         if (!rstate.is_shadow)
         {
+            LightList& lights = scene->getLights();
             rstate.render_mask = camera->render_mask();
             if (rstate.is_multiview)
             {
@@ -248,8 +249,8 @@ namespace gvr
             GL(glBlendEquation (GL_FUNC_ADD));
             GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
             GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-            rstate.lightsChanged = scene->getLights().isDirty();
-            rstate.shadow_map = scene->getLights().updateLights(this);
+            rstate.lightsChanged = lights.isDirty();
+            rstate.shadow_map = lights.updateLights(this);
         }
         if ((post_effects == NULL) ||
             (post_effect_render_texture_a == nullptr) ||

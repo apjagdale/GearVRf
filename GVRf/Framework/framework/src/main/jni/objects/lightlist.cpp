@@ -25,6 +25,7 @@
 #define LIGHT_ADDED 1
 #define LIGHT_REMOVED 2
 #define SHADOW_CHANGED 4
+#define REBUILD_SHADERS 8
 
 namespace gvr {
 
@@ -32,7 +33,7 @@ LightList::~LightList()
 {
     if (mLightBlock)
     {
-        //delete mLightBlock;
+        delete mLightBlock;
         mLightBlock = nullptr;
     }
 #ifdef DEBUG_LIGHT
@@ -49,7 +50,7 @@ int LightList::getLights(std::vector<Light*>& lightList) const
         for (auto itl = lights.begin(); itl != lights.end(); ++itl)
         {
             Light* light = *itl;
-            lightList.push_back(*itl);
+            lightList.push_back(light);
         }
     }
     return lightList.size();
@@ -79,7 +80,7 @@ bool LightList::addLight(Light* light)
         pair.second.push_back(light);
         mClassMap.insert(pair);
     }
-    mDirty |= LIGHT_ADDED;
+    mDirty |= LIGHT_ADDED | REBUILD_SHADERS;
 #ifdef DEBUG_LIGHT
     LOGD("LIGHT: %s added to scene", light->getLightClass());
 #endif
@@ -136,9 +137,37 @@ bool LightList::removeLight(Light* light)
 #ifdef DEBUG_LIGHT
     LOGD("LIGHT: %s removed from scene", light->getLightClass());
 #endif
-    mDirty |= LIGHT_REMOVED;
+    mDirty |= LIGHT_REMOVED | REBUILD_SHADERS;
     return true;
 }
+
+void LightList::shadersRebuilt()
+{
+    mDirty &= ~REBUILD_SHADERS;
+}
+
+ShadowMap* LightList::scanLights()
+{
+    ShadowMap* shadowMap = NULL;
+
+    for (auto it1 = mClassMap.begin();
+         it1 != mClassMap.end();
+         ++it1)
+    {
+        const std::vector<Light*>& lights = it1->second;
+        for (auto it2 = lights.begin(); it2 != lights.end(); ++it2)
+        {
+            Light* light = *it2;
+            ShadowMap* sm = light->getShadowMap();
+            if (sm && sm->enabled())
+            {
+                shadowMap = sm;
+            }
+        }
+    }
+    return shadowMap;
+}
+
 
 ShadowMap* LightList::updateLights(Renderer* renderer)
 {
@@ -147,6 +176,10 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
     bool updated = false;
     ShadowMap* shadowMap = NULL;
 
+    if (mDirty & REBUILD_SHADERS)
+    {
+        return scanLights();
+    }
     if (mDirty & LIGHT_ADDED)
     {
         createLightBlock(renderer);
@@ -163,6 +196,10 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
             if (sm && sm->enabled())
             {
                 shadowMap = sm;
+            }
+            if (mDirty & REBUILD_SHADERS)   // shaders don't match light list yet
+            {
+                continue;
             }
             if (dirty || light->uniforms().isDirty(ShaderData::MAT_DATA))
             {
@@ -265,7 +302,7 @@ void LightList::clear()
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
     mClassMap.clear();
-    mDirty = LIGHT_REMOVED;
+    mDirty = LIGHT_REMOVED | REBUILD_SHADERS;
 #ifdef DEBUG_LIGHT
     LOGD("LIGHT: clearing lights");
 #endif

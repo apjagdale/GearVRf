@@ -158,11 +158,11 @@ void Renderer::cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* cam
         ShaderManager* shader_manager, std::vector<RenderData*>* render_data_vector, bool is_multiview)
 {
     std::vector<SceneObject*> scene_objects;
+    LightList& lights = scene->getLights();
+    RenderState rstate;
 
     render_data_vector->clear();
     scene_objects.clear();
-    RenderState rstate;
-
     rstate.is_multiview = is_multiview;
     rstate.material_override = NULL;
     rstate.shader_manager = shader_manager;
@@ -173,8 +173,7 @@ void Renderer::cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* cam
     rstate.render_mask = camera->render_mask();
     rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
     rstate.javaSceneObject = javaSceneObject;
-    rstate.lightsChanged = scene->getLights().isDirty();
-
+    rstate.lightsChanged = lights.isDirty();
     glm::mat4 vp_matrix = glm::mat4(rstate.uniforms.u_proj * rstate.uniforms.u_view);
     glm::vec3 campos(rstate.uniforms.u_view[3]);
 
@@ -195,6 +194,7 @@ void Renderer::cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* cam
     }
     // 3. do occlusion culling, if enabled
     occlusion_cull(rstate, scene_objects, render_data_vector);
+    lights.shadersRebuilt();
 }
 
 

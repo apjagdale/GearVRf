@@ -346,7 +346,6 @@ public final class GVRRenderData extends GVRComponent implements IRenderable, Pr
         {
             NativeRenderData.enableLight(getNative());
             isLightEnabled = true;
-            bindShader(getGVRContext().getMainScene());
         }
     }
 
@@ -362,7 +361,6 @@ public final class GVRRenderData extends GVRComponent implements IRenderable, Pr
         if (isLightEnabled)
         {
             NativeRenderData.disableLight(getNative());
-            bindShader(null);
             isLightEnabled = false;
         }
     }

@@ -551,8 +551,12 @@ public class GVRShaderTemplate extends GVRShader
         }
         defines.put("LIGHTSOURCES", 1);
         for (GVRLight light : lights)
+        {
             if (light.getCastShadow())
+            {
                 castShadow = 1;
+            }
+        }
         defines.put("SHADOWS", castShadow);
         return defines;
     }
@@ -702,7 +706,7 @@ public class GVRShaderTemplate extends GVRShader
     {
         Map<String, LightClass> lightClasses = new HashMap<String, LightClass>();
 
-        if (lightlist == null)
+        if ((lightlist == null) || (lightlist.length == 0))
         {
             return lightClasses;
         }

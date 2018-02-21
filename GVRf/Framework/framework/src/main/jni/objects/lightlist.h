@@ -72,6 +72,9 @@ public:
         return mDirty != 0;
     }
 
+    void shadersRebuilt();
+    ShadowMap* scanLights();
+
     void makeShadowMaps(Scene* scene, jobject jscene, ShaderManager* shaderManager);
     void useLights(Renderer* renderer, Shader* shader);
 

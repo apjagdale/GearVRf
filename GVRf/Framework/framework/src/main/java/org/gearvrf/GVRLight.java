@@ -41,7 +41,6 @@ import org.joml.Vector3f;
  * advantage of these shadow maps.
  *
  * @see GVRShaderTemplate
- * @see GVRRenderData#bindShader(GVRScene)
  * @see GVRLight#setCastShadow(boolean)
  */
 public class GVRLight extends GVRJavaComponent implements GVRDrawFrameListener
