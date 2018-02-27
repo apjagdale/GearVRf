@@ -88,7 +88,7 @@ public:
         render_data_flags.alpha_blend_ = true;
         render_data_flags.alpha_to_coverage_ = false;
         hash_code_dirty_ = true;
-        render_data_flags.cast_shadows_ = false;
+        render_data_flags.cast_shadows_ = true;
         render_data_flags.dirty_ = false;
         render_data_flags.invert_coverage_mask_ = GL_FALSE;
         render_data_flags.stencilTestFlag_ = false;
