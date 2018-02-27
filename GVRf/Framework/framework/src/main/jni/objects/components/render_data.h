@@ -178,13 +178,21 @@ public:
     }
 
     void enable_light() {
-        render_data_flags.use_light_ = true;
-        hash_code_dirty_ = true;
+        if (!render_data_flags.use_light_)
+        {
+            render_data_flags.use_light_ = true;
+            hash_code_dirty_ = true;
+            markDirty();
+        }
     }
 
     void disable_light() {
-        render_data_flags.use_light_ = false;
-        hash_code_dirty_ = true;
+        if (render_data_flags.use_light_)
+        {
+            render_data_flags.use_light_ = false;
+            hash_code_dirty_ = true;
+            markDirty();
+        }
     }
 
     bool light_enabled() {
