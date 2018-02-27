@@ -205,15 +205,15 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
             {
                 int offset = light->getBlockOffset();
                 const UniformBlock& uniforms = light->uniforms().uniforms();
-                mLightBlock->setAt(offset, uniforms);
+                mLightBlock->updateGPU(renderer, offset, uniforms);
                 updated = true;
                 light->uniforms().clearDirty();
 #ifdef DEBUG_LIGHT
                 LOGV("LIGHT: %s updated offset = %d", light->getLightClass(), offset);
-//                std::string s = uniforms.dumpFloats();
-//                LOGD("LIGHT: %s updated offset = %d\n%s", light->getLightClass(), offset, s.c_str());
-//                s = uniforms.toString();
-//                LOGD("LIGHT:\n%s", s.c_str());
+                std::string s = uniforms.dumpFloats();
+                LOGD("LIGHT: %s updated offset = %d\n%s", light->getLightClass(), offset, s.c_str());
+                s = uniforms.toString();
+                LOGD("LIGHT:\n%s", s.c_str());
 #endif
             }
         }
@@ -221,10 +221,10 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
     mDirty = 0;
     if (updated)
     {
-        mLightBlock->updateGPU(renderer);
+//        mLightBlock->updateGPU(renderer);
 #ifdef DEBUG_LIGHT
-//        std::string s = mLightBlock->dumpFloats();
-//        LOGD("LIGHT: light block updated\n%s", s.c_str());
+        std::string s = mLightBlock->dumpFloats();
+        LOGD("LIGHT: light block updated\n%s", s.c_str());
 #endif
     }
     return shadowMap;

@@ -32,7 +32,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "objects/uniform_block.h"
 
-#define DEBUG_SHADER 1
+//#define DEBUG_SHADER 1
 
 namespace gvr {
 class Mesh;

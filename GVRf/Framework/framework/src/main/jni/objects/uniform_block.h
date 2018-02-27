@@ -296,12 +296,12 @@ namespace gvr
         virtual bool getIntVec(const char *name, int *val, int n) const;
 
         /**
-         * Copy the data from the CPU into the GPU.
+         * Copy a range of data from the CPU into the GPU.
          * If useGPUBuffer is enabled, the data is copied into a uniform
          * buffer in the GPU. Otherwise immediate mode is used to
          * copy the data to the graphics driver.
          */
-        virtual bool updateGPU(Renderer *) = 0;
+        virtual bool updateGPU(Renderer *, int start = 0, int len = 0) = 0;
 
         /**
          * Bind the uniform block to a shader
@@ -347,6 +347,7 @@ namespace gvr
         const char* getDataAt(int elemIndex);
         bool setAt(int elemIndex, const UniformBlock& srcBlock);
         bool setRange(int elemIndex, const void* srcData, int numElems);
+        bool updateGPU(Renderer*, int elemIndex, const UniformBlock& srcBlock);
 
     protected:
         UniformBlock(const char *descriptor);

@@ -18,13 +18,11 @@
 namespace gvr {
     GLUniformBlock::GLUniformBlock(const char* descriptor, int bindingPoint, const char* blockName)
       : UniformBlock(descriptor, bindingPoint, blockName),
-        GLOffset(0),
         GLBuffer(0)
     { }
 
     GLUniformBlock::GLUniformBlock(const char* descriptor, int bindingPoint, const char* blockName, int maxelems)
       : UniformBlock(descriptor, bindingPoint, blockName, maxelems),
-        GLOffset(0),
         GLBuffer(0)
     { }
 
@@ -33,7 +31,7 @@ namespace gvr {
         glDeleteBuffers(1,&GLBuffer);
     }
 
-    bool GLUniformBlock::updateGPU(Renderer* unused)
+    bool GLUniformBlock::updateGPU(Renderer* unused, int start, int len)
     {
         if (mUseBuffer)             // use a uniform buffer?
         {
@@ -50,11 +48,20 @@ namespace gvr {
             }
             if (mIsDirty)
             {
+                if (len <= 0)
+                {
+                    len = mElemSize * mMaxElems;
+                }
                 glBindBufferBase(GL_UNIFORM_BUFFER, mBindingPoint, GLBuffer);
-                glBufferSubData(GL_UNIFORM_BUFFER, GLOffset, mElemSize * mMaxElems, getData());
+                void* gpubuffer = glMapBufferRange(GL_UNIFORM_BUFFER, start, len, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
+                if (gpubuffer)
+                {
+                    memcpy(gpubuffer, (char*) getData() + start, len);
+                    glUnmapBuffer(GL_UNIFORM_BUFFER);
+                }
                 mIsDirty = false;
 #ifdef DEBUG_SHADER
-                LOGV("SHADER: UniformBlock::updateGPU %s size %d\n", getBlockName(), getTotalSize());
+                LOGV("SHADER: UniformBlock::updateGPU %s size %d\n", getBlockName(), len);
 #endif
             }
             checkGLError("GLUniformBlock::updateGPU");

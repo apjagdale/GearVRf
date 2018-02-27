@@ -389,7 +389,9 @@ namespace gvr
             (elemIndex + nelems <= mMaxElems))
         {
             const char* src = (const char*) srcBlock.getData();
-            memcpy(mUniformData + mElemSize * elemIndex, src, nelems * mElemSize);
+            int start = mElemSize * elemIndex;
+            int len = nelems * mElemSize;
+            memcpy(mUniformData + start, src, len);
             markDirty();
             elemIndex += nelems;
             if (elemIndex >= mNumElems)
@@ -402,6 +404,28 @@ namespace gvr
         return false;
     }
 
+    bool UniformBlock::updateGPU(Renderer* r, int elemIndex, const UniformBlock& srcBlock)
+    {
+        int len = srcBlock.getTotalSize();
+        int nelems = srcBlock.getTotalSize() / mElemSize;
+        if ((elemIndex >= 0) &&
+            (elemIndex + nelems <= mMaxElems))
+        {
+            const char* src = (const char*) srcBlock.getData();
+            int start = mElemSize * elemIndex;
+            mIsDirty = true;
+            memcpy(mUniformData + start, src, len);
+            updateGPU(r, start, len);
+            elemIndex += nelems;
+            if (elemIndex >= mNumElems)
+            {
+                setNumElems(elemIndex);
+            }
+            return true;
+        }
+        LOGE("UniformBlock::updateGPU ERROR %d out of range, maximum is %d", elemIndex, mMaxElems);
+        return false;
+    }
 
     const char* UniformBlock::getDataAt(int elemIndex)
     {
