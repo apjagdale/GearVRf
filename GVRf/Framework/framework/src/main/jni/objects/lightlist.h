@@ -35,7 +35,7 @@ public:
                   mLightBlock(NULL),
                   mNumShadowMaps(0),
                   mTotalUniforms(0),
-                  mUseUniformBlock(false) { }
+                  mUseUniformBlock(true) { }
 
     virtual ~LightList();
 
