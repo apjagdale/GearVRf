@@ -69,19 +69,19 @@ namespace gvr {
         return true;
     }
 
-    bool GLUniformBlock::bindBuffer(Shader* shader, Renderer* unused)
+    bool GLUniformBlock::bindBuffer(Shader* shader, Renderer* unused, int locationOffset)
     {
         GLShader* glshader = static_cast<GLShader*>(shader);
 
         if (!mUseBuffer)
         {
-            DataDescriptor::forEachEntry([this, glshader](const DataEntry& e) mutable
+            DataDescriptor::forEachEntry([this, glshader, locationOffset](const DataEntry& e) mutable
              {
                  if (!e.IsSet || e.NotUsed)
                  {
                      return;
                  }
-                 int loc = glshader->getUniformLoc(e.Index, getBindingPoint());
+                 int loc = glshader->getUniformLoc(locationOffset + e.Index, getBindingPoint());
                  if (loc < 0)
                  {
                      return;

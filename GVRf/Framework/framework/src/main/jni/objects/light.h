@@ -23,6 +23,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <glslang/Include/Common.h>
 
 #include "objects/shader_data.h"
 #include "engine/renderer/renderer.h"
@@ -209,9 +210,12 @@ public:
         return mLightIndex;
     }
 
+    const char* getLightName() const { return mLightName.c_str(); }
+
     void setLightIndex(int index)
     {
-        mLightIndex = 0;
+        mLightIndex = index;
+        mLightName = mLightClass + "s[" + std::to_string(mLightIndex) + "]";
     }
 
    /**
@@ -222,6 +226,7 @@ public:
     void setLightClass(const char* lightClass)
     {
         mLightClass = lightClass;
+        mLightName = mLightClass + "s[" + std::to_string(mLightIndex) + "]";
     }
 
     virtual void onAddedToScene(Scene* scene);
@@ -235,9 +240,12 @@ private:
     Light& operator=(const Light& light) = delete;
     Light& operator=(Light&& light) = delete;
 
+    void updateLayout();
+
 private:
     int mShadowMapIndex;
     std::string mLightClass;
+    std::string mLightName;
     int mLightIndex;
     int mBlockOffset;
 };

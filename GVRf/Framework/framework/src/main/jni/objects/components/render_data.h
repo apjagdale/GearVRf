@@ -42,19 +42,6 @@ class TextureCapturer;
 class RenderPass;
 struct RenderState;
 
-template<typename T>
-std::string to_string(T value) {
-
-    //create an output string stream
-    std::ostringstream os;
-
-    //throw the value into the string stream
-    os << value;
-
-    //convert the string stream into a string and return
-    return os.str();
-}
-
 class RenderData: public Component {
 public:
     enum Queue {
@@ -88,7 +75,7 @@ public:
         render_data_flags.alpha_blend_ = true;
         render_data_flags.alpha_to_coverage_ = false;
         hash_code_dirty_ = true;
-        render_data_flags.cast_shadows_ = false;
+        render_data_flags.cast_shadows_ = true;
         render_data_flags.dirty_ = false;
         render_data_flags.invert_coverage_mask_ = GL_FALSE;
         render_data_flags.stencilTestFlag_ = false;

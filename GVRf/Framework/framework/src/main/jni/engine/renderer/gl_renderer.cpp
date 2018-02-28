@@ -233,10 +233,10 @@ namespace gvr
         rstate.shadow_map = nullptr;
         rstate.lightsChanged = false;
         std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
+        LightList& lights = scene->getLights();
 
         if (!rstate.is_shadow)
         {
-            LightList& lights = scene->getLights();
             rstate.render_mask = camera->render_mask();
             if (rstate.is_multiview)
             {
@@ -250,7 +250,15 @@ namespace gvr
             GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
             GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
             rstate.lightsChanged = lights.isDirty();
-            rstate.shadow_map = lights.updateLights(this);
+
+            if (lights.usingUniformBlock())
+            {
+                rstate.shadow_map = lights.updateLightBlock(this);
+            }
+            else
+            {
+                rstate.shadow_map = lights.scanLights();
+            }
         }
         if ((post_effects == NULL) ||
             (post_effect_render_texture_a == nullptr) ||
@@ -314,7 +322,7 @@ namespace gvr
             renderPostEffectData(rstate, input_texture, post_effects, npost);
         }
         GL(glDisable(GL_BLEND));
-
+        lights.clearDirty();
     }
 
 /**
@@ -633,6 +641,7 @@ namespace gvr
                 glLineWidth(1.0f);
             }
         }
+        GLShader* glshader = static_cast<GLShader*>(shader);
         int texIndex = material->bindToShader(shader, this);
         if (texIndex >= 0)
         {
@@ -642,16 +651,17 @@ namespace gvr
                 updateTransforms(rstate, transformBlock, rdata);
                 if (!transformBlock->usesGPUBuffer())
                 {
-                    static_cast<GLShader*>(shader)->findUniforms(*transformBlock, TRANSFORM_UBO_INDEX);
+                    glshader->findUniforms(*transformBlock, TRANSFORM_UBO_INDEX);
                 }
                 transformBlock->bindBuffer(shader, this);
             }
             if (shader->useLights())
             {
-                rstate.scene->getLights().useLights(this, shader);
+                LightList& lightlist = rstate.scene->getLights();
+
+                lightlist.useLights(this, shader);
                 if (rstate.shadow_map)
                 {
-                    GLShader* glshader = static_cast<GLShader*>(shader);
                     int loc = glGetUniformLocation(glshader->getProgramId(), "u_shadow_maps");
                     if (loc >= 0)
                     {

@@ -21,6 +21,7 @@
 #include "engine/renderer/renderer.h"
 #include "objects/lightlist.h"
 #include "objects/scene.h"
+#include "shaders/shader.h"
 
 #define LIGHT_ADDED 1
 #define LIGHT_REMOVED 2
@@ -146,10 +147,8 @@ void LightList::shadersRebuilt()
     mDirty &= ~REBUILD_SHADERS;
 }
 
-ShadowMap* LightList::scanLights()
+void LightList::forEachLight(std::function<void(Light&)> func)
 {
-    ShadowMap* shadowMap = NULL;
-
     for (auto it1 = mClassMap.begin();
          it1 != mClassMap.end();
          ++it1)
@@ -158,6 +157,47 @@ ShadowMap* LightList::scanLights()
         for (auto it2 = lights.begin(); it2 != lights.end(); ++it2)
         {
             Light* light = *it2;
+            if (light)
+            {
+                func(*light);
+            }
+        }
+    }
+}
+
+void LightList::forEachLight(std::function<void(const Light&)> func) const
+{
+    for (auto it1 = mClassMap.begin();
+         it1 != mClassMap.end();
+         ++it1)
+    {
+        const std::vector<Light*>& lights = it1->second;
+        for (auto it2 = lights.begin(); it2 != lights.end(); ++it2)
+        {
+            Light* light = *it2;
+            if (light)
+            {
+                func(*light);
+            }
+        }
+    }
+}
+
+ShadowMap* LightList::scanLights()
+{
+    ShadowMap* shadowMap = NULL;
+
+    mTotalUniforms = 0;
+    for (auto it1 = mClassMap.begin();
+         it1 != mClassMap.end();
+         ++it1)
+    {
+        const std::vector<Light*>& lights = it1->second;
+        for (auto it2 = lights.begin(); it2 != lights.end(); ++it2)
+        {
+            Light* light = *it2;
+
+            mTotalUniforms += light->uniforms().uniforms().getNumEntries();
             ShadowMap* sm = light->getShadowMap();
             if (sm && sm->enabled())
             {
@@ -168,12 +208,10 @@ ShadowMap* LightList::scanLights()
     return shadowMap;
 }
 
-
-ShadowMap* LightList::updateLights(Renderer* renderer)
+ShadowMap* LightList::updateLightBlock(Renderer* renderer)
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
     bool dirty = mDirty != 0;
-    bool updated = false;
     ShadowMap* shadowMap = NULL;
 
     if (mDirty & REBUILD_SHADERS)
@@ -184,15 +222,18 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
     {
         createLightBlock(renderer);
     }
+    mTotalUniforms = 0;
     for (auto it1 = mClassMap.begin();
-        it1 != mClassMap.end();
-        ++it1)
+         it1 != mClassMap.end();
+         ++it1)
     {
         const std::vector<Light*>& lights = it1->second;
         for (auto it2 = lights.begin(); it2 != lights.end(); ++it2)
         {
             Light* light = *it2;
             ShadowMap* sm = light->getShadowMap();
+
+            mTotalUniforms += light->uniforms().uniforms().getNumEntries();
             if (sm && sm->enabled())
             {
                 shadowMap = sm;
@@ -206,33 +247,24 @@ ShadowMap* LightList::updateLights(Renderer* renderer)
                 int offset = light->getBlockOffset();
                 const UniformBlock& uniforms = light->uniforms().uniforms();
                 mLightBlock->updateGPU(renderer, offset, uniforms);
-                updated = true;
                 light->uniforms().clearDirty();
-#ifdef DEBUG_LIGHT
-                LOGV("LIGHT: %s updated offset = %d", light->getLightClass(), offset);
-                std::string s = uniforms.dumpFloats();
-                LOGD("LIGHT: %s updated offset = %d\n%s", light->getLightClass(), offset, s.c_str());
-                s = uniforms.toString();
-                LOGD("LIGHT:\n%s", s.c_str());
-#endif
             }
         }
     }
     mDirty = 0;
-    if (updated)
-    {
-//        mLightBlock->updateGPU(renderer);
-#ifdef DEBUG_LIGHT
-        std::string s = mLightBlock->dumpFloats();
-        LOGD("LIGHT: light block updated\n%s", s.c_str());
-#endif
-    }
     return shadowMap;
 }
 
 void LightList::useLights(Renderer* renderer, Shader* shader)
 {
-    mLightBlock->bindBuffer(shader, renderer);
+    if (mUseUniformBlock)
+    {
+        mLightBlock->bindBuffer(shader, renderer);
+    }
+    else
+    {
+        shader->bindLights(*this, renderer);
+    }
 }
 
 void LightList::makeShadowMaps(Scene* scene, jobject jscene, ShaderManager* shaderManager)
@@ -312,13 +344,25 @@ void LightList::makeShaderBlock(std::string& layout) const
 {
     std::lock_guard < std::recursive_mutex > lock(mLock);
     std::ostringstream stream;
-    stream << "layout (std140) uniform Lights_ubo\n{" << std::endl;
+    std::string prefix;
+
+    if (mUseUniformBlock)
+    {
+         stream << "layout (std140) uniform Lights_ubo\n{" << std::endl;
+    }
+    else
+    {
+        prefix = "uniform ";
+    }
     for (auto it = mClassMap.begin(); it != mClassMap.end(); ++it)
     {
         const std::vector<Light*>& lights = it->second;
-        stream << 'U' << it->first << " " << it->first << "s[" << lights.size() << "];" << std::endl;
+        stream << prefix << 'U' << it->first << " " << it->first << "s[" << lights.size() << "];" << std::endl;
     }
-    stream << "};" << std::endl;
+    if (mUseUniformBlock)
+    {
+        stream << "};" << std::endl;
+    }
     layout = stream.str();
 }
 

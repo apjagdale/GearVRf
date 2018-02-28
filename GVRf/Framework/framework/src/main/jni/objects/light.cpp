@@ -103,5 +103,10 @@ namespace gvr
         return uniforms().uniforms().getTotalSize();
     }
 
+    void Light::updateLayout()
+    {
+
+    }
+
 }
 

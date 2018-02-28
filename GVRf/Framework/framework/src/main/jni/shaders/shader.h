@@ -27,6 +27,7 @@
 #include <mutex>
 #include <vector>
 #include <objects/mesh.h>
+#include <objects/lightlist.h>
 
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -138,6 +139,7 @@ public:
     }
 
     virtual bool useShader(bool) = 0;
+    virtual void bindLights(LightList& lights, Renderer* r) = 0;
     static int calcSize(const char* type);
     void setJava(jclass shaderClass, JavaVM *javaVM);
     bool calcMatrix(float* inputMatrices, int inputSize, float* outputMatrices, int outputSize) const;
