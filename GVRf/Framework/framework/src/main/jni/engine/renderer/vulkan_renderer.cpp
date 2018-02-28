@@ -40,8 +40,8 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
 {
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
-RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo* renderTextureInfo) {
-    return new VkRenderTextureOffScreen(renderTextureInfo->fdboWidth, renderTextureInfo->fboHeight, renderTextureInfo->multisamples);
+RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
+    return new VkRenderTextureOffScreen(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
 }
 
 RenderData* VulkanRenderer::createRenderData()
@@ -228,7 +228,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
     std::vector<RenderData*>* render_data_vector = renderTarget->getRenderDataVector();
     int postEffectCount = 0;
 
-    if (!rstate.shadow_map) {
+    if (!rstate.is_shadow) {
         rstate.render_mask = camera->render_mask();
         rstate.uniforms.u_right = rstate.render_mask & RenderData::RenderMaskBit::Right;
         rstate.material_override = NULL;

@@ -59,7 +59,7 @@ namespace gvr {
         explicit VulkanUniformBlock(const char* descriptor, int bindingPoint,const char* blockName, int maxelems);
         virtual ~VulkanUniformBlock() {}
         bool bindBuffer(Shader*, Renderer*) {}
-        virtual bool updateGPU(Renderer*);
+        virtual bool updateGPU(Renderer*, int start = 0, int len = 0);
         virtual std::string makeShaderLayout();
 
         VulkanDescriptor* getVulkanDescriptor();
@@ -77,7 +77,7 @@ namespace gvr {
         virtual bool setIntVec(const char *name, const int *val, int n);
     protected:
         void createBuffer(VulkanCore*);
-        void updateBuffer(VulkanCore* vk);
+        void updateBuffer(VulkanCore* vk, int start, int len);
 
         bool buffer_init_ = false;
         VkWriteDescriptorSet writeDescriptorSet;

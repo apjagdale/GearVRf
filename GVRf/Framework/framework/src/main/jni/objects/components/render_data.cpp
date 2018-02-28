@@ -256,6 +256,7 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
         return -1;
     }
     dirty |= m->isDirty();
+    dirty |= (rstate.lightsChanged && light_enabled());
     for (int p = 0; p < pass_count(); ++p)
     {
         RenderPass* rpass = pass(p);
@@ -279,11 +280,12 @@ int RenderData::isValid(Renderer* renderer, const RenderState& rstate)
         //@todo implementation details leaked; unify common JNI reqs of Scene and RenderData
         JNIEnv* env = nullptr;
         int rc = rstate.scene->get_java_env(&env);
+
         bindShader(env, rstate.javaSceneObject, rstate.is_multiview);
-        if (rc > 0) {
+        if (rc > 0)
+        {
             rstate.scene->detach_java_env();
         }
-
         for (int p = 0; p < pass_count(); ++p)
         {
             RenderPass *rpass = pass(p);

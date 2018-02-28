@@ -79,7 +79,7 @@ public:
             texture_capturer(0),
             bones_ubo_(nullptr)
     {
-        render_data_flags.use_light_ = false;
+        render_data_flags.use_light_ = true;
         render_data_flags.use_lightmap_ = false;
         render_data_flags.batching_ = true;
         render_data_flags.offset_ = false;
@@ -88,7 +88,7 @@ public:
         render_data_flags.alpha_blend_ = true;
         render_data_flags.alpha_to_coverage_ = false;
         hash_code_dirty_ = true;
-        render_data_flags.cast_shadows_ = true;
+        render_data_flags.cast_shadows_ = false;
         render_data_flags.dirty_ = false;
         render_data_flags.invert_coverage_mask_ = GL_FALSE;
         render_data_flags.stencilTestFlag_ = false;
@@ -178,13 +178,21 @@ public:
     }
 
     void enable_light() {
-        render_data_flags.use_light_ = true;
-        hash_code_dirty_ = true;
+        if (!render_data_flags.use_light_)
+        {
+            render_data_flags.use_light_ = true;
+            hash_code_dirty_ = true;
+            markDirty();
+        }
     }
 
     void disable_light() {
-        render_data_flags.use_light_ = false;
-        hash_code_dirty_ = true;
+        if (render_data_flags.use_light_)
+        {
+            render_data_flags.use_light_ = false;
+            hash_code_dirty_ = true;
+            markDirty();
+        }
     }
 
     bool light_enabled() {
