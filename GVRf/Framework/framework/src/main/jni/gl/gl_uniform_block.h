@@ -46,7 +46,7 @@ namespace gvr
         /*
          * Bind the uniform buffer to the OpenGL shader
          */
-        virtual bool bindBuffer(Shader *, Renderer *);
+        virtual bool bindBuffer(Shader *, Renderer *, int locationOffset = 0);
 
         virtual std::string makeShaderLayout();
         virtual bool setFloatVec(const char *name, const float *val, int n);

@@ -306,7 +306,7 @@ namespace gvr
         /**
          * Bind the uniform block to a shader
          */
-        virtual bool bindBuffer(Shader *, Renderer *) = 0;
+        virtual bool bindBuffer(Shader *, Renderer *, int locationOffset = 0) = 0;
 
         virtual ~UniformBlock()
         {

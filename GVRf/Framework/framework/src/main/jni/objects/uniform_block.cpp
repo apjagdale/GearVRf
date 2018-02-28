@@ -45,6 +45,29 @@ namespace gvr
         }
     }
 
+    UniformBlock::UniformBlock(const char *descriptor, int bindingPoint, const char *blockName, int maxElems)
+            :   DataDescriptor(descriptor),
+                mBlockName(blockName),
+                mOwnData(false),
+                mUseBuffer(true),
+                mBindingPoint(bindingPoint),
+                mUniformData(NULL)
+    {
+        mElemSize = mTotalSize;
+        mMaxElems = maxElems;
+        if (blockName)
+        {
+            mBlockName = blockName;
+        }
+        if ((mElemSize > 0) && (maxElems > 0))
+        {
+            mMaxElems = mNumElems = maxElems;
+            mTotalSize = mElemSize * maxElems;
+            mUniformData = new char[mTotalSize];
+            mOwnData = true;
+        }
+    }
+
     bool UniformBlock::setInt(const char* name, int val)
     {
         int size = sizeof(int);
@@ -326,28 +349,6 @@ namespace gvr
         return os.str();
     }
 
-    UniformBlock::UniformBlock(const char *descriptor, int bindingPoint, const char *blockName, int maxElems)
-    :   DataDescriptor(descriptor),
-        mBlockName(blockName),
-        mOwnData(false),
-        mUseBuffer(true),
-        mBindingPoint(bindingPoint),
-        mUniformData(NULL)
-    {
-        mElemSize = mTotalSize;
-        mMaxElems = maxElems;
-        if (blockName)
-        {
-            mBlockName = blockName;
-        }
-        if ((mElemSize > 0) && (maxElems > 0))
-        {
-            mMaxElems = mNumElems = maxElems;
-            mTotalSize = mElemSize * maxElems;
-            mUniformData = new char[mTotalSize];
-            mOwnData = true;
-        }
-    }
 
     bool UniformBlock::setNumElems(int numElems)
     {

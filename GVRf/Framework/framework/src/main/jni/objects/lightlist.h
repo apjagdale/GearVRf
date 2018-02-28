@@ -31,9 +31,17 @@ namespace gvr {
 class LightList
 {
 public:
-    LightList() : mDirty(0), mLightBlock(NULL), mNumShadowMaps(0) { }
+    LightList() : mDirty(0),
+                  mLightBlock(NULL),
+                  mNumShadowMaps(0),
+                  mTotalUniforms(0),
+                  mUseUniformBlock(false) { }
 
     virtual ~LightList();
+
+    void useUniformBlock()  { mUseUniformBlock = true; }
+
+    bool usingUniformBlock()    { return mUseUniformBlock; }
 
     /*
      * Adds a new light to the scene.
@@ -63,13 +71,23 @@ public:
 
     void makeShaderBlock(std::string& layout) const;
 
-    ShadowMap* updateLights(Renderer* renderer);
+    ShadowMap* updateLightBlock(Renderer* renderer);
 
     bool createLightBlock(Renderer* renderer);
 
     bool isDirty() const
     {
         return mDirty != 0;
+    }
+
+    void clearDirty()
+    {
+        mDirty = 0;
+    }
+
+    int getNumUniforms() const
+    {
+        return mTotalUniforms;
     }
 
     void shadersRebuilt();
@@ -84,12 +102,15 @@ private:
     LightList& operator=(const LightList& lights) = delete;
     LightList& operator=(LightList&& lights) = delete;
 
+
 private:
     mutable std::recursive_mutex mLock;
     std::map<std::string, std::vector<Light*>> mClassMap;
     UniformBlock* mLightBlock;
     int mNumShadowMaps;
     int mDirty;
+    bool mUseUniformBlock;
+    int mTotalUniforms;
 };
 
 }

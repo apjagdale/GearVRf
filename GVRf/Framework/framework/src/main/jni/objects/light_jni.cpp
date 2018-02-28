@@ -35,6 +35,10 @@ Java_org_gearvrf_NativeLight_getComponentType(JNIEnv * env, jobject obj);
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_enable(JNIEnv * env, jobject obj, jlong jlight);
 
+JNIEXPORT jstring JNICALL
+Java_org_gearvrf_NativeLight_getLightName(JNIEnv * env, jobject obj, jlong jlight);
+
+
 JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_disable(JNIEnv * env, jobject obj, jlong jlight);
 
@@ -192,7 +196,16 @@ Java_org_gearvrf_NativeLight_getLightIndex(JNIEnv * env, jobject obj, jlong jlig
     return light->getLightIndex();
 }
 
-JNIEXPORT void JNICALL
+JNIEXPORT jstring JNICALL
+Java_org_gearvrf_NativeLight_getLightName(JNIEnv * env, jobject obj, jlong jlight)
+{
+    Light* light = reinterpret_cast<Light*>(jlight);
+    std::string clz = light->getLightName();
+    return env->NewStringUTF(clz.c_str());
+}
+
+
+    JNIEXPORT void JNICALL
 Java_org_gearvrf_NativeLight_setLightIndex(JNIEnv * env, jobject obj, jlong jlight, jint index)
 {
     Light* light = reinterpret_cast<Light*>(jlight);
