@@ -18,7 +18,7 @@
 
 #include <vector>
 #include <memory>
-#include "vulkan_wrapper.h"
+#include "vulkan_headers.h"
 
 namespace gvr {
     struct ImageInfo

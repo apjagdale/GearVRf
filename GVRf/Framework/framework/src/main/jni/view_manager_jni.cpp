@@ -14,6 +14,8 @@
  */
 
 #include <jni.h>
+#include <vulkan/vk_render_target.h>
+#include <vulkan/vk_render_texture_offscreen.h>
 
 #include "engine/renderer/renderer.h"
 #include "objects/textures/render_texture.h"
@@ -96,12 +98,24 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
                                                                               jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview){
     uint8_t *readback_buffer = (uint8_t*) env->GetDirectBufferAddress(jreadback_buffer);
     RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
-    RenderTexture* renderTexture =    renderTarget->getTexture();
+    RenderTexture* renderTexture;
+    gRenderer = Renderer::getInstance();
+    if(gRenderer->isVulkanInstance())
+        renderTexture = static_cast<VkRenderTarget*>(renderTarget)->getTexture();
+    else
+        renderTexture = renderTarget->getTexture();
 
     if(useMultiview){
             renderTexture->setLayerIndex(eye);
     }
-    renderTexture->readRenderResult(readback_buffer);
+
+    if(gRenderer->isVulkanInstance()) {
+        VkRenderTextureOffScreen *rT = static_cast<VkRenderTextureOffScreen *>(renderTexture);
+       rT->readRenderResult(&readback_buffer);
+    }
+    else
+        renderTexture->readRenderResult(readback_buffer);
+
 }
 
 }

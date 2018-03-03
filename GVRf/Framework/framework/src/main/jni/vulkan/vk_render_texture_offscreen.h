@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
-#include "vk_render_to_texture.h"
+
 
 #ifndef FRAMEWORK_VK_RENDER_TEXTURE_OFFSCREEN_H
 #define FRAMEWORK_VK_RENDER_TEXTURE_OFFSCREEN_H
+
+#include "vk_render_to_texture.h"
 
 namespace gvr {
     class VkRenderTextureOffScreen : public VkRenderTexture

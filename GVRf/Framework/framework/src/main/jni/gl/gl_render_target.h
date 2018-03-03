@@ -25,6 +25,7 @@ public:
     GLRenderTarget(){}
     virtual ~GLRenderTarget(){}
     virtual void beginRendering(Renderer *renderer);
+    //RenderTexture*  getTexture()  { return mRenderTexture; }
 };
 }
 #endif //FRAMEWORK_GL_RENDER_TARGET_H

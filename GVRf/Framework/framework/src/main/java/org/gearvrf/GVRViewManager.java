@@ -688,7 +688,7 @@ abstract class GVRViewManager extends GVRContext {
         // TODO: when we will use multithreading, create new camera using centercamera as we are adding posteffects into it
         final GVRCamera centerCamera = mMainScene.getMainCameraRig().getCenterCamera();
         final GVRMaterial postEffect = new GVRMaterial(this, GVRMaterial.GVRShaderType.VerticalFlip.ID);
-        centerCamera.addPostEffect(postEffect);
+        //centerCamera.addPostEffect(postEffect);
 
         GVRRenderTexture posteffectRenderTextureB = null;
         GVRRenderTexture posteffectRenderTextureA = null;
@@ -706,7 +706,7 @@ abstract class GVRViewManager extends GVRContext {
         }
 
         renderTarget.render(mMainScene,centerCamera, mRenderBundle.getShaderManager(), posteffectRenderTextureA, posteffectRenderTextureB);
-        centerCamera.removePostEffect(postEffect);
+        //centerCamera.removePostEffect(postEffect);
         readRenderResult(renderTarget, EYE.MULTIVIEW, false);
 
         if(isMultiview)
