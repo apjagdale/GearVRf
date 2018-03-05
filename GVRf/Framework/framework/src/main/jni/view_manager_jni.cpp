@@ -20,6 +20,7 @@
 #include "engine/renderer/renderer.h"
 #include "objects/textures/render_texture.h"
 #include "objects/components/render_target.h"
+#include "engine/renderer/vulkan_renderer.h"
 //#include "objects/components/camera.h"
 
 namespace gvr {
@@ -100,8 +101,22 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
     RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
     RenderTexture* renderTexture;
     gRenderer = Renderer::getInstance();
+    //Renderer* rend = Renderer::getInstance();
     if(gRenderer->isVulkanInstance())
-        renderTexture = static_cast<VkRenderTarget*>(renderTarget)->getTexture();
+    {
+        //reinterpret_cast<VulkanRenderer*>(gRenderer)->renderToOculus(static_cast<VkRenderTarget*>(renderTarget));
+        //renderTexture = static_cast<VkRenderTarget*>(renderTarget)->getTexture();
+
+        uint8_t * data;
+        VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(static_cast<VkRenderTarget*>(renderTarget)->getTexture());
+        renderTexture->readRenderResult(&data);
+        memcpy(readback_buffer, data, 1024*1024*4);
+
+
+
+        //readback_buffer = oculusTexData;
+
+    }
     else
         renderTexture = renderTarget->getTexture();
 
@@ -110,8 +125,10 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
     }
 
     if(gRenderer->isVulkanInstance()) {
-        VkRenderTextureOffScreen *rT = static_cast<VkRenderTextureOffScreen *>(renderTexture);
-       rT->readRenderResult(&readback_buffer);
+//        VkRenderTextureOffScreen *rT = static_cast<VkRenderTextureOffScreen *>(renderTexture);
+//        uint8_t * data;
+//        rT->readRenderResult(&data);
+//        memcpy(readback_buffer, data, 1024*1024*4);
     }
     else
         renderTexture->readRenderResult(readback_buffer);

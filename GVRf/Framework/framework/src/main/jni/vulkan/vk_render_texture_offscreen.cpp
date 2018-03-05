@@ -89,6 +89,7 @@ namespace gvr{
         VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
         err = vkMapMemory(device, mem, 0,
                           fbo->getImageSize(COLOR_IMAGE), 0, (void **) &data);
+        uint64_t siz = fbo->getImageSize(COLOR_IMAGE);
         *readback_buffer = data;
         //GVR_VK_CHECK(!err);
 
