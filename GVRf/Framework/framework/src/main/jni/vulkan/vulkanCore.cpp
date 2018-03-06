@@ -1289,13 +1289,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             m_Vulkan_Initialised = false;
             return;
         }
+
+        if(m_androidWindow != NULL) {
+            InitSurface();
+        }
+
         if (InitDevice() == false) {
             m_Vulkan_Initialised = false;
             return;
         }
 
         if(m_androidWindow != NULL) {
-            InitSurface();
             InitSwapChain();
             InitSync();
             SetNextBackBuffer();
