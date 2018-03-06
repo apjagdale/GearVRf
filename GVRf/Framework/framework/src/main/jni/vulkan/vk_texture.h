@@ -19,7 +19,6 @@
 #include "vulkan_headers.h"
 #include "../objects/textures/image.h"
 #include "../objects/textures/texture.h"
-//#include "vulkan/vulkan_image.h"
 
 
 namespace gvr {

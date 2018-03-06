@@ -43,7 +43,6 @@ VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget*
 
 RenderTexture* VkRenderTarget :: getTexture() {
     VkFence fence =  static_cast<VkRenderTexture*>(mRenderTexture)->getFenceObject();
-    //VkRenderTarget* renderTarget1 = renderTarget ;
     VkResult err;
 
     VulkanCore * core = VulkanCore::getInstance();
