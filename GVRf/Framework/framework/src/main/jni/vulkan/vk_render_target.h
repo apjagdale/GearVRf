@@ -34,10 +34,6 @@ public:
 
     RenderTexture* getTexture();
     VkCommandBuffer& getCommandBuffer();
-
-
-private:
-    VkRenderTexture* getRenderedTexture();
 };
 }
 #endif //FRAMEWORK_VK_RENDER_TARGET_H

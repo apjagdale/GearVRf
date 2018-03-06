@@ -29,11 +29,11 @@ VkCommandBuffer& VkRenderTarget::getCommandBuffer(){
      mRenderTexture->beginRendering(renderer);
  }
 
- RenderTexture* VkRenderTarget::getTexture()
- {
-     VkRenderTexture* renderTexture = getRenderedTexture();
-     return renderTexture;
- }
+// RenderTexture* VkRenderTarget::getTexture()
+// {
+//     VkRenderTexture* renderTexture = getRenderedTexture();
+//     return renderTexture;
+// }
 
 VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, bool is_multiview): RenderTarget(renderTexture, is_multiview){
     static_cast<VkRenderTexture*>(mRenderTexture)->initVkData();
@@ -47,7 +47,7 @@ VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget*
 }
 
 
-VkRenderTexture* VkRenderTarget :: getRenderedTexture() {
+RenderTexture* VkRenderTarget :: getTexture() {
     VkFence fence =  static_cast<VkRenderTexture*>(mRenderTexture)->getFenceObject();
     //VkRenderTarget* renderTarget1 = renderTarget ;
     VkResult err;
@@ -91,7 +91,7 @@ VkRenderTexture* VkRenderTarget :: getRenderedTexture() {
         err = vkWaitForFences(device, 1, &fence , VK_TRUE, 4294967295U);
     }
 
-    return static_cast<VkRenderTexture*>(mRenderTexture);
+    return mRenderTexture;
 }
 
 }

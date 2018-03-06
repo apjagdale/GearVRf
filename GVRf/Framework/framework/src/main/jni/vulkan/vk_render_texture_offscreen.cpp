@@ -89,10 +89,21 @@ namespace gvr{
         VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
         err = vkMapMemory(device, mem, 0,
                           fbo->getImageSize(COLOR_IMAGE), 0, (void **) &data);
-        uint64_t siz = fbo->getImageSize(COLOR_IMAGE);
+
         *readback_buffer = data;
         //GVR_VK_CHECK(!err);
 
+    }
+
+
+    void VkRenderTextureOffScreen::unmapDeviceMemory()
+    {
+        if(!fbo)
+            return;
+
+        VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
+        VkDevice device = vk_renderer->getDevice();
+        VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
         vkUnmapMemory(device, mem);
     }
 
