@@ -257,12 +257,15 @@ ShadowMap* LightList::updateLightBlock(Renderer* renderer)
 
 void LightList::useLights(Renderer* renderer, Shader* shader)
 {
+    LOGE("Abhijit in uselights");
     if (mUseUniformBlock)
     {
+        LOGE("Abhijit in UBO uselights");
         mLightBlock->bindBuffer(shader, renderer);
     }
     else
     {
+        LOGE("Abhijit in non UBO uselights");
         shader->bindLights(*this, renderer);
     }
 }
@@ -316,6 +319,7 @@ bool LightList::createLightBlock(Renderer* renderer)
     if ((mLightBlock == NULL) ||
         (numFloats > mLightBlock->getTotalSize()))
     {
+        LOGE("Abhijit adding all lights in one UBO");
         std::string desc("float lightdata");
         mLightBlock = renderer->createUniformBlock(desc.c_str(), LIGHT_UBO_INDEX, "Lights_ubo", numFloats);
         mLightBlock->useGPUBuffer(true);
@@ -348,7 +352,7 @@ void LightList::makeShaderBlock(std::string& layout) const
 
     if (mUseUniformBlock)
     {
-         stream << "layout (std140) uniform Lights_ubo\n{" << std::endl;
+         stream << "layout (std140, set = 0, binding = 3 ) uniform Lights_ubo\n{" << std::endl;
     }
     else
     {

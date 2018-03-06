@@ -30,6 +30,7 @@ namespace gvr {
     {
     public:
         explicit VulkanMaterial(const char* uniform_desc, const char* texture_desc);
+        explicit VulkanMaterial(const char* uniform_desc, const char* texture_desc, int bindingPoint, const char* blockName);
         virtual ~VulkanMaterial() {}
         void useGPUBuffer(bool flag){
             uniforms_.useGPUBuffer(flag);

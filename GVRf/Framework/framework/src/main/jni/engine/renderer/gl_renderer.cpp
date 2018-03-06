@@ -249,16 +249,15 @@ namespace gvr
             GL(glBlendEquation (GL_FUNC_ADD));
             GL(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
             GL(glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE));
-            rstate.lightsChanged = lights.isDirty();
+            //if(lights != NULL) {
+                rstate.lightsChanged = lights.isDirty();
 
-            if (lights.usingUniformBlock())
-            {
-                rstate.shadow_map = lights.updateLightBlock(this);
-            }
-            else
-            {
-                rstate.shadow_map = lights.scanLights();
-            }
+                if (lights.usingUniformBlock()) {
+                    rstate.shadow_map = lights.updateLightBlock(this);
+                } else {
+                    rstate.shadow_map = lights.scanLights();
+                }
+            //}
         }
         if ((post_effects == NULL) ||
             (post_effect_render_texture_a == nullptr) ||

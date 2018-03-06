@@ -88,7 +88,7 @@ public:
     VkPhysicalDevice& getPhysicalDevice(){
         return vulkanCore_->getPhysicalDevice();
     }
-    void renderRenderDataVector(RenderState&, std::vector<RenderData*>& render_data_vector, std::vector<RenderData*>&);
+    void renderRenderDataVector(RenderState&, std::vector<RenderData*>& render_data_vector, std::vector<RenderData*>&, LightList& lights);
     void restoreRenderStates(RenderData* render_data){}
     void setRenderStates(RenderData* render_data, RenderState& rstate){}
     virtual void cullAndRender(RenderTarget* renderTarget, Scene* scene,
@@ -123,8 +123,9 @@ public:
                                  const char* fragmentShader);
     virtual void renderRenderTarget(Scene*, jobject javaSceneObject, RenderTarget* renderTarget, ShaderManager* shader_manager,
                                     RenderTexture* post_effect_render_texture_a, RenderTexture* post_effect_render_texture_b);
-    virtual Light* createLight(const char* uniformDescriptor, const char* textureDescriptor) { return NULL; }
-    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int);
+    virtual Light* createLight(const char* uniformDescriptor, const char* textureDescriptor);
+    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int, LightList& lights);
+    virtual bool renderWithShader(RenderState& rstate, Shader* shader, RenderData* renderData, ShaderData* shaderData, int){}
     virtual void updatePostEffectMesh(Mesh*);
 private:
     VulkanCore* vulkanCore_;

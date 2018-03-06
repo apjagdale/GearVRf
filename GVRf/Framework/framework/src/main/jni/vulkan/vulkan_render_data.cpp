@@ -32,6 +32,7 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
     VkDescriptorSet descriptorSet = getDescriptorSet(curr_pass);
     //bind out descriptor set, which handles our uniforms and samplers
     if (!isDescriptorSetNull(curr_pass)) {
+        /*
         VulkanMaterial *vkmtl = static_cast<VulkanMaterial *>(material(
                 curr_pass));
 
@@ -39,8 +40,9 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
                            VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
                            0,
                            (uint32_t) vkmtl->uniforms().getTotalSize(),
-                           vkmtl->uniforms().getUniformData());
+                           vkmtl->uniforms().getUniformData());*/
 
+        //LOGE("Abhijit cmd bind descrptior set");
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 Vkshader->getPipelineLayout(), 0, 1,
                                 &descriptorSet, 0, NULL);

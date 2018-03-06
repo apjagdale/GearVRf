@@ -31,13 +31,26 @@ namespace gvr {
 class LightList
 {
 public:
+
     LightList() : mDirty(0),
                   mLightBlock(NULL),
                   mNumShadowMaps(0),
                   mTotalUniforms(0),
-                  mUseUniformBlock(false) { }
+                  mUseUniformBlock(true) { }
 
+  /*  LightList(bool useUniformBlock = false) : mDirty(0),
+                  mLightBlock(NULL),
+                  mNumShadowMaps(0),
+                  mTotalUniforms(0),
+                  mUseUniformBlock(useUniformBlock) {
+
+    }
+*/
     virtual ~LightList();
+
+    UniformBlock* getUBO(){
+        return mLightBlock;
+    }
 
     void useUniformBlock()  { mUseUniformBlock = true; }
 

@@ -359,14 +359,22 @@ public class GVRShaderTemplate extends GVRShader
                 combinedSource = combinedSource.replace("@" + key, segmentSource);
             }
         }
+
+        Log.e("Abhijit", "Abhijit calling makelayout from java" + getClass().getSimpleName());
         combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
         combinedSource = combinedSource.replace("@LIGHTSOURCES", lightShaderSource);
         combinedSource = combinedSource.replace("@MATERIAL_UNIFORMS", material.makeShaderLayout());
-        if(material != null && combinedSource.contains("Material_ubo"))
+      //  Log.e("Abhijit", "Abhijit material shadre string" + combinedSource);
+/*        if(material != null && combinedSource.contains("Material_ubo")) {
             material.useGpuBuffer(true);
-        else
+            Log.e("Abhijit", "Abhijit material gpu setting true");
+        }
+        else {
             material.useGpuBuffer(false);
+            Log.e("Abhijit", "Abhijit material gpu setting false");
+        }
 
+       */
         combinedSource = combinedSource.replace("@BONES_UNIFORMS", GVRShaderManager.makeLayout(sBonesDescriptor, "Bones_ubo", true));
         if (type.equals("Vertex"))
         {

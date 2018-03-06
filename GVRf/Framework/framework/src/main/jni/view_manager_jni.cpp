@@ -97,6 +97,7 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
     uint8_t *readback_buffer = (uint8_t*) env->GetDirectBufferAddress(jreadback_buffer);
     RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
     RenderTexture* renderTexture =    renderTarget->getTexture();
+   // VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(getRenderTexture(static_cast<VkRenderTarget*>(renderTarget)));
 
     if(useMultiview){
             renderTexture->setLayerIndex(eye);
