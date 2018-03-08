@@ -37,7 +37,7 @@ namespace gvr
         :   Light(),
             uniforms_(uniform_desc, texture_desc, LIGHT_UBO_INDEX, "Lights_ubo")
             {
-                uniforms_.useGPUBuffer(false);
+                uniforms_.useGPUBuffer(true);
             }
 
         virtual ShaderData& uniforms()

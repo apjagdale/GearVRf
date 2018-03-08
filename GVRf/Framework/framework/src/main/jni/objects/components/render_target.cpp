@@ -17,6 +17,7 @@
 #include "component.inl"
 #include "objects/textures/render_texture.h"
 #include "objects/light.h" // for DEBUG_LIGHT
+#include "objects/scene.h"
 
 namespace gvr {
 
@@ -95,8 +96,9 @@ RenderTarget::RenderTarget()
 
 void RenderTarget::cullFromCamera(Scene* scene, jobject javaSceneObject, Camera* camera, Renderer* renderer, ShaderManager* shader_manager){
 
-     renderer->cullFromCamera(scene, javaSceneObject, camera,shader_manager, mRenderDataVector.get(),mRenderState.is_multiview);
-     renderer->state_sort(mRenderDataVector.get());
+    renderer->cullFromCamera(scene, javaSceneObject, camera,shader_manager, mRenderDataVector.get(),mRenderState.is_multiview);
+    scene->getLights().shadersRebuilt();
+    renderer->state_sort(mRenderDataVector.get());
 }
 
 RenderTarget::~RenderTarget()

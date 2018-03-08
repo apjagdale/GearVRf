@@ -321,7 +321,6 @@ namespace gvr
             renderPostEffectData(rstate, input_texture, post_effects, npost);
         }
         GL(glDisable(GL_BLEND));
-        lights.clearDirty();
     }
 
 /**

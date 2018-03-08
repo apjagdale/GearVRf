@@ -38,14 +38,6 @@ public:
                   mTotalUniforms(0),
                   mUseUniformBlock(true) { }
 
-  /*  LightList(bool useUniformBlock = false) : mDirty(0),
-                  mLightBlock(NULL),
-                  mNumShadowMaps(0),
-                  mTotalUniforms(0),
-                  mUseUniformBlock(useUniformBlock) {
-
-    }
-*/
     virtual ~LightList();
 
     UniformBlock* getUBO(){
