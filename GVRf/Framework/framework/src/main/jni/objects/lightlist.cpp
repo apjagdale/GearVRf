@@ -223,6 +223,10 @@ ShadowMap* LightList::updateLightBlock(Renderer* renderer)
         createLightBlock(renderer);
     }
     mTotalUniforms = 0;
+    if (mClassMap.size() == 0)
+    {
+        return NULL;
+    }
     for (auto it1 = mClassMap.begin();
          it1 != mClassMap.end();
          ++it1)
@@ -237,10 +241,6 @@ ShadowMap* LightList::updateLightBlock(Renderer* renderer)
             if (sm && sm->enabled())
             {
                 shadowMap = sm;
-            }
-            if (mDirty & REBUILD_SHADERS)   // shaders don't match light list yet
-            {
-                continue;
             }
             if (dirty || light->uniforms().isDirty(ShaderData::MAT_DATA))
             {
@@ -291,7 +291,6 @@ void LightList::makeShadowMaps(Scene* scene, jobject jscene, ShaderManager* shad
     }
     if (mNumShadowMaps != numShadowMaps)
     {
-        mDirty |= SHADOW_CHANGED;
         mNumShadowMaps = numShadowMaps;
 #ifdef DEBUG_LIGHT
         LOGD("LIGHT: %d shadow maps", mNumShadowMaps);
@@ -317,6 +316,10 @@ bool LightList::createLightBlock(Renderer* renderer)
         (numFloats > mLightBlock->getTotalSize()))
     {
         std::string desc("float lightdata");
+        if (mLightBlock)
+        {
+            delete mLightBlock;
+        }
         mLightBlock = renderer->createUniformBlock(desc.c_str(), LIGHT_UBO_INDEX, "Lights_ubo", numFloats);
         mLightBlock->useGPUBuffer(true);
 #ifdef DEBUG_LIGHT

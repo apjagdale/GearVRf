@@ -194,7 +194,6 @@ void Renderer::cullFromCamera(Scene *scene, jobject javaSceneObject, Camera* cam
     }
     // 3. do occlusion culling, if enabled
     occlusion_cull(rstate, scene_objects, render_data_vector);
-    lights.shadersRebuilt();
 }
 
 
