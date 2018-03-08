@@ -14,13 +14,9 @@
  */
 
 #include <jni.h>
-#include <vulkan/vk_render_target.h>
-#include <vulkan/vk_render_texture_offscreen.h>
-
 #include "engine/renderer/renderer.h"
 #include "objects/textures/render_texture.h"
 #include "objects/components/render_target.h"
-#include "engine/renderer/vulkan_renderer.h"
 //#include "objects/components/camera.h"
 
 namespace gvr {

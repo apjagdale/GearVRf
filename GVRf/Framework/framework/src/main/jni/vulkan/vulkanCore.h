@@ -24,7 +24,6 @@
 #include "objects/components/camera.h"
 #include "vk_texture.h"
 
-
 #define GVR_VK_CHECK(X) if (!(X)) { LOGD("VK_CHECK Failure"); assert((X));}
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
