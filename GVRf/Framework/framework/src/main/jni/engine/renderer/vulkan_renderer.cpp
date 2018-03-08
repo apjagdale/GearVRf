@@ -146,6 +146,8 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
         updateTransforms(rstate, &transformUBO, rdata);
     }
     rdata->updateGPU(this,shader);
+
+    //lights.updateLightBlock(this);
     vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, lights);
 
     if(vkRdata->isDirty(pass)) {
@@ -234,7 +236,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
     LightList& lights = scene->getLights();
 
     std::vector<Light*> lightListtemp;
-    LOGE("Abhijit vulkan rlight counts %d", lights.getLights(lightListtemp));
+    //LOGE("Abhijit vulkan rlight counts %d", lights.getLights(lightListtemp));
 
 
     int postEffectCount = 0;
@@ -248,7 +250,8 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
 
             //LOGE("Abhijit vulkan renderer lights call  LIGHt flag %d", rstate.lightsChanged);
             if (lights.usingUniformBlock()) {
-                LOGE("Abhijit vulkan renderer lights call");
+                //LOGE("Abhijit vulkan renderer lights call");
+                lights.useUniformBlock();
                 rstate.shadow_map = lights.updateLightBlock(this);
             } else {
                 //rstate.shadow_map = lights.scanLights();

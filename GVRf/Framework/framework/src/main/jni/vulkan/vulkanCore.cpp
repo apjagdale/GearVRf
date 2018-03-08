@@ -580,6 +580,7 @@ void VulkanCore::InitCommandPools(){
         uint32_t index = 0;
         std::vector<VkDescriptorSetLayoutBinding> uniformAndSamplerBinding;
 
+
         vk_shader->makeLayout(vkMtl, uniformAndSamplerBinding,  index, vkdata, lights);
 
         VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
@@ -953,8 +954,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     pipelineCreateInfo.pDynamicState = &dynamic_state_create_info;
     VkPipeline pipeline = 0;
     LOGI("Vulkan graphics call before");
-    err = vkCreateGraphicsPipelines(m_device, m_pipelineCache, 1, &pipelineCreateInfo, nullptr,
+    err = vkCreateGraphicsPipelines(m_device, 0, 1, &pipelineCreateInfo, nullptr,
                                     &pipeline);
+    LOGE("Abhijit Vulkan graphics call after %d", err);
     GVR_VK_CHECK(!err);
     rdata->setPipeline(pipeline,pass);
     LOGI("Vulkan graphics call after");

@@ -109,7 +109,7 @@ namespace gvr {
         }
         memcpy(pData + start, mUniformData + start, len);
         vkUnmapMemory(device, m_bufferInfo.mem);
-
+/*
         if(getBindingPoint() == 1) {
             LOGE("Abhijit updating in vulkan uniform block  us  %d  and length %d",
                  getBindingPoint(), len);
@@ -119,7 +119,7 @@ namespace gvr {
                 LOGE("Abhijit data %f", *data);
                 data++;
             }
-        }
+        }*/
     }
 
     void VulkanUniformBlock::createBuffer(VulkanCore* vk)

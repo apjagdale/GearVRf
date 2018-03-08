@@ -170,6 +170,8 @@ void Scene::exportToFile(std::string filepath) {
 
 bool Scene::addLight(Light* light)
 {
+    //if(Renderer::getInstance()->isVulkanInstance())
+    //    lights_.useUniformBlock();
     return lights_.addLight(light);
 }
 

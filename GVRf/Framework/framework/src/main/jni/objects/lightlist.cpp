@@ -63,6 +63,7 @@ int LightList::getLights(std::vector<Light*>& lightList) const
  */
 bool LightList::addLight(Light* light)
 {
+    LOGE("Abhijit adding : addinngg light called");
     std::lock_guard < std::recursive_mutex > lock(mLock);
 
     auto it2 = mClassMap.find(light->getLightClass());
@@ -94,6 +95,7 @@ bool LightList::addLight(Light* light)
  */
 bool LightList::removeLight(Light* light)
 {
+    LOGE("Abhijit adding : removinmg light called");
     std::lock_guard < std::recursive_mutex > lock(mLock);
 
     /*
@@ -210,16 +212,20 @@ ShadowMap* LightList::scanLights()
 
 ShadowMap* LightList::updateLightBlock(Renderer* renderer)
 {
+
     std::lock_guard < std::recursive_mutex > lock(mLock);
     bool dirty = mDirty != 0;
     ShadowMap* shadowMap = NULL;
 
     if (mDirty & REBUILD_SHADERS)
     {
-        return scanLights();
+        LOGE("Abhijit REBUILD_SHADERS light block called");
+        //return scanLights();
+        scanLights();
     }
     if (mDirty & LIGHT_ADDED)
     {
+        LOGE("Abhijit create light block called");
         createLightBlock(renderer);
     }
     mTotalUniforms = 0;
@@ -246,8 +252,10 @@ ShadowMap* LightList::updateLightBlock(Renderer* renderer)
             {
                 int offset = light->getBlockOffset();
                 const UniformBlock& uniforms = light->uniforms().uniforms();
-                mLightBlock->updateGPU(renderer, offset, uniforms);
-                light->uniforms().clearDirty();
+              //  if(mLightBlock) {
+                    mLightBlock->updateGPU(renderer, offset, uniforms);
+                    light->uniforms().clearDirty();
+              //  }
             }
         }
     }
@@ -316,11 +324,18 @@ bool LightList::createLightBlock(Renderer* renderer)
             numFloats += light->getTotalSize() / sizeof(float);
         }
     }
+    //LOGE("Abhijit adding : createLightBlock light called  %d and prev %d", numFloats, mLightBlock->getTotalSize());
     if ((mLightBlock == NULL) ||
-        (numFloats > mLightBlock->getTotalSize()))
+        (numFloats > (mLightBlock->getTotalSize()/ sizeof(float))))
     {
         LOGE("Abhijit adding all lights in one UBO");
         std::string desc("float lightdata");
+
+
+        LOGE("Abhijit adding all lights requires %d", numFloats);
+        if(mLightBlock != NULL) {
+            delete mLightBlock;
+        }
         mLightBlock = renderer->createUniformBlock(desc.c_str(), LIGHT_UBO_INDEX, "Lights_ubo", numFloats);
         mLightBlock->useGPUBuffer(true);
 #ifdef DEBUG_LIGHT
