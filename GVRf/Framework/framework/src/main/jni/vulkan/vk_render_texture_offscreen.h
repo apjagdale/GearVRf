@@ -27,7 +27,8 @@ namespace gvr {
         explicit VkRenderTextureOffScreen(int width, int height, int sample_count = 1);
         void bind();
         bool isReady();
-        bool readRenderResult(uint8_t **readback_buffer);
+        bool readRenderResult(uint8_t *readback_buffer);
+        bool accessRenderResult(uint8_t **readback_buffer);
         void unmapDeviceMemory();
     };
 

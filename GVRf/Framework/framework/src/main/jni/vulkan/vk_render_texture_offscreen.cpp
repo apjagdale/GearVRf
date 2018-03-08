@@ -48,7 +48,16 @@ namespace gvr{
         return true;
     }
 
-    bool VkRenderTextureOffScreen::readRenderResult(uint8_t **readback_buffer) {
+    bool VkRenderTextureOffScreen::readRenderResult(uint8_t* readback_buffer){
+
+        uint8_t *data;
+        bool result = accessRenderResult(&data);
+        memcpy(readback_buffer, data, mWidth*mHeight*4);
+        unmapDeviceMemory();
+        return result;
+    }
+
+    bool VkRenderTextureOffScreen::accessRenderResult(uint8_t **readback_buffer) {
 
         if(!fbo)
             return false;
@@ -92,6 +101,8 @@ namespace gvr{
 
         *readback_buffer = data;
         //GVR_VK_CHECK(!err);
+
+        return true;
 
     }
 

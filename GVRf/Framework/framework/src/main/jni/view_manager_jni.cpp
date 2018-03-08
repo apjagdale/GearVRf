@@ -99,26 +99,11 @@ JNIEXPORT void JNICALL Java_org_gearvrf_GVRViewManager_readRenderResultNative(JN
                                                                               jobject jreadback_buffer, jlong jrenderTarget, jint eye, jboolean useMultiview){
     uint8_t *readback_buffer = (uint8_t*) env->GetDirectBufferAddress(jreadback_buffer);
     RenderTarget* renderTarget = reinterpret_cast<RenderTarget*>(jrenderTarget);
-    RenderTexture* renderTexture;
-
-    gRenderer = Renderer::getInstance();
-    if(gRenderer->isVulkanInstance())
-    {
-        uint8_t *data;
-        VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(static_cast<VkRenderTarget*>(renderTarget)->getTexture());
-        renderTexture->readRenderResult(&data);
-        memcpy(readback_buffer, data, renderTexture->width()*renderTexture->height()*4);
-        renderTexture->unmapDeviceMemory();
-        return;
-    }
-    else
-        renderTexture = renderTarget->getTexture();
-
+    RenderTexture* renderTexture = renderTarget->getTexture();
     if(useMultiview){
             renderTexture->setLayerIndex(eye);
     }
     renderTexture->readRenderResult(readback_buffer);
-
 }
 
 }
