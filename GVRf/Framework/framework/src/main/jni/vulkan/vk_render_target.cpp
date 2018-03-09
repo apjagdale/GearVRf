@@ -41,7 +41,7 @@ VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget*
 }
 
 
-RenderTexture* VkRenderTarget :: getTexture() {
+VkRenderTexture* VkRenderTarget :: getTexture() {
     VkFence fence =  static_cast<VkRenderTexture*>(mRenderTexture)->getFenceObject();
     VkResult err;
 
@@ -84,7 +84,7 @@ RenderTexture* VkRenderTarget :: getTexture() {
         err = vkWaitForFences(device, 1, &fence , VK_TRUE, 4294967295U);
     }
 
-    return mRenderTexture;
+    return static_cast<VkRenderTexture*>(mRenderTexture);
 }
 
 }

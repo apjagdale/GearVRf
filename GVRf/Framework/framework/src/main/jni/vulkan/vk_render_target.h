@@ -32,7 +32,7 @@ public:
     virtual ~VkRenderTarget(){}
     virtual void    beginRendering(Renderer* renderer);
 
-    RenderTexture* getTexture();
+    VkRenderTexture* getTexture();
     VkCommandBuffer& getCommandBuffer();
 };
 }
