@@ -68,7 +68,6 @@ namespace gvr {
 
     std::string VulkanUniformBlock::makeShaderLayout()
     {
-        LOGE("Abhijit makelayout in vulkan uniform block  useBufferFlag %d", mUseBuffer);
         std::ostringstream stream;
         if (mUseBuffer) {
             stream << "layout (std140, set = 0, binding = " << getBindingPoint() << " ) uniform "
@@ -83,9 +82,8 @@ namespace gvr {
             int nelems = entry.Count;
             if (entry.IsSet)
             {
-                if(nelems > 1) {
+                if(nelems > 1)
                     stream << " layout(offset=" << entry.Offset << ") " << entry.Type << " " << entry.Name << "[" << nelems << "];" << std::endl;
-                }
                 else
                     stream << " layout(offset=" << entry.Offset << ") " << entry.Type << " " << entry.Name << ";" << std::endl;
             }
@@ -109,17 +107,6 @@ namespace gvr {
         }
         memcpy(pData + start, mUniformData + start, len);
         vkUnmapMemory(device, m_bufferInfo.mem);
-/*
-        if(getBindingPoint() == 1) {
-            LOGE("Abhijit updating in vulkan uniform block  us  %d  and length %d",
-                 getBindingPoint(), len);
-
-            float *data = (float*)mUniformData;
-            for(int i = 0; i < 4; i++){
-                LOGE("Abhijit data %f", *data);
-                data++;
-            }
-        }*/
     }
 
     void VulkanUniformBlock::createBuffer(VulkanCore* vk)
@@ -155,7 +142,7 @@ namespace gvr {
         err = vkBindBufferMemory(device, m_bufferInfo.buf, m_bufferInfo.mem, 0);
         assert(!err);
 
-            m_bufferInfo.bufferInfo.buffer = m_bufferInfo.buf;
+        m_bufferInfo.bufferInfo.buffer = m_bufferInfo.buf;
         m_bufferInfo.bufferInfo.offset = 0;
 
         m_bufferInfo.bufferInfo.range = mTotalSize;
@@ -164,8 +151,6 @@ namespace gvr {
         createDescriptorWriteInfo(getBindingPoint(), VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT);
         vk_descriptor->createDescriptor(vk, getBindingPoint(),  VkShaderStageFlagBits(VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_VERTEX_BIT ));
         buffer_init_ = true;
-
-        LOGE("Abhijit creating in vulkan uniform block  us  %d and size %d", getBindingPoint(), mTotalSize);
     }
 
     bool VulkanUniformBlock::setFloatVec(const char* name, const float *val, int n) {

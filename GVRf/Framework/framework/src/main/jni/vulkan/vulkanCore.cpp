@@ -956,7 +956,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     LOGI("Vulkan graphics call before");
     err = vkCreateGraphicsPipelines(m_device, 0, 1, &pipelineCreateInfo, nullptr,
                                     &pipeline);
-    LOGE("Abhijit Vulkan graphics call after %d", err);
     GVR_VK_CHECK(!err);
     rdata->setPipeline(pipeline,pass);
     LOGI("Vulkan graphics call after");
@@ -1112,26 +1111,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                     line_width = 1.0;
                 }
                 vkCmdSetLineWidth(cmdBuffer, line_width);
-
-                // Light Changes
-                if (shader->useLights())
-                {
-                    //LightList& lightlist = rstate.scene->getLights();
-
-                    //lightlist.useLights(this, shader);
-                    /*if (rstate.shadow_map)
-                    {
-                        int loc = glGetUniformLocation(glshader->getProgramId(), "u_shadow_maps");
-                        if (loc >= 0)
-                        {
-#ifdef DEBUG_LIGHT
-                            LOGV("LIGHT: binding shadow map loc=%d texIndex = %d", loc, texIndex);
-#endif
-                            rstate.shadow_map->bindTexture(loc, texIndex);
-                        }
-                    }*/
-                }
-
                 rdata->render(shader,cmdBuffer,curr_pass);
            }
         }
@@ -1319,10 +1298,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         if(lights.getUBO() != nullptr){
-            LOGE("Abhijit pushing write descriptor of light");
             static_cast<VulkanUniformBlock*>(lights.getUBO())->setDescriptorSet(descriptorSet);
             writes.push_back(static_cast<VulkanUniformBlock*>(lights.getUBO())->getDescriptorSet());
-            LOGE("Abhijit pushing DONE write descriptor of light");
         }
 
         // TODO: add shadowmap descriptor
@@ -1380,6 +1357,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     void VulkanCore::initVulkanCore() {
         InitCommandPools();
-        LOGE("Vulkan after intialization");
+        LOGI("Vulkan after intialization");
     }
 }

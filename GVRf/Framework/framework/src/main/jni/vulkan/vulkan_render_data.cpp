@@ -42,7 +42,6 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
                            (uint32_t) vkmtl->uniforms().getTotalSize(),
                            vkmtl->uniforms().getUniformData());*/
 
-        //LOGE("Abhijit cmd bind descrptior set");
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 Vkshader->getPipelineLayout(), 0, 1,
                                 &descriptorSet, 0, NULL);

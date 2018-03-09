@@ -360,21 +360,9 @@ public class GVRShaderTemplate extends GVRShader
             }
         }
 
-        Log.e("Abhijit", "Abhijit calling makelayout from java" + getClass().getSimpleName());
         combinedSource = combinedSource.replace("@ShaderName", getClass().getSimpleName());
         combinedSource = combinedSource.replace("@LIGHTSOURCES", lightShaderSource);
         combinedSource = combinedSource.replace("@MATERIAL_UNIFORMS", material.makeShaderLayout());
-      //  Log.e("Abhijit", "Abhijit material shadre string" + combinedSource);
-/*        if(material != null && combinedSource.contains("Material_ubo")) {
-            material.useGpuBuffer(true);
-            Log.e("Abhijit", "Abhijit material gpu setting true");
-        }
-        else {
-            material.useGpuBuffer(false);
-            Log.e("Abhijit", "Abhijit material gpu setting false");
-        }
-
-       */
         combinedSource = combinedSource.replace("@BONES_UNIFORMS", GVRShaderManager.makeLayout(sBonesDescriptor, "Bones_ubo", true));
         if (type.equals("Vertex"))
         {
@@ -472,7 +460,7 @@ public class GVRShaderTemplate extends GVRShader
                     writeShader(context, "V-" + signature + ".glsl", vertexShaderSource);
                     writeShader(context, "F-" + signature + ".glsl", fragmentShaderSource);
                 }
-                Log.e(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
+                Log.i(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
             }
             if (nativeShader > 0)
             {
@@ -523,7 +511,7 @@ public class GVRShaderTemplate extends GVRShader
                     writeShader(context, "V-" + signature + ".glsl", vertexShaderSource);
                     writeShader(context, "F-" + signature + ".glsl", fragmentShaderSource);
                 }
-                Log.e(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
+                Log.i(TAG, "SHADER: generated shader #%d %s", nativeShader, signature);
             }
             return nativeShader;
         }

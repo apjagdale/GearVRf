@@ -50,7 +50,6 @@ public:
         mShadowMapIndex(-1),
         mLightIndex(-1)
     {
-        LOGE("Abhijit Light constructor called");
     }
 
     virtual ~Light();
@@ -192,7 +191,7 @@ public:
 
     ShadowMap* getShadowMap();
 
-    virtual int makeShaderLayout(std::string& layout);
+    int makeShaderLayout(std::string& layout);
 
     /**
      * Internal function called at the start of each frame

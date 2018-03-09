@@ -215,7 +215,6 @@ namespace gvr {
 
     std::string GLUniformBlock::makeShaderLayout()
     {
-        LOGE("Abhijit makelayout in gl uniform block");
         return UniformBlock::makeShaderLayout();
     }
 

@@ -273,7 +273,6 @@ namespace gvr
 
     std::string UniformBlock::makeShaderLayout()
     {
-        LOGE("Abhijit makelayout in in uniform block");
         std::ostringstream stream;
         if (mUseBuffer)
         {

@@ -55,10 +55,8 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
     if (getUniformDescriptor().getNumEntries()){
         VkDescriptorSetLayoutBinding &material_uniformBinding = reinterpret_cast<VulkanUniformBlock&>(vkMtl.uniforms()).getVulkanDescriptor()->getLayoutBinding();
         samplerBinding.push_back(material_uniformBinding);
-        LOGE("Abhijit materail ubo binding done %d", material_uniformBinding);
     }
     else {
-        LOGE("Abhijit materail ubo binding NOT done" );
         // Dummy binding for Material UBO, since now a push Constant
         dummy_binding.binding = MATERIAL_UBO_INDEX;
         samplerBinding.push_back(dummy_binding);
@@ -75,10 +73,8 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
     // Right now, we dont' have support for shadow map, so add dummy binding for it
 
     if(lights.getUBO() != nullptr){
-        LOGE("Abhijit light ubo binding START done" );
         VkDescriptorSetLayoutBinding &lights_uniformBinding = static_cast<VulkanUniformBlock*>(lights.getUBO())->getVulkanDescriptor()->getLayoutBinding();
         samplerBinding.push_back(lights_uniformBinding);
-        LOGE("Abhijit light ubo binding EN done" );
     }
     else {
         dummy_binding.binding = 3;
@@ -186,8 +182,6 @@ VulkanShader::~VulkanShader() { }
             bindingIndex = TRANSFORM_UBO_INDEX;
         else if(strcasestr(blockName,"Bones"))
             bindingIndex = BONES_UBO_INDEX;
-
-        LOGE("Abhijit makelayout in vkshader binding index %d", bindingIndex);
 
         if (useGPUBuffer)
         {

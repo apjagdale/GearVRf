@@ -367,7 +367,6 @@ void GLShader::findTextures()
 
 std::string GLShader::makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer)
 {
-    LOGE("Abhijit makelayout in glshader");
     std::ostringstream stream;
     if (useGPUBuffer)
     {
