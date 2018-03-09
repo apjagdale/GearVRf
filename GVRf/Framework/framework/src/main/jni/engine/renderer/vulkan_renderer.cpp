@@ -145,7 +145,6 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     {
         updateTransforms(rstate, &transformUBO, rdata);
     }
-    rdata->updateGPU(this,shader);
 
     LightList& lights = rstate.scene->getLights();
     vulkanCore_->InitLayoutRenderData(*vkmtl, vkRdata, shader, lights);
@@ -209,6 +208,7 @@ void VulkanRenderer::renderRenderDataVector(RenderState& rstate,std::vector<Rend
                 LOGE("SHADER: shader not found");
                 continue;
             }
+            (*rdata)->updateGPU(this,shader);
             if (!renderWithShader(rstate, shader, (*rdata), curr_material, curr_pass))
                 break;
 
@@ -306,7 +306,6 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
                 vk_renderTarget->getCommandBuffer());
     }
 
-    lights.clearDirty();
 }
 
 

@@ -217,8 +217,7 @@ ShadowMap* LightList::updateLightBlock(Renderer* renderer)
 
     if (mDirty & REBUILD_SHADERS)
     {
-        scanLights();
-        //return scanLights();
+        return scanLights();
     }
     if (mDirty & LIGHT_ADDED)
     {
@@ -354,7 +353,8 @@ void LightList::makeShaderBlock(std::string& layout) const
 
     if (mUseUniformBlock)
     {
-         stream << "layout (std140, set = 0, binding = 3 ) uniform Lights_ubo\n{" << std::endl;
+        int lightUBOIndex = LIGHT_UBO_INDEX;
+        stream << "layout (std140, binding = "<< lightUBOIndex <<" ) uniform Lights_ubo\n{" << std::endl;;
     }
     else
     {
