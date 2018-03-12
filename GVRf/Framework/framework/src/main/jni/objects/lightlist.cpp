@@ -353,8 +353,15 @@ void LightList::makeShaderBlock(std::string& layout) const
 
     if (mUseUniformBlock)
     {
-        int lightUBOIndex = LIGHT_UBO_INDEX;
-        stream << "layout (std140, binding = "<< lightUBOIndex <<" ) uniform Lights_ubo\n{" << std::endl;;
+        int uboLightBinding = LIGHT_UBO_INDEX;
+        stream <<
+                "\n#ifdef VULKAN\n"
+                "layout (std140, set = 0, binding = " << uboLightBinding << ")"
+                "\n#else\n"
+                "layout (std140)"
+                "\n#endif\n"
+                "uniform Lights_ubo\n{"
+               << std::endl;
     }
     else
     {
