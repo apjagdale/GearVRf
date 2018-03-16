@@ -21,7 +21,7 @@
 namespace gvr {
      class VkRenderTextureOnScreen : public VkRenderTexture{
      public:
-         explicit VkRenderTextureOnScreen(int width, int height, int sample_count = 1);
+         explicit VkRenderTextureOnScreen(int width, int height, int fboType, int layers = 1, int sample_count = 1);
          void bind();
     };
 

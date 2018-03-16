@@ -27,7 +27,7 @@ class VkRenderTexture : public RenderTexture
 protected:
     VKFramebuffer* fbo;
     void createRenderPass();
-    int mWidth, mHeight, mSamples;
+    int mWidth, mHeight, mSamples, mFboType, mLayers;
     std::vector <VkClearValue> clear_values;
     VkFence mWaitFence = 0;
     VkDescriptorImageInfo mImageInfo;
@@ -55,7 +55,7 @@ public:
     virtual ~VkRenderTexture(){
         delete fbo;
     }
-    explicit VkRenderTexture(int width, int height, int sample_count = 1);
+    explicit VkRenderTexture(int width, int height, int fboType, int layers = 1, int sample_count = 1);
     virtual unsigned int getFrameBufferId() const {
         return 0;
     }

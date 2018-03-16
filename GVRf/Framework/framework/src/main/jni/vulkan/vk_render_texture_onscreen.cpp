@@ -19,7 +19,7 @@
 #include "vk_imagebase.h"
 
 namespace gvr{
-    VkRenderTextureOnScreen::VkRenderTextureOnScreen(int width, int height, int sample_count):VkRenderTexture(width, height, sample_count){
+    VkRenderTextureOnScreen::VkRenderTextureOnScreen(int width, int height, int fboType, int layers, int sample_count):VkRenderTexture(width, height, fboType, layers, sample_count){
     }
 
     void VkRenderTextureOnScreen::bind() {
@@ -28,7 +28,7 @@ namespace gvr{
             createRenderPass();
             VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
-            fbo->createFrameBuffer(vk_renderer->getDevice(), DEPTH_IMAGE | COLOR_IMAGE, mSamples, true);
+            fbo->createFrameBuffer(vk_renderer->getDevice(), mFboType, mSamples, true);
         }
     }
 

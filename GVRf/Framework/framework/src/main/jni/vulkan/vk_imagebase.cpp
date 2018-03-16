@@ -98,6 +98,7 @@ void vkImageBase::createImageView(bool host_accessible) {
     ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
     GVR_VK_CHECK(!ret);
 
+    LOGE("Vulkan Abhijit %d", mLayers);
     ret = vkCreateImageView(
             device,
             gvr::ImageViewCreateInfo(image, imageType,

@@ -25,6 +25,7 @@
 #include <VrApi_Types.h>
 #include <engine/renderer/vulkan_renderer.h>
 #include <objects/textures/render_texture.h>
+
 static const char* activityClassName = "org/gearvrf/GVRActivity";
 static const char* viewManagerClassName = "org/gearvrf/OvrViewManager";
 
@@ -119,7 +120,7 @@ namespace gvr {
     RenderTextureInfo* renderTextureInfo = new RenderTextureInfo();
     renderTextureInfo->fboId = fbo.getRenderBufferFBOId(index);
     renderTextureInfo->fboHeight = fbo.getHeight();
-    renderTextureInfo->fdboWidth = fbo.getWidth();
+    renderTextureInfo->fboWidth = fbo.getWidth();
     renderTextureInfo->multisamples = mMultisamplesConfiguration;
     renderTextureInfo->useMultiview = use_multiview;
     renderTextureInfo->views = use_multiview ? 2 : 1;

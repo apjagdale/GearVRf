@@ -42,7 +42,11 @@ ShaderData* VulkanRenderer::createMaterial(const char* uniform_desc, const char*
     return new VulkanMaterial(uniform_desc, texture_desc);
 }
 RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& renderTextureInfo) {
-    return new VkRenderTextureOffScreen(renderTextureInfo.fdboWidth, renderTextureInfo.fboHeight, renderTextureInfo.multisamples);
+    return new VkRenderTextureOffScreen(renderTextureInfo.fboWidth, renderTextureInfo.fboHeight, DEPTH_IMAGE | COLOR_IMAGE, 1, renderTextureInfo.multisamples);
+}
+
+RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format) {
+
 }
 
     Light* VulkanRenderer::createLight(const char* uniformDescriptor, const char* textureDescriptor)
@@ -105,7 +109,7 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
                                                    int jcolor_format, int jdepth_format, bool resolve_depth,
                                                    const TextureParameters* texture_parameters, int number_views)
 {
-    return new VkRenderTextureOffScreen(width, height, sample_count);
+    return new VkRenderTextureOffScreen(width, height, DEPTH_IMAGE | COLOR_IMAGE, 1, sample_count);
 }
 
 RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count,
@@ -113,7 +117,7 @@ RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sa
                                                    const TextureParameters* texture_parameters, int number_views, bool monoscopic)
 {
     if(monoscopic)
-        return new VkRenderTextureOnScreen(width, height, sample_count);
+        return new VkRenderTextureOnScreen(width, height, DEPTH_IMAGE | COLOR_IMAGE, 1, sample_count);
     return createRenderTexture(width, height, sample_count, jcolor_format, jdepth_format, resolve_depth, texture_parameters, number_views);
 }
 

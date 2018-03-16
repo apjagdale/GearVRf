@@ -24,7 +24,7 @@ namespace gvr {
     class VkRenderTextureOffScreen : public VkRenderTexture
     {
     public:
-        explicit VkRenderTextureOffScreen(int width, int height, int sample_count = 1);
+        explicit VkRenderTextureOffScreen(int width, int height, int fboType, int layers = 1, int sample_count = 1);
         void bind();
         bool isReady();
         bool readRenderResult(uint8_t *readback_buffer);
