@@ -26,6 +26,7 @@ class VKFramebuffer final{
     int mWidth;
     int mHeight;
     VkFramebuffer mFramebuffer;
+    std::vector<VkFramebuffer> mCascadeFramebuffer;
 public:
 
     ~VKFramebuffer();

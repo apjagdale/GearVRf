@@ -98,15 +98,34 @@ void vkImageBase::createImageView(bool host_accessible) {
     ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
     GVR_VK_CHECK(!ret);
 
-    LOGE("Vulkan Abhijit %d", mLayers);
-    ret = vkCreateImageView(
-            device,
-            gvr::ImageViewCreateInfo(image, imageType,
-                                     format_, 1, mLayers,
-                                     VK_IMAGE_ASPECT_COLOR_BIT),
-            nullptr, &imageView
-    );
-    GVR_VK_CHECK(!ret);
+    LOGE("Vulkan Abhijit layers %d", mLayers);
+    // Overall view of the image created
+    if(mLayers == 1) {
+        ret = vkCreateImageView(
+                device,
+                gvr::ImageViewCreateInfo(image, imageType,
+                                         format_, 1, 0, mLayers,
+                                         VK_IMAGE_ASPECT_COLOR_BIT),
+                nullptr, &imageView
+        );
+        GVR_VK_CHECK(!ret);
+    }
+    else {
+        //View per layers are created here
+        VkImageView layerView;
+        for (int i = 0; i < mLayers; i++) {
+            LOGE("Abhijit creating image view for layer %d", i);
+            ret = vkCreateImageView(
+                    device,
+                    gvr::ImageViewCreateInfo(image, imageType,
+                                             format_, 1, i, 1,
+                                             VK_IMAGE_ASPECT_COLOR_BIT),
+                    nullptr, &layerView
+            );
+            GVR_VK_CHECK(!ret);
+            cascadeImageView.push_back(layerView);
+        }
+    }
 
     if(host_accessible) {
 
@@ -415,7 +434,7 @@ int vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels,
     assert(!err);
     err = vkCreateImageView(device, gvr::ImageViewCreateInfo(image,
                                                              target,
-                                                             internalFormat, mipLevels,
+                                                             internalFormat, mipLevels,0,
                                                              pixels.size(),
                                                              VK_IMAGE_ASPECT_COLOR_BIT), NULL,
                             &imageView);

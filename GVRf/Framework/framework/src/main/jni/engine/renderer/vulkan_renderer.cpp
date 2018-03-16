@@ -46,7 +46,8 @@ RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& rend
 }
 
 RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format) {
-
+    LOGE("Abhijit calling VkRenderTextureOffScreen with layers %d", layers);
+    return new VkRenderTextureOffScreen(width, height, DEPTH_IMAGE, layers, sample_count);
 }
 
     Light* VulkanRenderer::createLight(const char* uniformDescriptor, const char* textureDescriptor)

@@ -660,6 +660,7 @@ void VulkanCore::InitCommandPools(){
             return mRenderPassMap[render_pass_type + sample_count];
 
         if(render_pass_type == SHADOW_RENDERPASS){
+            LOGE("Abhijit creating  SHADOW_RENDERPASS with layers");
             VkRenderPass render_pass = getShadowRenderPass(m_device);
             mRenderPassMap.insert(std::make_pair(render_pass_type, render_pass));
             return render_pass;
@@ -1040,12 +1041,35 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             LOGE("renderpass  is not initialized");
         }
 
-        ret = vkCreateFramebuffer(device,
-                                  gvr::FramebufferCreateInfo(0, mRenderpass, attachments.size(),
-                                                             attachments.data(), mWidth, mHeight,
-                                                             uint32_t(1)), nullptr,
-                                  &mFramebuffer);
-        GVR_VK_CHECK(!ret);
+
+        if(layers == 1) {
+            ret = vkCreateFramebuffer(device,
+                                      gvr::FramebufferCreateInfo(0, mRenderpass, attachments.size(),
+                                                                 attachments.data(), mWidth,
+                                                                 mHeight,
+                                                                 uint32_t(1)), nullptr,
+                                      &mFramebuffer);
+            GVR_VK_CHECK(!ret);
+        }
+        // For multiple layers
+        else{
+            VkFramebuffer layerFramebuffer;
+            for(int i = 0; i < layers; i++) {
+                attachments.clear();
+                attachments.push_back(mAttachments[DEPTH_IMAGE]->getVkLayerImageView(i));
+                LOGE("Abhijit creating framebuffer for layer %d", i);
+                ret = vkCreateFramebuffer(device,
+                                          gvr::FramebufferCreateInfo(0, mRenderpass,
+                                                                     attachments.size(),
+                                                                     attachments.data(), mWidth,
+                                                                     mHeight,
+                                                                     uint32_t(1)), nullptr,
+                                          &layerFramebuffer);
+                GVR_VK_CHECK(!ret);
+                mCascadeFramebuffer.push_back(layerFramebuffer);
+            }
+        }
+
     }
 
 

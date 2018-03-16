@@ -59,6 +59,10 @@ class vkImageBase
             return imageView;
         }
 
+        const VkImageView& getVkLayerImageView(int layer){
+            return cascadeImageView[layer];
+        }
+
     void setVkImageView(VkImageView img){
          imageView = img;
     }
@@ -92,6 +96,7 @@ class vkImageBase
         VkDeviceMemory dev_memory = 0, host_memory = 0;
         VkImageLayout imageLayout;
         VkImageView imageView;
+        std::vector<VkImageView> cascadeImageView;
         VkFormat format_;
         int mSampleCount;
         int width_, height_, depth_,  mLayers;

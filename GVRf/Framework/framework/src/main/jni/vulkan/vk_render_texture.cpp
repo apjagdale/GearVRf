@@ -37,7 +37,12 @@ const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
 
 void VkRenderTexture::createRenderPass(){
     VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
-    VkRenderPass renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
+    VkRenderPass renderPass;
+    if(mFboType == (DEPTH_IMAGE | COLOR_IMAGE))
+        renderPass = vk_renderer->getCore()->createVkRenderPass(NORMAL_RENDERPASS, mSampleCount);
+    else
+        renderPass = vk_renderer->getCore()->createVkRenderPass(SHADOW_RENDERPASS, mSampleCount);
+
     clear_values.resize(3);
     fbo->addRenderPass(renderPass);
 }
