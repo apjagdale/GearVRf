@@ -88,8 +88,33 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     return rp_begin;
 }
 
+    /*
+bool VkRenderTexture::isReady()
+{
+    VkFence fence =  getFenceObject();
+    VkResult err;
+
+    VulkanCore * core = VulkanCore::getInstance();
+    if(!core)
+    {
+        return false;
+    }
+
+    VkDevice device = core->getDevice();
+    err = vkGetFenceStatus(device, fence);
+    while (err != VK_SUCCESS) {
+        err = vkWaitForFences(device, 1, &fence , VK_TRUE, 4294967295U);
+    }
+
+    return true;
+}*/
+
 void VkRenderTexture::beginRendering(Renderer* renderer){
-    bind();
+        bind();
+        /*if (!isReady())
+        {
+            return;
+        }*/
     VkRenderPassBeginInfo rp_begin = getRenderPassBeginInfo();
     VkViewport viewport = {};
     viewport.height = (float) height();

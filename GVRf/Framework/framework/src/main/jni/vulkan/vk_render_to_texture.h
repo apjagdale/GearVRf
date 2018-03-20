@@ -63,6 +63,7 @@ public:
     virtual unsigned int getDepthBufferId() const {
         return 0;
     }
+    //virtual bool isReady(){};
     virtual void beginRendering(Renderer* renderer);
     virtual void endRendering(Renderer*){
         vkCmdEndRenderPass(mCmdBuffer);

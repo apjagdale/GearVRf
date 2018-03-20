@@ -667,7 +667,12 @@ namespace gvr
 #ifdef DEBUG_LIGHT
                         LOGV("LIGHT: binding shadow map loc=%d texIndex = %d", loc, texIndex);
 #endif
-                        rstate.shadow_map->bindTexture(loc, texIndex);
+                        GLRenderTexture* rtex = static_cast<GLRenderTexture*>(rstate.shadow_map->getTexture());
+
+                        if (rtex)
+                        {
+                            rtex->bindTexture(loc, texIndex);
+                        }
                     }
                 }
             }
