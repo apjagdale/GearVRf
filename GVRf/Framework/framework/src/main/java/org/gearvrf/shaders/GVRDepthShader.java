@@ -33,7 +33,8 @@ public class GVRDepthShader extends GVRShaderTemplate
 
     public GVRDepthShader(GVRContext gvrcontext)
     {
-        super("", "", "float3 a_position float4 a_bone_weights int4 a_bone_indices", GLSLESVersion.VULKAN);
+        //super("", "", "float3 a_position float4 a_bone_weights int4 a_bone_indices", GLSLESVersion.VULKAN);
+        super("", "", "float3 a_position", GLSLESVersion.VULKAN);
         if (fragTemplate == null)
         {
             Context context = gvrcontext.getContext();

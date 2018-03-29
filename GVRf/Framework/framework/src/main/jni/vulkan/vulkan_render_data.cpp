@@ -52,14 +52,19 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
     VulkanVertexBuffer *vbuf = reinterpret_cast< VulkanVertexBuffer *>(mesh_->getVertexBuffer());
     const VulkanIndexBuffer *ibuf = reinterpret_cast<const VulkanIndexBuffer *>(mesh_->getIndexBuffer());
     const GVR_VK_Vertices *vert = (vbuf->getVKVertices(shader));
+    if(vert == NULL)
+        return;
 
     vkCmdBindVertexBuffers(cmdBuffer, VERTEX_BUFFER_BIND_ID, 1, &(vert->buf), offsets);
 
     if(ibuf && ibuf->getIndexCount()) {
+
         const GVR_VK_Indices &ind = ibuf->getVKIndices();
         VkIndexType indexType = (ibuf->getIndexSize() == 2) ? VK_INDEX_TYPE_UINT16
                                                             : VK_INDEX_TYPE_UINT32;
         vkCmdBindIndexBuffer(cmdBuffer, ind.buffer, 0, indexType);
+        LOGE("Abhijit indices count %d", (ind.count));
+        LOGE("Abhijit vertices count %d", (vbuf->getVertexCount()));
         vkCmdDrawIndexed(cmdBuffer, ind.count, 1, 0, 0, 1);
     }
     else

@@ -87,6 +87,14 @@ public:
     {
         return m_descriptorLayout;
     }
+    bool isDepthShader(){
+        return isDepthShaderFlag;
+    }
+
+    void setDepthShaderFlag(){
+        isDepthShaderFlag = true;
+    }
+
     void  convertToVkShaders();
     virtual void bindLights(LightList&, Renderer* r) { }
     int makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetLayoutBinding>& samplerBinding, int index, VulkanRenderData* vkdata, LightList& lights);
@@ -102,6 +110,7 @@ private:
     VulkanShader& operator=(VulkanShader&& shader) = delete;
     std::vector<uint32_t> compiledVS;
     std::vector<uint32_t> compiledFS;
+    bool isDepthShaderFlag = false;
 
 protected:
     virtual void initialize();

@@ -16,7 +16,7 @@
 /***************************************************************************
  * A shader which an user can add in run-time.
  ***************************************************************************/
-#define TEXTURE_BIND_START 4
+#define TEXTURE_BIND_START 5
 #include "vulkan/vulkan_shader.h"
 #include "vulkan/vulkan_material.h"
 #include "engine/renderer/vulkan_renderer.h"
@@ -81,12 +81,24 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
         samplerBinding.push_back(dummy_binding);
     }
 
+    // Dummy shadowmap binding
+    VkDescriptorSetLayoutBinding layoutBinding;
+    layoutBinding.binding = 4;
+    layoutBinding.descriptorCount = 1;
+    layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    layoutBinding.pImmutableSamplers = nullptr;
+    (samplerBinding).push_back(layoutBinding);
+
+    //dummy_binding.binding = 4;
+    //samplerBinding.push_back(dummy_binding);
     /*
      * TODO :: if has shadowmap, create binding for it
      */
     index = TEXTURE_BIND_START;
     vkMtl.forEachTexture([this, &samplerBinding](const char* texname, Texture* t) mutable
     {
+        LOGE("Abhijit texture name %s", texname);
         const DataDescriptor::DataEntry* entry = mTextureDesc.find(texname);
         if ((entry == NULL) || entry->NotUsed)
         {
@@ -124,7 +136,7 @@ int VulkanShader::bindTextures(VulkanMaterial* material, std::vector<VkWriteDesc
         write.descriptorCount = 1;
         write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         if(!t->getImage())
-            write.pImageInfo = &(static_cast<VkRenderTexture*>(t)->getDescriptorImage());
+            write.pImageInfo = &(static_cast<VkRenderTexture*>(t)->getDescriptorImage(COLOR_IMAGE));
         else
             write.pImageInfo = &(tex->getDescriptorImage());
         writes.push_back(write);

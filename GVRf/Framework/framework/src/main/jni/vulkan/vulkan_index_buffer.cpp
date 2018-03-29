@@ -45,6 +45,7 @@ namespace gvr {
         if (!isDirty())
             return;
         m_indices.count = static_cast<uint32_t>(getIndexCount());
+        LOGE("Abhijit indices count %d", (m_indices.count));
         VkMemoryRequirements mem_reqs;
         VkMemoryAllocateInfo memoryAllocateInfo = {};
         bool        pass;

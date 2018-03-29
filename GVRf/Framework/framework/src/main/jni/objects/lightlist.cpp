@@ -183,6 +183,8 @@ void LightList::forEachLight(std::function<void(const Light&)> func) const
     }
 }
 
+
+
 ShadowMap* LightList::scanLights()
 {
     ShadowMap* shadowMap = NULL;

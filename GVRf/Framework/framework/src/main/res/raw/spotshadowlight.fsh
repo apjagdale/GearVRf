@@ -29,11 +29,16 @@ Radiance @LightType(Surface s, in U@LightType data, int index)
         vec3 shadowMapPosition = ShadowCoord.xyz / ShadowCoord.w;
         vec3 texcoord = vec3(shadowMapPosition.x, shadowMapPosition.y, data.shadow_map_index);
         vec4 depth = texture(u_shadow_maps, texcoord);
-        float distanceFromLight = unpackFloatFromVec4i(depth);
+       // float distanceFromLight = unpackFloatFromVec4i(depth);
 
-        if (distanceFromLight < shadowMapPosition.z - bias)
+        if (depth.x < shadowMapPosition.z - bias)
             attenuation = 0.5;
+
+         data.ambient_intensity.xyz = vec3(0,1.0,0);
 	}
+else{
+data.ambient_intensity.xyz = vec3(1.0,0,0);
+}
 #endif
     return Radiance(data.ambient_intensity.xyz,
                     data.diffuse_intensity.xyz,

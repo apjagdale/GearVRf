@@ -49,8 +49,10 @@ namespace gvr {
     }
     const GVR_VK_Vertices* VulkanVertexBuffer::getVKVertices(Shader* shader)  {
         std::unordered_map<Shader*,std::shared_ptr<GVR_VK_Vertices>>::iterator it;
-        if((it = mVerticesMap.find(shader)) == mVerticesMap.end())
+        if((it = mVerticesMap.find(shader)) == mVerticesMap.end()) {
             LOGE("vertex buffer not created");
+            return NULL;
+        }
 
         return (it->second).get();
     }
@@ -65,6 +67,36 @@ namespace gvr {
         std::shared_ptr<GVR_VK_Vertices> vertices(new GVR_VK_Vertices);
         // Our m_vertices member contains the types required for storing
         // and defining our vertex buffer within the graphics pipeline
+
+        int i = 0;
+        int stride = 0;
+        shader->getVertexDescriptor().forEachEntry([this, &i, &vertices, &stride](const DataDescriptor::DataEntry &e)
+                                                   {
+                                                       LOGV("VertexBuffer::bindToShader find %s", e.Name);
+                                                       const DataDescriptor::DataEntry* entry = find(e.Name);
+
+                                                       if (!e.NotUsed)                             // shader uses this vertex attribute?
+                                                       {
+                                                           if ((entry != nullptr) && entry->IsSet) // mesh uses this vertex attribute?
+                                                           {
+                                                               VkVertexInputAttributeDescription binding;
+                                                               binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
+                                                               binding.location = e.Index;
+                                                               LOGE("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
+                                                               binding.format = getDataType(entry->Type); //float3
+                                                               binding.offset = entry->Offset;
+                                                               stride+= entry->Size;
+                                                               vertices->vi_attrs.push_back(binding);
+                                                               i++;
+                                                           }
+                                                           else                                // mesh uses attribute but shader does not
+                                                           {
+                                                               LOGE("entry is not present %s", e.Name);
+
+                                                           }
+
+                                                       }
+                                                   });
 
         // Create our buffer object.
         VkDevice& device = vulkanCore->getDevice();
@@ -112,6 +144,7 @@ namespace gvr {
         GVR_VK_CHECK(!err);
 
         // Copy our triangle verticies and colors into the mapped memory area.
+        LOGE("Abhijit vertices count %d", (bufferByteSize/3));
         memcpy(data, mVertexData, bufferByteSize);
 
         // Unmap the memory back from the CPU.
@@ -157,34 +190,7 @@ namespace gvr {
         // structure with the correct information.
         vertices->vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertices->vi.pNext = nullptr;
-        int i = 0;
 
-        shader->getVertexDescriptor().forEachEntry([this, &i, &vertices](const DataDescriptor::DataEntry &e)
-        {
-            LOGV("VertexBuffer::bindToShader find %s", e.Name);
-            const DataDescriptor::DataEntry* entry = find(e.Name);
-
-            if (!e.NotUsed)                             // shader uses this vertex attribute?
-            {
-                if ((entry != nullptr) && entry->IsSet) // mesh uses this vertex attribute?
-                {
-                    VkVertexInputAttributeDescription binding;
-                    binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
-                    binding.location = e.Index;
-                    LOGE("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
-                    binding.format = getDataType(entry->Type); //float3
-                    binding.offset = entry->Offset;
-                    vertices->vi_attrs.push_back(binding);
-                    i++;
-                }
-                else                                // mesh uses attribute but shader does not
-                {
-                    LOGE("entry is not present %s", e.Name);
-
-                }
-
-            }
-        });
         vertices->vi_bindings.stride = mTotalSize;
         vertices->vi.vertexAttributeDescriptionCount = i;
         vertices->vi.pVertexAttributeDescriptions = vertices->vi_attrs.data();

@@ -28,7 +28,7 @@
 #include "vulkanCore.h"
 #include <array>
 
-#define TEXTURE_BIND_START 4
+#define TEXTURE_BIND_START 5
 #define QUEUE_INDEX_MAX 99999
 #define VERTEX_BUFFER_BIND_ID 0
 namespace gvr {
@@ -563,7 +563,7 @@ void VulkanCore::InitCommandPools(){
         GVR_VK_CHECK(!ret);
     }
 
-    void VulkanCore::InitLayoutRenderData(VulkanMaterial &vkMtl, VulkanRenderData* vkdata, Shader *shader, LightList& lights) {
+    void VulkanCore::InitLayoutRenderData(VulkanMaterial * vkMtl, VulkanRenderData* vkdata, Shader *shader, LightList& lights) {
 
         const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
         DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
@@ -582,7 +582,7 @@ void VulkanCore::InitCommandPools(){
         std::vector<VkDescriptorSetLayoutBinding> uniformAndSamplerBinding;
 
 
-        vk_shader->makeLayout(vkMtl, uniformAndSamplerBinding,  index, vkdata, lights);
+        vk_shader->makeLayout(*vkMtl, uniformAndSamplerBinding,  index, vkdata, lights);
 
         VkDescriptorSetLayout &descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
 
@@ -610,15 +610,18 @@ void VulkanCore::InitCommandPools(){
     VkRenderPass getShadowRenderPass(VkDevice device){
 
         VkRenderPass renderPass;
-        VkAttachmentDescription attachmentDescription{};
-        attachmentDescription.format = VK_FORMAT_D32_SFLOAT;
-        attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-        attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;							// Clear depth at beginning of the render pass
-        attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// We will read from depth, so it's important to store the depth attachment results
-        attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					// We don't care about initial layout of the attachment
-        attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;// Attachment will be transitioned to shader read at render pass end
+        std::vector<VkAttachmentDescription> attachmentDescriptions = {};
+        VkAttachmentDescription attachment;
+        attachment.format = VK_FORMAT_D16_UNORM;
+        attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;							// Clear depth at beginning of the render pass
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;						// We will read from depth, so it's important to store the depth attachment results
+        attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;					// We don't care about initial layout of the attachment
+        attachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;// Attachment will be transitioned to shader read at render pass end
+
+        attachmentDescriptions.push_back(attachment);
 
         VkAttachmentReference depthReference = {};
         depthReference.attachment = 0;
@@ -636,19 +639,19 @@ void VulkanCore::InitCommandPools(){
         dependencies[0].dstSubpass = 0;
         dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
         dependencies[0].dstStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dependencies[0].dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
         dependencies[1].srcSubpass = 0;
         dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
         dependencies[1].srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[1].dstStageMask =  VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
         dependencies[1].srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
         dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-        vkCreateRenderPass(device, gvr::RenderPassCreateInfo(0, (uint32_t) 1, &attachmentDescription,
+        vkCreateRenderPass(device, gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
                                                              1, &subpass, (uint32_t) dependencies.size(),
                                                              dependencies.data()), nullptr, &renderPass);
         return renderPass;
@@ -804,14 +807,18 @@ void VulkanCore::InitCommandPools(){
                 module, "main");
         shaderStages[0] = *shaderStageInfo;
 
-        err = vkCreateShaderModule(m_device, gvr::ShaderModuleCreateInfo(result_frag.data(), result_frag.size() *
-                                                                                             sizeof(unsigned int)),
-                                   nullptr, &module);
-        GVR_VK_CHECK(!err);
-        shaderStageInfo = gvr::PipelineShaderStageCreateInfo(
-                VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, VK_SHADER_STAGE_FRAGMENT_BIT,
-                module, "main");
-        shaderStages[1] = *shaderStageInfo;
+        if(result_frag.size()) {
+            err = vkCreateShaderModule(m_device, gvr::ShaderModuleCreateInfo(result_frag.data(),
+                                                                             result_frag.size() *
+                                                                             sizeof(unsigned int)),
+                                       nullptr, &module);
+            GVR_VK_CHECK(!err);
+            shaderStageInfo = gvr::PipelineShaderStageCreateInfo(
+                    VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+                    VK_SHADER_STAGE_FRAGMENT_BIT,
+                    module, "main");
+            shaderStages[1] = *shaderStageInfo;
+        }
 
     }
 
@@ -880,9 +887,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     VkPipelineColorBlendAttachmentState att_state[1] = {};
     bool disable_color_depth_write = rdata->stencil_test() && (RenderData::Queue::Stencil == rdata->rendering_order());
     att_state[0].colorWriteMask = disable_color_depth_write ? 0x0 : (VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);
+    if(shader->isDepthShader())
+    att_state[0].colorWriteMask = VK_FALSE;
     att_state[0].blendEnable = VK_FALSE;
 
-    if(rdata->alpha_blend()) {
+    if(!shader->isDepthShader() && rdata->alpha_blend()) {
         att_state[0].blendEnable = VK_TRUE;
         att_state[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
         att_state[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -893,6 +902,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
     std::vector<uint32_t> result_vert = shader->getVkVertexShader();
     std::vector<uint32_t> result_frag = shader->getVkFragmentShader();
+    if(shader->isDepthShader())
+        result_frag = {};
     // We define two shader stages: our vertex and fragment shader.
     // they are embedded as SPIR-V into a header file for ease of deployment.
     VkPipelineShaderStageCreateInfo shaderStages[2] = {};
@@ -918,8 +929,11 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                                                                                        VK_FALSE,
                                                                                        0, 0, 0,
                                                                                        1.0);
-    pipelineCreateInfo.pColorBlendState = gvr::PipelineColorBlendStateCreateInfo(1,
-                                                                                 &att_state[0]);
+    if(shader->isDepthShader())
+    pipelineCreateInfo.pColorBlendState = {};
+    else
+    pipelineCreateInfo.pColorBlendState = gvr::PipelineColorBlendStateCreateInfo(1,&att_state[0]);
+
     pipelineCreateInfo.pMultisampleState = gvr::PipelineMultisampleStateCreateInfo(
             getVKSampleBit(sampleCount), VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE,
             VK_NULL_HANDLE, VK_NULL_HANDLE);
@@ -938,7 +952,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
 
     pipelineCreateInfo.pDynamicState = nullptr;
-    pipelineCreateInfo.stageCount = 2; //vertex and fragment
+    pipelineCreateInfo.stageCount = (shader->isDepthShader()) ? 1: 2; //vertex and fragment
     std::vector<VkDynamicState> dynamic_states = {
             VK_DYNAMIC_STATE_VIEWPORT,
             VK_DYNAMIC_STATE_SCISSOR,
@@ -1030,7 +1044,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         if(image_type & DEPTH_IMAGE && mAttachments[DEPTH_IMAGE]== nullptr){
             vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D16_UNORM, mWidth,
-                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ,
+                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, layers, sample_count);
             depthImage->createImageView(false);
             mAttachments[DEPTH_IMAGE] = depthImage;
@@ -1130,6 +1144,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 VulkanShader *shader = static_cast<VulkanShader *>(shader_manager->getShader(
                         rdata->get_shader(false,curr_pass)));
 
+                LOGE("Abhijit in cmd buffer build shader id is %d", shader->getShaderID());
                 float line_width;
                 ShaderData* material = rdata->pass(curr_pass)->material();
                 if(!material || !material->getFloat("line_width", line_width)){
@@ -1239,12 +1254,12 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         GVR_VK_CHECK(!err);
     }
 
-    bool VulkanCore::InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData, LightList& lights) {
+    bool VulkanCore::InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader* shader, VulkanRenderData* vkData, LightList* lights, VulkanMaterial* vkmtl) {
 
         const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
         DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
         bool transformUboPresent = shader->usesMatrixUniforms();
-        VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(vkData->material(pass));
+        //VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(vkData->material(pass));
 
         if ((textureDescriptor.getNumEntries() == 0) && uniformDescriptor.getNumEntries() == 0 && !transformUboPresent) {
         //    vkData->setDescriptorSetNull(true,pass);
@@ -1284,12 +1299,36 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             writes.push_back(static_cast<VulkanUniformBlock*>(vkData->getBonesUbo())->getDescriptorSet());
         }
 
-        if(lights.getUBO() != nullptr){
-            static_cast<VulkanUniformBlock*>(lights.getUBO())->setDescriptorSet(descriptorSet);
-            writes.push_back(static_cast<VulkanUniformBlock*>(lights.getUBO())->getDescriptorSet());
+        if(lights != NULL && lights->getUBO() != nullptr){
+            static_cast<VulkanUniformBlock*>(lights->getUBO())->setDescriptorSet(descriptorSet);
+            writes.push_back(static_cast<VulkanUniformBlock*>(lights->getUBO())->getDescriptorSet());
         }
 
         // TODO: add shadowmap descriptor
+
+        ShadowMap* shadowMap = NULL;
+        if(lights != NULL)
+        shadowMap= lights->scanLights();
+        if(shadowMap){
+
+            RenderTarget *rt = static_cast<RenderTarget*>(shadowMap);
+            VkRenderTexture* vkRenderTexture = static_cast<VkRenderTexture *>(rt->getTexture());
+            if(vkRenderTexture->getFBO() != NULL) {
+
+                VkWriteDescriptorSet write;
+                memset(&write, 0, sizeof(write));
+
+                write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                write.dstBinding = 4;
+                write.dstSet = descriptorSet;
+                write.descriptorCount = 1;
+                write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                write.pImageInfo = &(static_cast<VkRenderTexture *>(rt->getTexture())->getDescriptorImage(
+                        DEPTH_IMAGE));
+                writes.push_back(write);
+                LOGE("Abhijit updating write descriptor of shadowmap");
+            }
+        }
 
         vkShader->bindTextures(vkmtl, writes,  descriptorSet);
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);

@@ -23,16 +23,39 @@ VkRenderTexture::VkRenderTexture(int width, int height, int fboType, int layers,
     initVkData();
 }
 
-const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(){
-    mImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    mImageInfo.imageView = fbo->getImageView(COLOR_IMAGE);
-    TextureParameters textureParameters = TextureParameters();
-    uint64_t index = textureParameters.getHashCode();
-    index = (index << 32) | 1;
-    if(getSampler(index) == 0)
-        VkTexture::createSampler(textureParameters,1);
-    mImageInfo.sampler = getSampler(index);
+const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(ImageType imageType){
+    mImageInfo.imageLayout = imageType == DEPTH_IMAGE ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL :VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    mImageInfo.imageView = fbo->getImageView(imageType);
+    if(imageType != DEPTH_IMAGE) {
+        TextureParameters textureParameters = TextureParameters();
+        uint64_t index = textureParameters.getHashCode();
+        index = (index << 32) | 1;
+        if (getSampler(index) == 0)
+            VkTexture::createSampler(textureParameters, 1);
+        mImageInfo.sampler = getSampler(index);
+    }
+    else {
+        VkSamplerCreateInfo sampler = {};
+        sampler.magFilter = VK_FILTER_LINEAR;
+        sampler.minFilter = VK_FILTER_LINEAR;
+        sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler.addressModeV = sampler.addressModeU;
+        sampler.addressModeW = sampler.addressModeU;
+        sampler.mipLodBias = 0.0f;
+        sampler.maxAnisotropy = 1.0f;
+        sampler.minLod = 0.0f;
+        sampler.maxLod = 1.0f;
+        sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
+        VkSampler sampler1;
+        VkResult err = vkCreateSampler(vk_renderer->getDevice(), &sampler, nullptr, &sampler1);
+        assert(!err);
+        mImageInfo.sampler = sampler1;
+        LOGE("Abhijit creating sampler of depth shadow map");
+    }
     return  mImageInfo;
+
 }
 
 void VkRenderTexture::createRenderPass(){
@@ -77,7 +100,7 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rp_begin.pNext = nullptr;
     rp_begin.renderPass = fbo->getRenderPass();
-    rp_begin.framebuffer = fbo->getFramebuffer();
+    rp_begin.framebuffer = fbo->getFramebuffer(layer_index_);
     rp_begin.renderArea.offset.x = 0;
     rp_begin.renderArea.offset.y = 0;
     rp_begin.renderArea.extent.width = fbo->getWidth();
@@ -132,5 +155,14 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
     vkCmdSetViewport(mCmdBuffer,0,1,&viewport);
     vkCmdBeginRenderPass(mCmdBuffer, &rp_begin, VK_SUBPASS_CONTENTS_INLINE);
 }
+
+/*
+ * Bind the framebuffer to the specified layer of the texture array.
+ * Create the framebuffer and layered texture if necessary.
+ */
+    void VkRenderTexture::setLayerIndex(int layerIndex)
+    {
+        layer_index_ = layerIndex;
+    }
 
 }

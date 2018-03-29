@@ -57,6 +57,9 @@ public:
     }
 
     const VkImageView &getImageView(ImageType type) {
+        /*if(type == DEPTH_IMAGE){
+            return mAttachments[type]->getVkLayerImageView(0);
+        }*/
         return mAttachments[type]->getVkImageView();
     }
 
@@ -78,8 +81,16 @@ public:
 
     void createFrameBuffer(VkDevice &, int, int layers = 1, int sample_count = 1, bool monoscopic = false);
     void createFramebuffer(VkDevice& device);
-    const VkFramebuffer &getFramebuffer() {
-        return mFramebuffer;
+    const VkFramebuffer &getFramebuffer(int layer) {
+        if(layer == -1) {
+            LOGE("Abhijit returning normal fbo fbo with layer %d", layer);
+            return mFramebuffer;
+        }
+        else{
+            LOGE("Abhijit returning cascade fbo with layer %d", layer);
+            return mCascadeFramebuffer[layer];
+        }
+
     }
 
 };

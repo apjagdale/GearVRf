@@ -111,15 +111,25 @@ void vkImageBase::createImageView(bool host_accessible) {
         GVR_VK_CHECK(!ret);
     }
     else {
+        // View for whole array
+        ret = vkCreateImageView(
+                device,
+                gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
+                                         format_, 1, 0, mLayers,
+                                         VK_IMAGE_ASPECT_DEPTH_BIT),
+                nullptr, &imageView
+        );
+        GVR_VK_CHECK(!ret);
+
         //View per layers are created here
         VkImageView layerView;
         for (int i = 0; i < mLayers; i++) {
             LOGE("Abhijit creating image view for layer %d", i);
             ret = vkCreateImageView(
                     device,
-                    gvr::ImageViewCreateInfo(image, imageType,
+                    gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
                                              format_, 1, i, 1,
-                                             VK_IMAGE_ASPECT_COLOR_BIT),
+                                             VK_IMAGE_ASPECT_DEPTH_BIT),
                     nullptr, &layerView
             );
             GVR_VK_CHECK(!ret);
