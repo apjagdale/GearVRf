@@ -20,6 +20,7 @@
 
 #include "engine/renderer/renderer.h"
 #include "objects/lightlist.h"
+#include "objects/light.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
 
@@ -210,7 +211,6 @@ ShadowMap* LightList::scanLights()
 
 ShadowMap* LightList::updateLightBlock(Renderer* renderer)
 {
-
     std::lock_guard < std::recursive_mutex > lock(mLock);
     bool dirty = mDirty != 0;
     ShadowMap* shadowMap = NULL;
@@ -313,7 +313,6 @@ bool LightList::createLightBlock(Renderer* renderer)
             numFloats += light->getTotalSize() / sizeof(float);
         }
     }
-
     if ((mLightBlock == NULL) ||
         (numFloats > (mLightBlock->getTotalSize()/ sizeof(float))))
     {
