@@ -594,12 +594,6 @@ void VulkanCore::InitCommandPools(){
                                           &descriptorLayout);
         GVR_VK_CHECK(!ret);
 
-/*
-        VkPushConstantRange pushConstantRange = {};
-        pushConstantRange.offset                        = 0;
-        pushConstantRange.size                          = (uint32_t) vkMtl.uniforms().getTotalSize();
-        pushConstantRange.stageFlags                    = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;*/
-
         VkPipelineLayout &pipelineLayout = static_cast<VulkanShader *>(shader)->getPipelineLayout();
         ret = vkCreatePipelineLayout(m_device,
                                      gvr::PipelineLayoutCreateInfo(0, 1, &descriptorLayout, 0, 0),
