@@ -605,9 +605,9 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (lclass.VertexDescriptor != null)
             {
-                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "in");
-
+                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "#ifdef HAS_SHADOWS \n layout(location = 20) in");
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
+                lightDefs +=  "#endif";
             }
             lightDefs += "\n" + lightShader + "\n";
             lightFunction += "        if (" + ulightData + elemIndex + ".enabled != 0.0)\n        {\n";
@@ -659,8 +659,9 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (vertexOutputs != null)
             {
-                vertexOutputs = vertexOutputs.replace("$PREFIX", "out");
+                vertexOutputs = vertexOutputs.replace("$PREFIX", "#ifdef HAS_SHADOWS \n layout(location = 20) out");
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
+                lightDefs +=  "#endif";
             }
             if (lclass.Count > 1)
             {
