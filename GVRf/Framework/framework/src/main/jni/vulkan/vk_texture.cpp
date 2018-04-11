@@ -87,9 +87,9 @@ void VkTexture::createSampler(TextureParameters& textureParameters, int maxLod) 
 
     VkResult err;
 
-    err = vkCreateSampler(vk_renderer->getDevice(), gvr::SamplerCreateInfo(min_filter_type_,
-                                                                           mag_filter_type_,
-                                                                           VK_SAMPLER_MIPMAP_MODE_NEAREST,
+    err = vkCreateSampler(vk_renderer->getDevice(), gvr::SamplerCreateInfo(VK_FILTER_LINEAR,
+                                                                           VK_FILTER_LINEAR,
+                                                                           VK_SAMPLER_MIPMAP_MODE_LINEAR,
                                                                            wrap_s_type_,
                                                                            wrap_t_type_,
                                                                            wrap_t_type_,

@@ -24,6 +24,7 @@ int getComponentsNumber(VkFormat format){
         case VK_FORMAT_D16_UNORM:
             return 2;
         case VK_FORMAT_D32_SFLOAT:
+        case VK_FORMAT_D24_UNORM_S8_UINT:
             return 4;
         default:
             LOGE("format not found");

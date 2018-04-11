@@ -47,8 +47,9 @@ RenderTexture* VulkanRenderer::createRenderTexture(const RenderTextureInfo& rend
 
 RenderTexture* VulkanRenderer::createRenderTexture(int width, int height, int sample_count, int layers, int jdepth_format) {
     sample_count = 1;
+    layers = 1;
     LOGE("Abhijit calling VkRenderTextureOffScreen with layers %d and %d samples", layers, sample_count);
-    return new VkRenderTextureOffScreen(width, height, DEPTH_IMAGE, layers, sample_count);
+    return new VkRenderTextureOffScreen(width, height, DEPTH_IMAGE | COLOR_IMAGE, layers, sample_count);
 }
 
     Light* VulkanRenderer::createLight(const char* uniformDescriptor, const char* textureDescriptor)
@@ -190,14 +191,13 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
         rdata->updateGPU(this, depthShader);
         LightList& lights = rstate.scene->getLights();
         vulkanCore_->InitLayoutRenderData(static_cast<VulkanMaterial*>(curr_material), vkRdata, depthShader, lights);
-        VulkanShader * vkDepthShader = static_cast<VulkanShader*>(depthShader);
-        vkDepthShader->setDepthShaderFlag();
+
         // Replacing shader ID for Shadowmap
         rdata->set_shader(pass, depthShader->getShaderID(), rstate.is_multiview);
         LOGE("Abhijit created START shdow pipeline rending with shadow from vkRenderer with DS id %d", depthShader->getShaderID());
         if(vkRdata->isDirty(pass)) {
             vulkanCore_->InitDescriptorSetForRenderData(this, pass, depthShader, vkRdata, NULL, static_cast<VulkanMaterial*>(curr_material));
-            VkRenderPass render_pass = vulkanCore_->createVkRenderPass(SHADOW_RENDERPASS, 1);
+            VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS, 1);
             std::string vkPipelineHashCode = vkRdata->getHashCode() + std::to_string(vkRdata->getRenderPass(pass)->getHashCode(rstate.is_multiview)) + std::to_string(1);
 
             VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
@@ -404,6 +404,8 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
             } else {
                 LOGE("Vulkan only supports UBO Lighting");
             }
+    }else{
+        LOGE("Vulkan only supports UBO Lighting");
     }
 
     renderRenderDataVector(rstate,*render_data_vector,render_data_list);
@@ -462,12 +464,15 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
                 vk_renderTarget->getCommandBuffer());
 
         if(rstate.is_shadow){
-            LOGE("Abhijit waiting for shadowmap cmdbuffer to complete");
+
             int success = 0;
             while(success != 1){
                 success = vulkanCore_->waitForFence(static_cast<VkRenderTexture *>(renderTarget->getTexture())->getFenceObject());
             }
+
+            //vulkanCore_->setShadowmapRT(renderTarget);
         }
+
     }
 
 }

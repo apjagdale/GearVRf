@@ -22,7 +22,7 @@ layout(location = 7) in ivec4 a_bone_indices;
 #endif
 
 layout(location = 0) in vec3 a_position;
-//layout(location = 0) out vec4 proj_position;
+layout(location = 0) out vec4 proj_position;
 struct Vertex
 {
 	vec4 local_position;
@@ -44,5 +44,6 @@ void main()
 #endif
 	gl_Position = proj_position;*/
 	gl_Position = u_mvp * vertex.local_position;
+	proj_position = gl_Position;
 	//gl_Position = proj_position;
 }

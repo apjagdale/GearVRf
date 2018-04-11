@@ -605,7 +605,7 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (lclass.VertexDescriptor != null)
             {
-                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "in");
+                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "layout(location = 20) in");
 
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
             }
@@ -659,7 +659,7 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (vertexOutputs != null)
             {
-                vertexOutputs = vertexOutputs.replace("$PREFIX", "out");
+                vertexOutputs = vertexOutputs.replace("$PREFIX", "layout(location = 20) out");
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
             }
             if (lclass.Count > 1)

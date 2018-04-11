@@ -19,5 +19,4 @@ void main()
     float depth = proj_position.z / proj_position.w;
     depth = (depth + 1.0) / 2.0;
     color = packFloatToVec4i(depth);
-    color = vec4(1.0 - (1.0 - depth) * 100.0);
 }

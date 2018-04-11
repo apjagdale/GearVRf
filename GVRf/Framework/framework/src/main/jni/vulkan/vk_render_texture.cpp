@@ -81,10 +81,10 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     VkClearValue clear_color;
     VkClearValue clear_depth;
 
-    clear_color.color.float32[0] = mBackColor[0];
-    clear_color.color.float32[1] = mBackColor[1];
-    clear_color.color.float32[2] = mBackColor[2];
-    clear_color.color.float32[3] = mBackColor[3];
+    clear_color.color.float32[0] = 0.0f;
+    clear_color.color.float32[1] = 1.0f;
+    clear_color.color.float32[2] = 0.0f;
+    clear_color.color.float32[3] = 1.0f;
 
     clear_depth.depthStencil.depth = 1.0f;
     clear_depth.depthStencil.stencil = 0;
@@ -100,7 +100,7 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     rp_begin.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     rp_begin.pNext = nullptr;
     rp_begin.renderPass = fbo->getRenderPass();
-    rp_begin.framebuffer = fbo->getFramebuffer(layer_index_);
+    rp_begin.framebuffer = fbo->getFramebuffer(-1);
     rp_begin.renderArea.offset.x = 0;
     rp_begin.renderArea.offset.y = 0;
     rp_begin.renderArea.extent.width = fbo->getWidth();

@@ -161,6 +161,7 @@ public:
     }
 
     void renderToOculus(RenderTarget* renderTarget);
+    void setShadowmapRT(RenderTarget* renderTarget);
     void InitSwapChain();
 
     VkImage getSwapChainImage(){
@@ -250,6 +251,7 @@ private:
 
     VkPipelineCache m_pipelineCache;
     std::unordered_map<int, VkRenderPass> mRenderPassMap;
+    RenderTarget* renderTargetSM= nullptr;
 };
 }
 #endif //FRAMEWORK_VULKANCORE_H

@@ -81,11 +81,14 @@ namespace gvr
         shadowMap->setLayerIndex(layerIndex);
         shadowMap->setMainScene(scene);
         shadowMap->cullFromCamera(scene, javaSceneObject, shadowMap->getCamera(),renderer, shader_manager);
-        shadowMap->beginRendering(renderer);
+
+        if(!renderer->getInstance()->isVulkanInstance())
+            shadowMap->beginRendering(renderer);
         renderer->renderRenderTarget(scene, javaSceneObject, shadowMap,shader_manager, nullptr, nullptr);
         // End rendering already called on Vulkan
+
         if(!renderer->getInstance()->isVulkanInstance())
-        shadowMap->endRendering(renderer);
+            shadowMap->endRendering(renderer);
         return true;
     }
 

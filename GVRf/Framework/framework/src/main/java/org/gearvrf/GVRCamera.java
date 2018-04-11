@@ -225,6 +225,7 @@ public abstract class GVRCamera extends GVRComponent implements PrettyPrint {
         else
         {
             GVRRenderPass rpass = new GVRRenderPass(ctx, postEffectData);
+            mPostEffects.setCullFace(GVRRenderPass.GVRCullFaceEnum.None);
             mPostEffects.addPass(rpass);
         }
     }
