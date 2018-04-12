@@ -32,10 +32,15 @@ class GLFrameBuffer;
         virtual void  beginRendering(Renderer* renderer);
         void setLayerIndex(int layerIndex);
 
+        ShaderData* getShadowMaterial(){
+            return mShadowMaterial;
+        }
+
     protected:
         int         mLayerIndex;
         ShaderData* mShadowMaterial;
     };
+
 }
 #endif
 

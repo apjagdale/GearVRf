@@ -141,75 +141,23 @@ IndexBuffer* VulkanRenderer::createIndexBuffer(int bytesPerIndex, int icount)
 
 bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, RenderData* rdata, ShaderData* shaderData,  int pass)
 {
-
-    // Shadow Rendering
-    /*
-     * If a material override is provided, render the mesh
-     * once with the designated material.
-     * If updateGPU returns -1, some textures are not ready
-     * yet and we do not render this mesh.
-     */
-
-    //LOGE("Abhijit valyue of is shadow %d", rstate.is_shadow);
+    // For Shadowmap just replace the shader
     ShaderData* curr_material = rstate.material_override;
-    if (rstate.is_shadow && curr_material){
-
-        // Shadow
-        Shader* depthShader = nullptr;
-        //LOGE("Abhijit rending with shadow from vkRenderer ");
-        const char* depthShaderName = rdata->mesh()->hasBones() ? "GVRDepthShader$a_bone_weights$a_bone_indices" : "GVRDepthShader";
-        depthShader = rstate.shader_manager->findShader(depthShaderName);
-        //LOGE("Abhijit Depth shader name formed %s ", depthShaderName);
-        if (depthShader == nullptr){
+    if (rstate.is_shadow && curr_material) {
+        const char *depthShaderName = rdata->mesh()->hasBones()
+                                      ? "GVRDepthShader$a_bone_weights$a_bone_indices"
+                                      : "GVRDepthShader";
+        shader = rstate.shader_manager->findShader(depthShaderName);
+        if (shader == nullptr) {
             rstate.scene->makeDepthShaders(rstate.javaSceneObject);
-            depthShader = rstate.shader_manager->findShader(depthShaderName);
-            if (depthShader == nullptr){
+            shader = rstate.shader_manager->findShader(depthShaderName);
+            if (shader == nullptr) {
                 LOGE("Renderer::renderMesh cannot find depth shader %s", depthShaderName);
                 return false;
             }
         }
-
-        if (curr_material->updateGPU(this,rdata) >= 0) {
-            //numberTriangles += indexCount;
-            //numberDrawCalls++;
-            //set_face_culling(rdata->pass(0)->cull_face());
-            //(renderMaterialShader(rstate, rdata, curr_material, depthShader));
-        }
-
-        VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
-        UniformBlock& transformUBO = vkRdata->getTransformUbo();
-        if (depthShader->usesMatrixUniforms()){
-            //LOGE("Abhijit depth shader uses transform ubo");
-            updateTransforms(rstate, &transformUBO, rdata);
-        }
-        rdata->updateGPU(this, depthShader);
-        LightList& lights = rstate.scene->getLights();
-        vulkanCore_->InitLayoutRenderData(static_cast<VulkanMaterial*>(curr_material), vkRdata, depthShader, lights);
-
-        // Replacing shader ID for Shadowmap
-        rdata->set_shader(pass, depthShader->getShaderID(), rstate.is_multiview);
-        //LOGE("Abhijit created START shdow pipeline rending with shadow from vkRenderer with DS id %d", depthShader->getShaderID());
-        if(vkRdata->isDirty(pass)) {
-            vulkanCore_->InitDescriptorSetForRenderData(this, pass, depthShader, vkRdata, NULL, static_cast<VulkanMaterial*>(curr_material));
-            VkRenderPass render_pass = vulkanCore_->createVkRenderPass(NORMAL_RENDERPASS, rstate.sampleCount);
-            std::string vkPipelineHashCode = vkRdata->getHashCode() + std::to_string(vkRdata->getRenderPass(pass)->getHashCode(rstate.is_multiview)) + std::to_string(rstate.sampleCount);
-
-            VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
-            if(pipeline == 0) {
-                vkRdata->createPipeline(depthShader, this, pass, render_pass, rstate.sampleCount);
-                vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
-            }
-            else{
-                vkRdata->setPipeline(pipeline, pass);
-                vkRdata->clearDirty();
-            }
-        }
-        //LOGE("Abhijit created END shdow pipeline rending with shadow from vkRenderer");
-        return true;
+        rdata->set_shader(pass, shader->getShaderID(), rstate.is_multiview);
     }
-
-
-
 
     // Normal Rendering
     VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
@@ -327,8 +275,6 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
             } else {
                 LOGE("Vulkan only supports UBO Lighting");
             }
-    }else{
-        LOGE("Vulkan only supports UBO Lighting");
     }
 
     renderRenderDataVector(rstate,*render_data_vector,render_data_list);
@@ -386,6 +332,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
                 static_cast<VkRenderTexture *>(renderTarget->getTexture())->getFenceObject(),
                 vk_renderTarget->getCommandBuffer());
 
+        // Wait for shadowmap to be rendered
         if(rstate.is_shadow){
             int success = 0;
             while(success != 1){

@@ -607,7 +607,7 @@ public class GVRShaderTemplate extends GVRShader
             if (lclass.VertexDescriptor != null)
             {
                 String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "layout(location = " + shadowMapLocation + ") in");
-                shadowMapLocation++;
+                shadowMapLocation += lclass.Count;
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
             }
             lightDefs += "\n" + lightShader + "\n";
@@ -662,7 +662,7 @@ public class GVRShaderTemplate extends GVRShader
             if (vertexOutputs != null)
             {
                 vertexOutputs = vertexOutputs.replace("$PREFIX", "layout(location = " + shadowMapLocation + ") out");
-                shadowMapLocation++;
+                shadowMapLocation += lclass.Count;
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
             }
             if (lclass.Count > 1)

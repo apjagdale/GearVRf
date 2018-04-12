@@ -67,11 +67,9 @@ namespace gvr{
         VkDevice device = vk_renderer->getDevice();
 
         err = vkResetFences(device, 1, &mWaitFence);
+        GVR_VK_CHECK(!err);
         vk_renderer->getCore()->beginCmdBuffer(mCmdBuffer);
-        VkBufferCopy copyRegion = {};
-        copyRegion.srcOffset = 0; // Optional
-        copyRegion.dstOffset = 0; // Optional
-        copyRegion.size = fbo->getImageSize(COLOR_IMAGE);
+
         VkExtent3D extent3D = {};
         extent3D.width = mWidth;
         extent3D.height = mHeight;
@@ -94,13 +92,13 @@ namespace gvr{
 
         uint8_t *data;
         err = vkWaitForFences(device, 1, &mWaitFence, VK_TRUE, 4294967295U);
-
+        GVR_VK_CHECK(!err);
         VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
         err = vkMapMemory(device, mem, 0,
                           fbo->getImageSize(COLOR_IMAGE), 0, (void **) &data);
 
         *readback_buffer = data;
-        //GVR_VK_CHECK(!err);
+        GVR_VK_CHECK(!err);
 
         return true;
 

@@ -663,7 +663,6 @@ void VulkanCore::InitCommandPools(){
             return mRenderPassMap[render_pass_type + sample_count];
 
         if(render_pass_type == SHADOW_RENDERPASS){
-            LOGE("Abhijit creating  SHADOW_RENDERPASS with layers");
             VkRenderPass render_pass = getShadowRenderPass(m_device);
             mRenderPassMap.insert(std::make_pair(render_pass_type, render_pass));
             return render_pass;
@@ -744,29 +743,10 @@ void VulkanCore::InitCommandPools(){
         subpassDescription.preserveAttachmentCount = 0;
         subpassDescription.pPreserveAttachments = nullptr;
 
-
-        std::array<VkSubpassDependency, 2> dependencies;
-
-        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[0].dstSubpass = 0;
-        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
-        dependencies[1].srcSubpass = 0;
-        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
-        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
-        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-
         VkResult ret = vkCreateRenderPass(m_device,
                            gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
-                                                     1, &subpassDescription, (uint32_t) 2,
-                                                     dependencies.data()), nullptr, &renderPass);
+                                                     1, &subpassDescription, (uint32_t) 0,
+                                                     nullptr), nullptr, &renderPass);
         GVR_VK_CHECK(!ret);
         mRenderPassMap.insert(std::make_pair(NORMAL_RENDERPASS + sample_count, renderPass));
         return renderPass;
@@ -1059,7 +1039,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 attachments.push_back(mAttachments[MULTISAMPLED_IMAGE]->getVkLayerImageView(i));
                 attachments.push_back(mAttachments[COLOR_IMAGE]->getVkLayerImageView(i));
                 attachments.push_back(mAttachments[DEPTH_IMAGE]->getVkLayerImageView(i));
-                LOGE("Abhijit creating framebuffer for layer %d", i);
+
                 ret = vkCreateFramebuffer(device,
                                           gvr::FramebufferCreateInfo(0, mRenderpass,
                                                                      attachments.size(),
@@ -1129,10 +1109,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             VulkanRenderData *rdata = static_cast<VulkanRenderData *>(render_data_vector[j]);
 
             for(int curr_pass = postEffectFlag ? (rdata->pass_count() - 1) : 0 ;curr_pass < rdata->pass_count(); curr_pass++) {
-                VulkanShader *shader = static_cast<VulkanShader *>(shader_manager->getShader(
-                        rdata->get_shader(false,curr_pass)));
-
-                //LOGE("Abhijit in cmd buffer build shader id is %d", shader->getShaderID());
+                VulkanShader *shader = static_cast<VulkanShader *>(shader_manager->getShader(rdata->get_shader(false,curr_pass)));
                 float line_width;
                 ShaderData* material = rdata->pass(curr_pass)->material();
                 if(!material || !material->getFloat("line_width", line_width)){
@@ -1301,6 +1278,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         ShadowMap* shadowMap = NULL;
         if(lights != NULL)
         shadowMap= lights->scanLights();
+
         if(shadowMap){
             RenderTarget *rt = static_cast<RenderTarget*>(shadowMap);
             VkRenderTexture* vkRenderTexture = static_cast<VkRenderTexture *>(rt->getTexture());
@@ -1318,8 +1296,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 write.pImageInfo = &(static_cast<VkRenderTexture *>(rt->getTexture())->getDescriptorImage(
                         COLOR_IMAGE));
                 writes.push_back(write);
-
-                LOGE("AAA this sohuldnt print");
             }
         }
 

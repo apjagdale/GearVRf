@@ -83,11 +83,9 @@ public:
     void createFramebuffer(VkDevice& device);
     const VkFramebuffer &getFramebuffer(int layer) {
         if(layer == -1) {
-            LOGE("Abhijit returning normal fbo fbo with layer %d", layer);
             return mFramebuffer;
         }
         else{
-            LOGE("Abhijit returning cascade fbo with layer %d", layer);
             return mCascadeFramebuffer[layer];
         }
 

@@ -32,16 +32,6 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
     VkDescriptorSet descriptorSet = getDescriptorSet(curr_pass);
     //bind out descriptor set, which handles our uniforms and samplers
     if (!isDescriptorSetNull(curr_pass)) {
-        /*
-        VulkanMaterial *vkmtl = static_cast<VulkanMaterial *>(material(
-                curr_pass));
-
-        vkCmdPushConstants(cmdBuffer, Vkshader->getPipelineLayout(),
-                           VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-                           0,
-                           (uint32_t) vkmtl->uniforms().getTotalSize(),
-                           vkmtl->uniforms().getUniformData());*/
-
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 Vkshader->getPipelineLayout(), 0, 1,
                                 &descriptorSet, 0, NULL);
@@ -63,8 +53,6 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
         VkIndexType indexType = (ibuf->getIndexSize() == 2) ? VK_INDEX_TYPE_UINT16
                                                             : VK_INDEX_TYPE_UINT32;
         vkCmdBindIndexBuffer(cmdBuffer, ind.buffer, 0, indexType);
-        //LOGE("Abhijit indices count %d", (ind.count));
-        //LOGE("Abhijit vertices count %d", (vbuf->getVertexCount()));
         vkCmdDrawIndexed(cmdBuffer, ind.count, 1, 0, 0, 1);
     }
     else

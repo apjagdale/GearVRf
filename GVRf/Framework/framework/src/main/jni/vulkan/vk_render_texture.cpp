@@ -24,38 +24,15 @@ VkRenderTexture::VkRenderTexture(int width, int height, int fboType, int layers,
 }
 
 const VkDescriptorImageInfo& VkRenderTexture::getDescriptorImage(ImageType imageType){
-    mImageInfo.imageLayout = imageType == DEPTH_IMAGE ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL :VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    mImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     mImageInfo.imageView = fbo->getImageView(imageType);
-    if(imageType != DEPTH_IMAGE) {
-        TextureParameters textureParameters = TextureParameters();
-        uint64_t index = textureParameters.getHashCode();
-        index = (index << 32) | 1;
-        if (getSampler(index) == 0)
-            VkTexture::createSampler(textureParameters, 1);
-        mImageInfo.sampler = getSampler(index);
-    }
-    else {
-        VkSamplerCreateInfo sampler = {};
-        sampler.magFilter = VK_FILTER_LINEAR;
-        sampler.minFilter = VK_FILTER_LINEAR;
-        sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        sampler.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-        sampler.addressModeV = sampler.addressModeU;
-        sampler.addressModeW = sampler.addressModeU;
-        sampler.mipLodBias = 0.0f;
-        sampler.maxAnisotropy = 1.0f;
-        sampler.minLod = 0.0f;
-        sampler.maxLod = 1.0f;
-        sampler.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-        VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
-        VkSampler sampler1;
-        VkResult err = vkCreateSampler(vk_renderer->getDevice(), &sampler, nullptr, &sampler1);
-        assert(!err);
-        mImageInfo.sampler = sampler1;
-        LOGE("Abhijit creating sampler of depth shadow map");
-    }
+    TextureParameters textureParameters = TextureParameters();
+    uint64_t index = textureParameters.getHashCode();
+    index = (index << 32) | 1;
+    if (getSampler(index) == 0)
+        VkTexture::createSampler(textureParameters, 1);
+    mImageInfo.sampler = getSampler(index);
     return  mImageInfo;
-
 }
 
 void VkRenderTexture::createRenderPass(){
@@ -86,12 +63,9 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     clear_color.color.float32[2] = mBackColor[2];
     clear_color.color.float32[3] = mBackColor[3];
 
-
-
     clear_depth.depthStencil.depth = 1.0f;
     clear_depth.depthStencil.stencil = 0;
 
-    //LOGE("AAA clear clor %f %f %f %f ", mBackColor[0], mBackColor[1], mBackColor[2], mBackColor[3] );
     clear_values[0] = clear_color;
     if(mSampleCount > 1) {
         clear_values[1] = clear_color;
@@ -114,33 +88,9 @@ VkRenderPassBeginInfo VkRenderTexture::getRenderPassBeginInfo(){
     return rp_begin;
 }
 
-    /*
-bool VkRenderTexture::isReady()
-{
-    VkFence fence =  getFenceObject();
-    VkResult err;
-
-    VulkanCore * core = VulkanCore::getInstance();
-    if(!core)
-    {
-        return false;
-    }
-
-    VkDevice device = core->getDevice();
-    err = vkGetFenceStatus(device, fence);
-    while (err != VK_SUCCESS) {
-        err = vkWaitForFences(device, 1, &fence , VK_TRUE, 4294967295U);
-    }
-
-    return true;
-}*/
-
 void VkRenderTexture::beginRendering(Renderer* renderer){
-        bind();
-        /*if (!isReady())
-        {
-            return;
-        }*/
+    bind();
+
     VkRenderPassBeginInfo rp_begin = getRenderPassBeginInfo();
     VkViewport viewport = {};
     viewport.height = (float) height();
@@ -165,7 +115,6 @@ void VkRenderTexture::beginRendering(Renderer* renderer){
  */
     void VkRenderTexture::setLayerIndex(int layerIndex)
     {
-        LOGE("Abhijit Layer index %d", layerIndex);
         layer_index_ = layerIndex;
     }
 

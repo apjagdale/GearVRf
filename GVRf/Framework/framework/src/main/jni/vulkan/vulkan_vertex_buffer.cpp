@@ -82,7 +82,7 @@ namespace gvr {
                                                                VkVertexInputAttributeDescription binding;
                                                                binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
                                                                binding.location = e.Index;
-                                                               LOGE("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
+                                                               LOGI("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
                                                                binding.format = getDataType(entry->Type); //float3
                                                                binding.offset = entry->Offset;
                                                                stride+= entry->Size;
@@ -144,7 +144,6 @@ namespace gvr {
         GVR_VK_CHECK(!err);
 
         // Copy our triangle verticies and colors into the mapped memory area.
-        LOGE("Abhijit vertices count %d", (bufferByteSize/3));
         memcpy(data, mVertexData, bufferByteSize);
 
         // Unmap the memory back from the CPU.

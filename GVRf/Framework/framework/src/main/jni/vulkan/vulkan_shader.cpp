@@ -93,7 +93,6 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
     index = TEXTURE_BIND_START;
     vkMtl.forEachTexture([this, &samplerBinding](const char* texname, Texture* t) mutable
     {
-        LOGE("Abhijit texture name %s", texname);
         const DataDescriptor::DataEntry* entry = mTextureDesc.find(texname);
         if ((entry == NULL) || entry->NotUsed)
         {

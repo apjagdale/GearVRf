@@ -112,7 +112,6 @@ void vkImageBase::createImageView(bool host_accessible) {
     ret = vkBindBufferMemory(device, hostBuffer, host_memory, 0);
     GVR_VK_CHECK(!ret);
 
-    LOGE("Vulkan Abhijit layers %d", mLayers);
     // Overall view of the image created
     if(mLayers == 1) {
         ret = vkCreateImageView(
@@ -138,7 +137,6 @@ void vkImageBase::createImageView(bool host_accessible) {
         //View per layers are created here
         VkImageView layerView;
         for (int i = 0; i < mLayers; i++) {
-            LOGE("Abhijit creating image view for layer %d", i);
             ret = vkCreateImageView(
                     device,
                     gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,

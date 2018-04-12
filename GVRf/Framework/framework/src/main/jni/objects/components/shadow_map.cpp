@@ -39,8 +39,7 @@ class Renderer;
 
     void  ShadowMap::beginRendering(Renderer* renderer)
     {
-        //if(!Renderer::getInstance()->isVulkanInstance())
-            RenderTarget::beginRendering(renderer);
+        RenderTarget::beginRendering(renderer);
         mRenderState.render_mask = 1;
         mRenderState.is_shadow = true;
         mRenderState.shadow_map = nullptr;
