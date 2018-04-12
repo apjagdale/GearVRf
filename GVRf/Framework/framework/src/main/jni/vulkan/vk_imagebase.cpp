@@ -31,6 +31,19 @@ int getComponentsNumber(VkFormat format){
     }
 }
 
+    VkImageAspectFlagBits getAspectFlagForFormat(VkFormat format){
+        switch (format){
+            case VK_FORMAT_R8G8B8A8_UNORM:
+                return VK_IMAGE_ASPECT_COLOR_BIT;
+            case VK_FORMAT_D16_UNORM:
+            case VK_FORMAT_D32_SFLOAT:
+            case VK_FORMAT_D24_UNORM_S8_UINT:
+                return VK_IMAGE_ASPECT_DEPTH_BIT;
+            default:
+                LOGE("format not found");
+        }
+    }
+
     vkImageBase::~vkImageBase(){
         VulkanCore * instance = VulkanCore::getInstance();
         VkDevice device = instance->getDevice();
@@ -106,7 +119,7 @@ void vkImageBase::createImageView(bool host_accessible) {
                 device,
                 gvr::ImageViewCreateInfo(image, imageType,
                                          format_, 1, 0, mLayers,
-                                         VK_IMAGE_ASPECT_COLOR_BIT),
+                                         getAspectFlagForFormat(format_)),
                 nullptr, &imageView
         );
         GVR_VK_CHECK(!ret);
@@ -117,7 +130,7 @@ void vkImageBase::createImageView(bool host_accessible) {
                 device,
                 gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
                                          format_, 1, 0, mLayers,
-                                         VK_IMAGE_ASPECT_DEPTH_BIT),
+                                         getAspectFlagForFormat(format_)),
                 nullptr, &imageView
         );
         GVR_VK_CHECK(!ret);
@@ -130,7 +143,7 @@ void vkImageBase::createImageView(bool host_accessible) {
                     device,
                     gvr::ImageViewCreateInfo(image, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
                                              format_, 1, i, 1,
-                                             VK_IMAGE_ASPECT_DEPTH_BIT),
+                                             getAspectFlagForFormat(format_)),
                     nullptr, &layerView
             );
             GVR_VK_CHECK(!ret);

@@ -221,7 +221,7 @@ void GVRActivity::copyVulkanTexture(int texSwapChainIndex, int eye){
                        oculusTexData);
     glFlush();
     frameBuffer_[eye].advance();
-
+    reinterpret_cast<VulkanRenderer*>(gRenderer)->unmapRenderToOculus(renderTarget);
 }
 
 void GVRActivity::onDrawFrame(jobject jViewManager) {

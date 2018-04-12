@@ -65,7 +65,7 @@ public class GVRShadowMap extends GVRRenderTarget
         mTempMtx = new float[16];
         if (sShadowMaps == null)
         {
-            sShadowMaps = new GVRRenderTextureArray(ctx, 1024, 1024, 1, 1);
+            sShadowMaps = new GVRRenderTextureArray(ctx, 1024, 1024, 2, 4);
             sBiasMatrix = new Matrix4f();
             sBiasMatrix.scale(0.5f);
             sBiasMatrix.setTranslation(0.5f, 0.5f, 0.5f);

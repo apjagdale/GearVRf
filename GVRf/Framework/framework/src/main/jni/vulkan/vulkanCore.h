@@ -161,7 +161,7 @@ public:
     }
 
     void renderToOculus(RenderTarget* renderTarget);
-    void setShadowmapRT(RenderTarget* renderTarget);
+    void unmapRenderToOculus(RenderTarget* renderTarget);
     void InitSwapChain();
 
     VkImage getSwapChainImage(){

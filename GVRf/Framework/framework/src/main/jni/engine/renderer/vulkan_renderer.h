@@ -66,6 +66,9 @@ public:
     void renderToOculus(RenderTarget* renderTarget){
         vulkanCore_->renderToOculus(renderTarget);
     }
+    void unmapRenderToOculus(RenderTarget* renderTarget){
+        vulkanCore_->unmapRenderToOculus(renderTarget);
+    }
     Texture* createSharedTexture( int id) {};
 
     VulkanRenderer() : vulkanCore_(nullptr) {

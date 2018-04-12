@@ -28,7 +28,7 @@ Radiance @LightType(Surface s, in U@LightType data, int index)
         bias = clamp(bias, 0.0, 0.01);
         vec3 shadowMapPosition = ShadowCoord.xyz / ShadowCoord.w;
         vec3 texcoord = vec3(shadowMapPosition.x, shadowMapPosition.y, data.shadow_map_index);
-        vec4 depth = texture(u_shadow_maps, vec2(texcoord.xy));
+        vec4 depth = texture(u_shadow_maps, texcoord);
         float distanceFromLight = unpackFloatFromVec4i(depth);
 
         if (distanceFromLight < shadowMapPosition.z - bias)

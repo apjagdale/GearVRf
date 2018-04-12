@@ -18,7 +18,7 @@ layout(location = 0) in vec3 view_direction;
 layout(location = 4) in vec2 diffuse_coord;
 
 #ifdef HAS_SHADOWS
-layout(set = 0, binding = 4) uniform highp sampler2D u_shadow_maps;
+layout(set = 0, binding = 4) uniform highp sampler2DArray u_shadow_maps;
 #endif
 
 struct Radiance

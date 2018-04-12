@@ -77,24 +77,19 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
         samplerBinding.push_back(lights_uniformBinding);
     }
     else {
-        dummy_binding.binding = 3;
+        dummy_binding.binding = LIGHT_UBO_INDEX;
         samplerBinding.push_back(dummy_binding);
     }
 
     // Dummy shadowmap binding
     VkDescriptorSetLayoutBinding layoutBinding;
-    layoutBinding.binding = 4;
+    layoutBinding.binding = SHADOW_UBO_INDEX;
     layoutBinding.descriptorCount = 1;
     layoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
     layoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
     layoutBinding.pImmutableSamplers = nullptr;
     (samplerBinding).push_back(layoutBinding);
 
-    //dummy_binding.binding = 4;
-    //samplerBinding.push_back(dummy_binding);
-    /*
-     * TODO :: if has shadowmap, create binding for it
-     */
     index = TEXTURE_BIND_START;
     vkMtl.forEachTexture([this, &samplerBinding](const char* texname, Texture* t) mutable
     {

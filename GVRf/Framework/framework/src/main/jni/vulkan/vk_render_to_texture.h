@@ -25,7 +25,7 @@ namespace gvr{
 class VkRenderTexture : public RenderTexture
 {
 protected:
-    VKFramebuffer* fbo;
+    VKFramebuffer* fbo = nullptr;
     void createRenderPass();
     int mWidth, mHeight, mSamples, mFboType, mLayers;
     std::vector <VkClearValue> clear_values;

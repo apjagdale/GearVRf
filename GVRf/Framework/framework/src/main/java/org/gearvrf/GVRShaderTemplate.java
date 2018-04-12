@@ -574,6 +574,7 @@ public class GVRShaderTemplate extends GVRShader
      */
     private String generateLightFragmentShaderLoop(GVRScene scene, Map<String, LightClass> lightClasses)
     {
+        int shadowMapLocation = 20;
         String lightFunction = "\nvec4 LightPixel(Surface s)\n{\n"
                                + "    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);\n"
                                + "    vec4 c;\n"
@@ -605,8 +606,8 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (lclass.VertexDescriptor != null)
             {
-                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "layout(location = 20) in");
-
+                String vertexOutputs = lclass.VertexOutputs.replace("$PREFIX", "layout(location = " + shadowMapLocation + ") in");
+                shadowMapLocation++;
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
             }
             lightDefs += "\n" + lightShader + "\n";
@@ -635,6 +636,7 @@ public class GVRShaderTemplate extends GVRShader
      */
     private String generateLightVertexShaderLoop(GVRScene scene, Map<String, LightClass> lightClasses)
     {
+        int shadowMapLocation = 20;
         String lightSources = "";
         String lightDefs = "";
         String lightFunction = "\nvoid LightVertex(Vertex vertex)\n{\n";
@@ -659,7 +661,8 @@ public class GVRShaderTemplate extends GVRShader
             }
             if (vertexOutputs != null)
             {
-                vertexOutputs = vertexOutputs.replace("$PREFIX", "layout(location = 20) out");
+                vertexOutputs = vertexOutputs.replace("$PREFIX", "layout(location = " + shadowMapLocation + ") out");
+                shadowMapLocation++;
                 lightDefs += vertexOutputs.replace("$COUNT", lclass.Count.toString());
             }
             if (lclass.Count > 1)

@@ -658,7 +658,7 @@ void VulkanCore::InitCommandPools(){
     }
 
     VkRenderPass VulkanCore::createVkRenderPass(RenderPassType render_pass_type, int sample_count){
-        sample_count = 1;
+
         if(mRenderPassMap[render_pass_type + sample_count])
             return mRenderPassMap[render_pass_type + sample_count];
 
@@ -706,10 +706,10 @@ void VulkanCore::InitCommandPools(){
         // Depth Attachment
         attachment = {};
         attachment.flags = 0;
-        attachment.format = VK_FORMAT_D24_UNORM_S8_UINT;
+        attachment.format = VK_FORMAT_D16_UNORM;
         attachment.samples = getVKSampleBit(sample_count);
         attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        attachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -745,10 +745,28 @@ void VulkanCore::InitCommandPools(){
         subpassDescription.pPreserveAttachments = nullptr;
 
 
+        std::array<VkSubpassDependency, 2> dependencies;
+
+        dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[0].dstSubpass = 0;
+        dependencies[0].srcStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[0].srcAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[0].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+        dependencies[1].srcSubpass = 0;
+        dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
+        dependencies[1].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependencies[1].dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+        dependencies[1].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        dependencies[1].dstAccessMask = VK_ACCESS_MEMORY_READ_BIT;
+        dependencies[1].dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
         VkResult ret = vkCreateRenderPass(m_device,
                            gvr::RenderPassCreateInfo(0, (uint32_t) attachmentDescriptions.size(), attachmentDescriptions.data(),
-                                                     1, &subpassDescription, (uint32_t) 0,
-                                                     nullptr), nullptr, &renderPass);
+                                                     1, &subpassDescription, (uint32_t) 2,
+                                                     dependencies.data()), nullptr, &renderPass);
         GVR_VK_CHECK(!ret);
         mRenderPassMap.insert(std::make_pair(NORMAL_RENDERPASS + sample_count, renderPass));
         return renderPass;
@@ -888,7 +906,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     bool disable_color_depth_write = rdata->stencil_test() && (RenderData::Queue::Stencil == rdata->rendering_order());
     att_state[0].colorWriteMask = disable_color_depth_write ? 0x0 : (VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT);    att_state[0].blendEnable = VK_FALSE;
 
-    if(!shader->isDepthShader() && rdata->alpha_blend()) {
+    if(rdata->alpha_blend()) {
         att_state[0].blendEnable = VK_TRUE;
         att_state[0].srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
         att_state[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -968,29 +986,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     LOGI("Vulkan graphics call after");
 
 }
-    void VKFramebuffer::createFramebuffer(VkDevice& device){
 
-        std::vector<VkImageView> attachments;
-        VkResult ret;
-
-        if(mAttachments[COLOR_IMAGE]!= nullptr){
-            attachments.push_back(mAttachments[COLOR_IMAGE]->getVkImageView());
-        }
-
-        if(mAttachments[DEPTH_IMAGE]!= nullptr){
-            attachments.push_back(mAttachments[DEPTH_IMAGE]->getVkImageView());
-        }
-        if(mRenderpass == 0 ){
-            LOGE("renderpass  is not initialized");
-        }
-
-        ret = vkCreateFramebuffer(device,
-                                  gvr::FramebufferCreateInfo(0, mRenderpass, attachments.size(),
-                                                             attachments.data(), mWidth, mHeight,
-                                                             uint32_t(1)), nullptr,
-                                  &mFramebuffer);
-        GVR_VK_CHECK(!ret);
-    }
     VkSampler getSampler(uint64_t index){
 
         for(int i =0; i<samplers.size(); i = i+2){
@@ -1034,10 +1030,10 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         }
 
         if(image_type & DEPTH_IMAGE && mAttachments[DEPTH_IMAGE]== nullptr){
-            vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D24_UNORM_S8_UINT, mWidth,
-                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL ,
+            vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_D16_UNORM, mWidth,
+                                                      mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, layers, sample_count);
-            depthImage->createImageView(true);
+            depthImage->createImageView(false);
             mAttachments[DEPTH_IMAGE] = depthImage;
             attachments.push_back(depthImage->getVkImageView());
         }
@@ -1046,7 +1042,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             LOGE("renderpass  is not initialized");
         }
 
-      //          LOGE("Abhijit creating framebuffer for attachement count %d", attachments.size());
         if(layers == 1) {
             ret = vkCreateFramebuffer(device,
                                       gvr::FramebufferCreateInfo(0, mRenderpass, attachments.size(),
@@ -1061,6 +1056,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             VkFramebuffer layerFramebuffer;
             for(int i = 0; i < layers; i++) {
                 attachments.clear();
+                attachments.push_back(mAttachments[MULTISAMPLED_IMAGE]->getVkLayerImageView(i));
+                attachments.push_back(mAttachments[COLOR_IMAGE]->getVkLayerImageView(i));
                 attachments.push_back(mAttachments[DEPTH_IMAGE]->getVkLayerImageView(i));
                 LOGE("Abhijit creating framebuffer for layer %d", i);
                 ret = vkCreateFramebuffer(device,
@@ -1135,7 +1132,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 VulkanShader *shader = static_cast<VulkanShader *>(shader_manager->getShader(
                         rdata->get_shader(false,curr_pass)));
 
-                LOGE("Abhijit in cmd buffer build shader id is %d", shader->getShaderID());
+                //LOGE("Abhijit in cmd buffer build shader id is %d", shader->getShaderID());
                 float line_width;
                 ShaderData* material = rdata->pass(curr_pass)->material();
                 if(!material || !material->getFloat("line_width", line_width)){
@@ -1217,16 +1214,14 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
     }
 
-    void VulkanCore::setShadowmapRT(RenderTarget* renderTarget){
-        renderTargetSM = renderTarget;
-    }
     void VulkanCore::renderToOculus(RenderTarget* renderTarget){
-        if(renderTargetSM != nullptr){
-            renderTarget = renderTargetSM;
-          //  LOGE("Abhijit rendering shadowmap");
-        }
         VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(static_cast<VkRenderTarget*>(renderTarget)->getTexture());
         renderTexture->accessRenderResult(&oculusTexData);
+        //renderTexture->unmapDeviceMemory();
+    }
+
+    void VulkanCore::unmapRenderToOculus(RenderTarget* renderTarget){
+        VkRenderTextureOffScreen* renderTexture = static_cast<VkRenderTextureOffScreen*>(static_cast<VkRenderTarget*>(renderTarget)->getTexture());
         renderTexture->unmapDeviceMemory();
     }
 
@@ -1259,7 +1254,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         const DataDescriptor& textureDescriptor = shader->getTextureDescriptor();
         DataDescriptor &uniformDescriptor = shader->getUniformDescriptor();
         bool transformUboPresent = shader->usesMatrixUniforms();
-        //VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(vkData->material(pass));
 
         if ((textureDescriptor.getNumEntries() == 0) && uniformDescriptor.getNumEntries() == 0 && !transformUboPresent) {
         //    vkData->setDescriptorSetNull(true,pass);
@@ -1304,16 +1298,14 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             writes.push_back(static_cast<VulkanUniformBlock*>(lights->getUBO())->getDescriptorSet());
         }
 
-        // TODO: add shadowmap descriptor
-
         ShadowMap* shadowMap = NULL;
         if(lights != NULL)
         shadowMap= lights->scanLights();
         if(shadowMap){
-
             RenderTarget *rt = static_cast<RenderTarget*>(shadowMap);
             VkRenderTexture* vkRenderTexture = static_cast<VkRenderTexture *>(rt->getTexture());
-            if(vkRenderTexture->getFBO() != NULL) {
+
+            if(vkRenderTexture->getFBO() != nullptr) {
 
                 VkWriteDescriptorSet write;
                 memset(&write, 0, sizeof(write));
@@ -1326,6 +1318,8 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
                 write.pImageInfo = &(static_cast<VkRenderTexture *>(rt->getTexture())->getDescriptorImage(
                         COLOR_IMAGE));
                 writes.push_back(write);
+
+                LOGE("AAA this sohuldnt print");
             }
         }
 

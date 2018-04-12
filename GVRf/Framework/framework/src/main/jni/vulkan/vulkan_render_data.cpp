@@ -63,8 +63,8 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
         VkIndexType indexType = (ibuf->getIndexSize() == 2) ? VK_INDEX_TYPE_UINT16
                                                             : VK_INDEX_TYPE_UINT32;
         vkCmdBindIndexBuffer(cmdBuffer, ind.buffer, 0, indexType);
-        LOGE("Abhijit indices count %d", (ind.count));
-        LOGE("Abhijit vertices count %d", (vbuf->getVertexCount()));
+        //LOGE("Abhijit indices count %d", (ind.count));
+        //LOGE("Abhijit vertices count %d", (vbuf->getVertexCount()));
         vkCmdDrawIndexed(cmdBuffer, ind.count, 1, 0, 0, 1);
     }
     else
