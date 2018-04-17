@@ -51,8 +51,11 @@ class vkImageBase
     { }
     virtual ~vkImageBase();
         void createImageView(bool host_accessible);
-        int updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
-
+        void updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
+        void createMipLevels(VkFormatProperties formatProperties, VulkanRenderer *vk_renderer,
+                                     VkCommandBufferBeginInfo setupCmdsBeginInfo, std::vector<VkBufferImageCopy> &bufferCopyRegions,
+                                     int mipLevels, std::vector<ImageInfo> &bitmapInfos, VkImageMemoryBarrier imageMemoryBarrier,
+                                     VkSubmitInfo submit_info, VkCommandBuffer *buffers, VkQueue queue);
         VkImageViewType getImageType() const { return imageType; }
 
         const VkImageView& getVkImageView(){
@@ -92,10 +95,10 @@ class vkImageBase
 
     private:
         VkImageViewType imageType;
-        VkImage image;
+        VkImage image = 0;
         VkDeviceMemory dev_memory = 0, host_memory = 0;
         VkImageLayout imageLayout;
-        VkImageView imageView;
+        VkImageView imageView = 0;
         std::vector<VkImageView> cascadeImageView;
         VkFormat format_;
         int mSampleCount;

@@ -6,8 +6,7 @@ Radiance @LightType(Surface s, in U@LightType data, int index)
     vec4 L = u_view * data.world_direction;
 #endif
 	float attenuation = 1.0;
-    vec4 ShadowCoord = @LightType_shadow_position[index];
-    vec3 lightdir = normalize(L.xyz);
+vec3 lightdir = normalize(L.xyz);
 
  #ifdef HAS_SHADOWS
     if ((data.shadow_map_index >= 0.0) && (ShadowCoord.w > 0.0))
