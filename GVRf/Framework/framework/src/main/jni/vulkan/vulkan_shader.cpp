@@ -70,7 +70,6 @@ int VulkanShader::makeLayout(VulkanMaterial& vkMtl, std::vector<VkDescriptorSetL
         dummy_binding.binding = BONES_UBO_INDEX;
         samplerBinding.push_back(dummy_binding);
     }
-    // Right now, we dont' have support for shadow map, so add dummy binding for it
 
     if(lights.getUBO() != nullptr){
         VkDescriptorSetLayoutBinding &lights_uniformBinding = static_cast<VulkanUniformBlock*>(lights.getUBO())->getVulkanDescriptor()->getLayoutBinding();

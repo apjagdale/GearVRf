@@ -108,6 +108,7 @@ public:
     void initCmdBuffer(VkCommandBufferLevel level,VkCommandBuffer& cmdBuffer);
 
     bool InitDescriptorSetForRenderData(VulkanRenderer* renderer, int pass, Shader*, VulkanRenderData* vkData, LightList *lights, VulkanMaterial* vkmtl);
+
     void beginCmdBuffer(VkCommandBuffer cmdBuffer);
     void BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector, Camera*, ShaderManager*,RenderTarget*,VkRenderTexture*, bool);
     void BuildCmdBufferForRenderDataPE(VkCommandBuffer &cmdBuffer, ShaderManager*, Camera*, RenderData* rdata, VkRenderTexture*, int);
