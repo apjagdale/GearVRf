@@ -20,6 +20,7 @@
 
 #include "engine/renderer/renderer.h"
 #include "objects/lightlist.h"
+#include "objects/light.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
 
@@ -183,8 +184,6 @@ void LightList::forEachLight(std::function<void(const Light&)> func) const
     }
 }
 
-
-
 ShadowMap* LightList::scanLights()
 {
     ShadowMap* shadowMap = NULL;
@@ -212,7 +211,6 @@ ShadowMap* LightList::scanLights()
 
 ShadowMap* LightList::updateLightBlock(Renderer* renderer)
 {
-
     std::lock_guard < std::recursive_mutex > lock(mLock);
     bool dirty = mDirty != 0;
     ShadowMap* shadowMap = NULL;

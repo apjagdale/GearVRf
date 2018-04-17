@@ -18,12 +18,11 @@ package org.gearvrf.io;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-import org.gearvrf.GVREventReceiver;
-import org.gearvrf.IEventReceiver;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRCamera;
 import org.gearvrf.GVRCollider;
 import org.gearvrf.GVRContext;
+import org.gearvrf.GVREventReceiver;
 import org.gearvrf.GVRMesh;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.GVRPicker;
@@ -31,6 +30,7 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRSensor;
 import org.gearvrf.GVRTransform;
+import org.gearvrf.IEventReceiver;
 import org.gearvrf.IEvents;
 import org.gearvrf.IPickEvents;
 import org.gearvrf.ISensorEvents;
@@ -75,6 +75,94 @@ public abstract class GVRCursorController implements IEventReceiver
         ORIENT_CURSOR_WITH_SURFACE_NORMAL,
         CURSOR_DEPTH_FROM_CONTROLLER
     };
+
+
+    /**
+     * Implements thread-safe dragging of a scene hierarchy synchronized
+     * with cursor movement
+     */
+    class Dragger implements Runnable
+    {
+        private GVRSceneObject mDragMe;
+        private GVRSceneObject mDragParent;
+        private boolean mDragging = false;
+        private final Object mLock;
+
+        public Dragger(Object lock) { mLock = lock; }
+
+        public boolean start(GVRSceneObject dragMe)
+        {
+            synchronized (mLock)
+            {
+                if (!mDragging)
+                {
+                    mDragMe = dragMe;
+                    getGVRContext().runOnGlThreadPostRender(0, this);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public boolean stop()
+        {
+            synchronized (mLock)
+            {
+                if (mDragging && (mDragMe != null))
+                {
+                    getGVRContext().runOnGlThreadPostRender(0, this);
+                    return true;
+                }
+            }
+            return false;
+
+        }
+
+        @Override
+        public void run()
+        {
+            synchronized (mLock)
+            {
+                if (!mDragging)
+                {
+                    GVRTransform objTrans = mDragMe.getTransform();
+                    Matrix4f cursorMtx = mDragRoot.getTransform().getModelMatrix4f();
+                    Matrix4f objMatrix = objTrans.getModelMatrix4f();
+
+                    mDragParent = mDragMe.getParent();
+                    if (mDragParent != null)
+                    {
+                        mDragParent.removeChildObject(mDragMe);
+                    }
+                    cursorMtx.invert();
+                    objTrans.setModelMatrix(cursorMtx.mul(objMatrix));
+                    mDragRoot.addChildObject(mDragMe);
+                    mDragging = true;
+                }
+                else
+                {
+                    GVRTransform objTrans = mDragMe.getTransform();
+                    Matrix4f cursorMatrix = mDragRoot.getTransform().getModelMatrix4f();
+                    mDragRoot.removeChildObject(mDragMe);
+                    Matrix4f objMatrix = objTrans.getModelMatrix4f();
+
+                    objTrans.setModelMatrix(cursorMatrix.mul(objMatrix));
+                    if (mDragParent != null)
+                    {
+                        mDragParent.addChildObject(mDragMe);
+                    }
+                    else
+                    {
+                        scene.addSceneObject(mDragMe);
+                    }
+                    mDragMe = null;
+                    mDragParent = null;
+                    mDragging = false;
+                }
+            }
+        }
+    };
+
     private static final String TAG = "GVRCursorController";
     private static int uniqueControllerId = 0;
     private final int controllerId;
@@ -93,8 +181,9 @@ public abstract class GVRCursorController implements IEventReceiver
     protected Object eventLock = new Object();
     protected GVRSceneObject mCursor = null;
     protected boolean enable = false;
-    protected boolean mSendEventsToActivity = true;
     protected Object mCursorLock = new Object();
+    protected Dragger mDragger = new Dragger(mCursorLock);
+
     protected String name;
     protected int vendorId, productId;
     protected GVRScene scene = null;
@@ -103,8 +192,6 @@ public abstract class GVRCursorController implements IEventReceiver
     protected float mCursorDepth = 1.0f;
     protected GVRSceneObject mCursorScale;
     protected GVRSceneObject mDragRoot;
-    protected GVRSceneObject mDragParent = null;
-    protected GVRSceneObject mDragMe = null;
     protected GVRContext context;
     protected volatile boolean mConnected = false;
     protected int mTouchButtons = MotionEvent.BUTTON_SECONDARY | MotionEvent.BUTTON_PRIMARY;
@@ -195,28 +282,26 @@ public abstract class GVRCursorController implements IEventReceiver
      * Dispatch a key event for this controller.
      * @param event event to dispatch
      * @return true if event handled, false if event should be routed to the application
-     * @see #sendEventsToActivity(boolean)
      */
     synchronized public boolean dispatchKeyEvent(KeyEvent event)
     {
         synchronized (eventLock) {
             this.keyEvent.add(event);
         }
-        return !mSendEventsToActivity;
+        return true;
     }
 
     /**
      * Dispatch a motion event for this controller.
      * @param event event to dispatch
      * @return true if event handled, false if event should be routed to the application
-     * @see #sendEventsToActivity(boolean)
      */
     synchronized public boolean dispatchMotionEvent(MotionEvent event)
     {
         synchronized (eventLock) {
             this.motionEvent.add(event);
         }
-        return !mSendEventsToActivity;
+        return true;
     }
 
     /**
@@ -242,43 +327,6 @@ public abstract class GVRCursorController implements IEventReceiver
      * @see GVREventReceiver#addListener(IEvents)
      */
     public GVREventReceiver getEventReceiver() { return listeners; }
-
-    /**
-     * Enable or disable routing controller MotionEvents to GVRActivity.
-     * <p>
-     * When a controller is active, Android MotionEvents are routed
-     * to your application via {@link GVRActivity#dispatchTouchEvent}
-     * and also consumed by the controller.
-     * <p>
-     * You can listen for {@link IPickEvents} or {@link ITouchEvents}
-     * emitted by the{@link GVRPicker} associated with the controller.
-     * The {@link GVRPicker.GVRPickedObject} associated with the
-     * event may have an Android MotionEvent attached.
-     * You can also use a {@link IControllerEvent}
-     * to listen for controller events. You can get the motion event
-     * with {@link GVRCursorController#getMotionEvent()}.
-     * <p>
-     * If you disable this option, Android MotionEvent and KeyEvents
-     * are not routed to your application when a controller is active.
-     * If you are using {@link org.gearvrf.scene_objects.GVRViewSceneObject}
-     * disable this option because events are routed to the Android View in this case.
-     *
-     * @param flag true to send events to GVRActivity, false to not send them
-     * @see #sendingEventsToActivity
-     * @see IControllerEvent
-     * @see #addPickEventListener(IEvents)
-     * @see ITouchEvents
-     */
-    public void sendEventsToActivity(boolean flag)
-    {
-        mSendEventsToActivity = flag;
-    }
-
-    /**
-     * Determine whether controller events are being routed to GVRActivity.
-     * @return true if events are sent to the activity, else false
-     */
-    public boolean sendingEventsToActivity() { return mSendEventsToActivity; }
 
     /**
      * Set a {@link GVRSceneObject} to be controlled by the
@@ -433,55 +481,6 @@ public abstract class GVRCursorController implements IEventReceiver
     public CursorControl getCursorControl() { return mCursorControl; }
 
 
-    private Runnable mStartDrag = new Runnable()
-    {
-        @Override
-        public void run()
-        {
-            synchronized (mCursorLock)
-            {
-                GVRTransform objTrans = mDragMe.getTransform();
-                Matrix4f cursorMtx = mDragRoot.getTransform().getModelMatrix4f();
-                Matrix4f objMatrix = objTrans.getModelMatrix4f();
-
-                mDragParent = mDragMe.getParent();
-                if (mDragParent != null)
-                {
-                    mDragParent.removeChildObject(mDragMe);
-                }
-                cursorMtx.invert();
-                objTrans.setModelMatrix(cursorMtx.mul(objMatrix));
-                mDragRoot.addChildObject(mDragMe);
-            }
-        }
-    };
-
-    private Runnable mStopDrag = new Runnable()
-    {
-        @Override
-        public void run()
-        {
-            synchronized (mCursorLock)
-            {
-                GVRTransform objTrans = mDragMe.getTransform();
-                Matrix4f cursorMatrix = mDragRoot.getTransform().getModelMatrix4f();
-                mDragRoot.removeChildObject(mDragMe);
-                Matrix4f objMatrix = objTrans.getModelMatrix4f();
-
-                objTrans.setModelMatrix(cursorMatrix.mul(objMatrix));
-                if (mDragParent != null)
-                {
-                    mDragParent.addChildObject(mDragMe);
-                }
-                else
-                {
-                    scene.addSceneObject(mDragMe);
-                }
-                mDragMe = null;
-                mDragParent = null;
-            }
-        }
-    };
 
     /**
      * Allows a single {@link GVRSceneObject} to be dragged by the controller.
@@ -501,13 +500,7 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     public boolean startDrag(GVRSceneObject dragMe)
     {
-        if (mDragMe != null)
-        {
-            return false;
-        }
-        mDragMe = dragMe;
-        getGVRContext().runOnGlThreadPostRender(0, mStartDrag);
-        return true;
+        return mDragger.start(dragMe);
     }
 
     /**
@@ -524,12 +517,7 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     public boolean stopDrag()
     {
-        if (mDragMe == null)
-        {
-            return false;
-        }
-        getGVRContext().runOnGlThreadPostRender(0, mStopDrag);
-        return true;
+        return mDragger.stop();
     }
 
     /**
@@ -1071,14 +1059,14 @@ public abstract class GVRCursorController implements IEventReceiver
         }
     }
 
-    protected class ControllerPick implements Runnable
+    protected final class ControllerPick implements Runnable
     {
         public MotionEvent mEvent;
         public GVRPicker mPicker;
         public boolean mActive;
         public boolean mDoPick;
 
-        public void init(GVRPicker picker, MotionEvent event, boolean active)
+        public ControllerPick(GVRPicker picker, MotionEvent event, boolean active)
         {
             mPicker = picker;
             mEvent = event;
@@ -1124,8 +1112,6 @@ public abstract class GVRCursorController implements IEventReceiver
         }
     }
 
-    protected ControllerPick mControllerPick = new ControllerPick();
-
     /**
      * Update the state of the picker. If it has an owner, the picker
      * will use that object to derive its position and orientation.
@@ -1134,9 +1120,9 @@ public abstract class GVRCursorController implements IEventReceiver
      */
     protected void updatePicker(MotionEvent event, boolean isActive)
     {
-        MotionEvent newEvent = (event != null) ? MotionEvent.obtain(event) : null;
-        mControllerPick.init(mPicker, newEvent, isActive);
-        context.runOnGlThread(mControllerPick);
+        final MotionEvent newEvent = (event != null) ? event : null;
+        final ControllerPick controllerPick = new ControllerPick(mPicker, newEvent, isActive);
+        context.runOnGlThread(controllerPick);
     }
 
     /**
@@ -1165,11 +1151,6 @@ public abstract class GVRCursorController implements IEventReceiver
         synchronized (eventLock)
         {
             processedKeyEvent.clear();
-            // done processing, recycle
-            for (MotionEvent event : processedMotionEvent)
-            {
-                event.recycle();
-            }
             processedMotionEvent.clear();
         }
     }

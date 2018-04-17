@@ -23,15 +23,14 @@
 
 #include <functional>
 #include "engine/renderer/renderer.h"
-#include "objects/light.h"
-
 
 namespace gvr {
+
+class Light;
 
 class LightList
 {
 public:
-
     LightList() : mDirty(0),
                   mLightBlock(NULL),
                   mNumShadowMaps(0),

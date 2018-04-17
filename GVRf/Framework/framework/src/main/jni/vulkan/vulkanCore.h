@@ -23,15 +23,16 @@
 #include <unordered_map>
 #include "objects/components/camera.h"
 #include "vk_texture.h"
+#include "vulkan_flags.h"
 
-#define GVR_VK_CHECK(X) if (!(X)) { LOGD("VK_CHECK Failure"); assert((X));}
+
+#define GVR_VK_CHECK(X) if (!(X)) { FAIL("VK_CHECK Failure"); }
 #define GVR_VK_VERTEX_BUFFER_BIND_ID 0
 #define GVR_VK_SAMPLE_NAME "GVR Vulkan"
 #define VK_KHR_ANDROID_SURFACE_EXTENSION_NAME "VK_KHR_android_surface"
 
 namespace gvr {
 class VulkanUniformBlock;
-
 
 extern  void setImageLayout(VkImageMemoryBarrier imageMemoryBarrier, VkCommandBuffer cmdBuffer, VkImage image, VkImageAspectFlags aspectMask, VkImageLayout oldImageLayout, VkImageLayout newImageLayout, VkImageSubresourceRange subresourceRange,
                             VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VkPipelineStageFlags destStageFlags = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
@@ -251,7 +252,6 @@ private:
 
     VkPipelineCache m_pipelineCache;
     std::unordered_map<int, VkRenderPass> mRenderPassMap;
-    RenderTarget* renderTargetSM= nullptr;
 };
 }
 #endif //FRAMEWORK_VULKANCORE_H

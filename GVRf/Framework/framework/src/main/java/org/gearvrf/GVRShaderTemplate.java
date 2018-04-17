@@ -620,7 +620,7 @@ public class GVRShaderTemplate extends GVRShader
                 lightFunction += "  }\n";
             }
         }
-        lightFunction += "    return color;\n}\n";
+        lightFunction += "   return color;\n}\n";
         return lightDefs + lightSources + lightFunction;
     }
 

@@ -31,8 +31,12 @@ import org.gearvrf.GVRRenderData;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
 import org.gearvrf.GVRVertexBuffer;
+import org.gearvrf.scene_objects.GVRVideoSceneObject;
 import org.joml.AxisAngle4f;
 import org.joml.Vector3f;
+import org.joml.Vector2f;
+import org.gearvrf.x3d.data_types.SFVec2f;
+import org.gearvrf.x3d.data_types.SFFloat;
 
 
 /**
@@ -59,6 +63,7 @@ public class DefinedItem {
     private GVRTexture gvrTexture = null;
     private GVRRenderData gvrRenderData = null;
     private GVRMaterial gvrMaterial = null;
+    private GVRVideoSceneObject gvrVideoSceneObject = null;
     private Viewpoint viewpoint = null;
     private GVRTextViewSceneObject gvrTextViewSceneObject = null;
     /**
@@ -69,6 +74,11 @@ public class DefinedItem {
      */
     private AxisAngle4f rotationAxisAngle = new AxisAngle4f();
     private Vector3f direction = new Vector3f();
+
+    private SFVec2f textureTranslation = new SFVec2f(0, 0);
+    private SFVec2f textureCenter = new SFVec2f(0, 0);
+    private SFVec2f textureScale = new SFVec2f(1, 1);
+    private SFFloat textureRotation = new SFFloat(0);
 
     public DefinedItem() {
     }
@@ -150,6 +160,13 @@ public class DefinedItem {
     public GVRTexture getGVRTexture() {
         return this.gvrTexture;
     }
+    public void setGVRVideoSceneObject(GVRVideoSceneObject gvrVideoSceneObject) {
+        this.gvrVideoSceneObject = gvrVideoSceneObject;
+    }
+
+    public GVRVideoSceneObject getGVRVideoSceneObject() {
+        return this.gvrVideoSceneObject;
+    }
 
     public void setGVRMesh(GVRMesh gvrMesh) {
         this.gvrMesh = gvrMesh;
@@ -199,6 +216,46 @@ public class DefinedItem {
 
     public Viewpoint getViewpoint() {
         return this.viewpoint;
+    }
+
+    public void setTextureTranslation (float x, float y) {
+        textureTranslation.setValue( x, y );
+    }
+    public void setTextureTranslation (SFVec2f textureTranslation) {
+        this.textureTranslation.setValue( textureTranslation );
+    }
+    public SFVec2f getTextureTranslation () {
+        return this.textureTranslation;
+    }
+
+    public void setTextureCenter (float x, float y) {
+        textureCenter.setValue( x, y );
+    }
+    public void setTextureCenter (SFVec2f textureCenter) {
+        this.textureCenter.setValue( textureCenter );
+    }
+    public SFVec2f getTextureCenter () {
+        return this.textureCenter;
+    }
+
+    public void setTextureScale (float x, float y) {
+        textureScale.setValue( x,  y );
+    }
+    public void setTextureScale (SFVec2f textureScale) {
+        this.textureScale.setValue( textureScale );
+    }
+    public SFVec2f getTextureScale () {
+        return this.textureScale;
+    }
+
+    public void setTextureRotation (float rotation) {
+        textureRotation.setValue( rotation);
+    }
+    public void setTextureRotation (SFFloat rotation) {
+        this.textureRotation.setValue( rotation.getValue() );
+    }
+    public SFFloat getTextureRotation () {
+        return textureRotation;
     }
 
 }

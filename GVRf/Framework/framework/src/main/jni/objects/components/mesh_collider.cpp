@@ -71,6 +71,10 @@ namespace gvr
         Mesh* mesh = mesh_;
         bool pickCoordinates = pickCoordinates_;
         SceneObject* owner = owner_object();
+        if (nullptr == owner) {
+            return ColliderData();
+        }
+
         RenderData* rd = owner->render_data();
         glm::mat4 model_matrix = owner->transform()->getModelMatrix();
         glm::mat4 model_inverse = glm::affineInverse(model_matrix);
@@ -130,6 +134,10 @@ namespace gvr
     {
         Mesh* mesh = mesh_;
         SceneObject* owner = owner_object();
+        if (nullptr == owner) {
+            return ColliderData();
+        }
+
         RenderData* rd = owner->render_data();
         glm::mat4 model_matrix = owner->transform()->getModelMatrix();
         glm::mat4 model_inverse = glm::affineInverse(model_matrix);
@@ -339,11 +347,6 @@ static void populateSurfaceCoords(const Mesh& mesh, ColliderData& colliderData) 
         if (dist <= r)                       // bounding sphere intersects collision sphere?
         {
             h *= bounds.radius() / dist;           // hit point on collision sphere
-            LOGE("COLLIDER: sphere(%f, %f, %f) collider(%f, %f, %f) hit(%f, %f, %f) dist = %f radius = %f",
-                 sphere[0], sphere[1], sphere[2],
-                 colliderCenter.x, colliderCenter.y, colliderCenter.z,
-                 h.x, h.y, h.z,
-                 dist, r);
             data.IsHit = true;
             data.HitPosition = h;
             data.Distance = dist;

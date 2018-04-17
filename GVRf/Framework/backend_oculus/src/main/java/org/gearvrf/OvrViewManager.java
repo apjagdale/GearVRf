@@ -58,13 +58,11 @@ import org.gearvrf.utility.VrAppSettings;
  * {@link #onRotationSensor(long, float, float, float, float, float, float, float)
  * onRotationSensor()} to draw the scene graph properly.
  */
-class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener {
+class OvrViewManager extends GVRViewManager {
 
     private static final String TAG = Log.tag(OvrViewManager.class);
 
-    protected OvrRotationSensor mRotationSensor;
     protected OvrLensInfo mLensInfo;
-
     protected int mCurrentEye;
 
     // Statistic debug info
@@ -103,11 +101,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         }
 
         /*
-         * Starts listening to the sensor.
-         */
-        mRotationSensor = new OvrRotationSensor(gvrActivity, this);
-
-        /*
          * Sets things with the numbers in the xml.
          */
         DisplayMetrics metrics = new DisplayMetrics();
@@ -144,50 +137,15 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
         mStatsLine.addColumn(mTracerAfterDrawEyes.getStatColumn());
     }
 
-    /*
-     * Android life cycle
-     */
-
-    /**
-     * Called when the system is about to start resuming a previous activity.
-     * This is typically used to commit unsaved changes to persistent data, stop
-     * animations and other things that may be consuming CPU, etc.
-     * Implementations of this method must be very quick because the next
-     * activity will not be resumed until this method returns.
-     */
-    @Override
-    void onPause() {
-        super.onPause();
-        Log.v(TAG, "onPause");
-        mRotationSensor.onPause();
-    }
-
-    /**
-     * Called when the activity will start interacting with the user. At this
-     * point your activity is at the top of the activity stack, with user input
-     * going to it.
-     */
-    void onResume() {
-        super.onResume();
-        Log.v(TAG, "onResume");
-    }
-
-    /**
-     * The final call you receive before your activity is destroyed.
-     */
-    void onDestroy() {
-        Log.v(TAG, "onDestroy");
-        mRotationSensor.onDestroy();
-        super.onDestroy();
-    }
-
     /**
      * Called when the surface is created or recreated. Avoided because this can
      * be called twice at the beginning.
      */
     void onSurfaceChanged(int width, int height) {
         Log.v(TAG, "onSurfaceChanged");
-        mRotationSensor.onResume();
+
+        final VrAppSettings.EyeBufferParams.DepthFormat depthFormat = getActivity().getAppSettings().getEyeBufferParams().getDepthFormat();
+        getActivity().getConfigurationManager().configureRendering(VrAppSettings.EyeBufferParams.DepthFormat.DEPTH_24_STENCIL_8 == depthFormat);
     }
 
     @Override
@@ -292,15 +250,13 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
 
     /** Called once per frame */
     protected void onDrawFrame() {
-        beforeDrawEyes();
-        drawEyes(mActivity.getActivityNative().getNative());
 
         // update the gear controller
         if (mGearController != null)
         {
             mGearController.onDrawFrame();
         }
-
+        drawEyes(mActivity.getActivityNative().getNative());
         afterDrawEyes();
     }
 
@@ -329,7 +285,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
     @Override
     void onSurfaceCreated() {
         super.onSurfaceCreated();
-        mRotationSensor.onResume();
         mGearController = mInputManager.getGearController();
         if (mGearController != null)
         {
@@ -364,39 +319,6 @@ class OvrViewManager extends GVRViewManager implements OvrRotationSensorListener
      * GVRF APIs
      */
 
-    /**
-     * Called to reset current sensor data.
-     *
-     * @param timeStamp
-     *            current time stamp
-     * @param rotationW
-     *            Quaternion rotation W
-     * @param rotationX
-     *            Quaternion rotation X
-     * @param rotationY
-     *            Quaternion rotation Y
-     * @param rotationZ
-     *            Quaternion rotation Z
-     * @param gyroX
-     *            Gyro rotation X
-     * @param gyroY
-     *            Gyro rotation Y
-     * @param gyroZ
-     *            Gyro rotation Z
-     */
-    @Override
-    public void onRotationSensor(long timeStamp, float rotationW, float rotationX, float rotationY, float rotationZ,
-                                 float gyroX, float gyroY, float gyroZ) {
-        GVRCameraRig cameraRig = null;
-        if (mMainScene != null) {
-            cameraRig = mMainScene.getMainCameraRig();
-        }
-
-        if (cameraRig != null) {
-            cameraRig.setRotationSensorData(timeStamp, rotationW, rotationX, rotationY, rotationZ, gyroX, gyroY, gyroZ);
-            updateSensoredScene();
-        }
-    }
     private native long getRenderTextureInfo(long ptr, int index, int eye );
     private native void drawEyes(long ptr);
 }

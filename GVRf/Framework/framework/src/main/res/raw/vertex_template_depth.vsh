@@ -36,14 +36,11 @@ void main()
 #ifdef HAS_VertexSkinShader
     @VertexSkinShader
 #endif
-/*
+
 #ifdef HAS_MULTIVIEW
 	proj_position = u_mvp_[gl_ViewID_OVR] * vertex.local_position;
 #else
 	proj_position = u_mvp * vertex.local_position;
 #endif
-	gl_Position = proj_position;*/
-	gl_Position = u_mvp * vertex.local_position;
-	proj_position = gl_Position;
-	//gl_Position = proj_position;
+	gl_Position = proj_position;
 }

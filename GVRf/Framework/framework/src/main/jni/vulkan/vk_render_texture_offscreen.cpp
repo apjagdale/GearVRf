@@ -101,7 +101,6 @@ namespace gvr{
         GVR_VK_CHECK(!err);
 
         return true;
-
     }
 
 

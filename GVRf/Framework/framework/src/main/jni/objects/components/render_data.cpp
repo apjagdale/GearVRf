@@ -19,6 +19,7 @@
 #include "util/jni_utils.h"
 #include "objects/scene.h"
 #include "shaders/shader.h"
+#include <glslang/Include/Common.h> //@todo remove; for to_string
 
 namespace gvr {
 
@@ -70,6 +71,7 @@ const RenderPass* RenderData::pass(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass];
     }
+    return nullptr;
 }
 
 void RenderData::set_mesh(Mesh* mesh)
@@ -90,6 +92,7 @@ int RenderData::cull_face(int pass) const {
     if (pass >= 0 && pass < render_pass_list_.size()) {
         return render_pass_list_[pass]->cull_face();
     }
+    return 0;
 }
 
 ShaderData* RenderData::material(int pass) const {
@@ -225,6 +228,8 @@ const std::string& RenderData::getHashCode()
         render_data_string.append(std::to_string(stencilOpSfail_));
         render_data_string.append(std::to_string(stencilOpDpfail_));
         render_data_string.append(std::to_string(stencilOpDppass_));
+        render_data_string.append(std::to_string(source_alpha_blend_func_));
+        render_data_string.append(std::to_string(dest_alpha_blend_func_));
         render_data_string.append(std::to_string(mesh_->getVertexBuffer()->getDescriptor()));
         hash_code = render_data_string;
         hash_code_dirty_ = false;
@@ -321,8 +326,7 @@ bool RenderData::updateGPU(Renderer* renderer, Shader* shader)
             bones_ubo_->updateGPU(renderer);
         }
     }
-    vbuf->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
-    return true;
+    return vbuf->updateGPU(renderer, mesh_->getIndexBuffer(), shader);
 }
 
 void RenderData::setBindShaderObject(JNIEnv* env, jobject bindShaderObject) {

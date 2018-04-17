@@ -16,12 +16,23 @@
 package org.gearvrf.x3d;
 
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.view.Surface;
 
+import org.gearvrf.GVRExternalScene;
+import org.gearvrf.GVRResourceVolume;
+import org.gearvrf.GVRScene;
+import org.gearvrf.animation.GVRAnimator;
+import org.gearvrf.GVRShaderId;
 import org.gearvrf.io.GVRCursorController;
 import org.gearvrf.GVRMeshCollider;
 import org.gearvrf.io.GVRControllerType;
 import org.gearvrf.io.GVRInputManager;
+import org.gearvrf.scene_objects.GVRVideoSceneObject;
+import org.gearvrf.scene_objects.GVRVideoSceneObjectPlayer;
 import org.gearvrf.utility.Log;
 
 import java.io.FileNotFoundException;
@@ -41,9 +52,13 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.gearvrf.script.GVRJavascriptScriptFile;
 import org.gearvrf.script.javascript.GVRJavascriptV8File;
+import org.joml.Matrix3f;
+import org.joml.Vector2f;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import org.gearvrf.x3d.data_types.SFVec2f;
 
 import org.gearvrf.GVRAndroidResource;
 import org.gearvrf.GVRAssetLoader;
@@ -70,6 +85,7 @@ import org.gearvrf.GVRTextureParameters;
 import org.gearvrf.GVRTextureParameters.TextureWrapType;
 import org.gearvrf.GVRTransform;
 import org.gearvrf.GVRVertexBuffer;
+import org.gearvrf.scene_objects.GVRConeSceneObject;
 import org.gearvrf.scene_objects.GVRCubeSceneObject;
 import org.gearvrf.scene_objects.GVRCylinderSceneObject;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
@@ -79,7 +95,105 @@ import org.joml.Vector3f;
 import org.joml.Quaternionf;
 import java.util.EnumSet;
 
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.ExoPlayerFactory;
+import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.source.ExtractorMediaSource;
+import com.google.android.exoplayer2.source.MediaSource;
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
+import com.google.android.exoplayer2.trackselection.TrackSelection;
+import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.upstream.AssetDataSource;
+import com.google.android.exoplayer2.upstream.DataSource;
+
+
 public class X3Dobject {
+
+
+    protected GVRVideoSceneObjectPlayer<ExoPlayer> makeExoPlayer(String movieFileName ) {
+
+        GVRVideoSceneObjectPlayer<ExoPlayer> gvrVideoSceneObjectPlayer = null;
+
+        try {
+            final Context context = activityContext;
+            final String movieFileNameFinal = movieFileName;
+
+            DataSource.Factory dataSourceFactory = new DataSource.Factory() {
+                @Override
+                public DataSource createDataSource() {
+                    return new AssetDataSource(context);
+                }
+            };
+
+            final MediaSource mediaSource = new ExtractorMediaSource(Uri.parse("asset:///" + movieFileName),
+                    dataSourceFactory,
+                    new DefaultExtractorsFactory(), null, null);
+
+            final SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(context,
+                    new DefaultTrackSelector());
+            player.prepare(mediaSource);
+            Log.e(TAG, "Load movie " + movieFileNameFinal + ".");
+
+            gvrVideoSceneObjectPlayer = new GVRVideoSceneObjectPlayer<ExoPlayer>() {
+                @Override
+                public ExoPlayer getPlayer() {
+                    return player;
+                }
+
+                @Override
+                public void setSurface(final Surface surface) {
+                    player.addListener(new Player.DefaultEventListener() {
+                        @Override
+                        public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+                            switch (playbackState) {
+                                case Player.STATE_BUFFERING:
+                                    break;
+                                case Player.STATE_ENDED:
+                                    player.seekTo(0);
+                                    break;
+                                case Player.STATE_IDLE:
+                                    break;
+                                case Player.STATE_READY:
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    });
+                    player.setVideoSurface(surface);
+                }
+
+                @Override
+                public void release() {
+                    player.release();
+                }
+
+                @Override
+                public boolean canReleaseSurfaceImmediately() {
+                    return false;
+                }
+
+                @Override
+                public void pause() {
+                    player.setPlayWhenReady(false);
+                }
+
+                @Override
+                public void start() {
+                    Log.e(TAG, "movie start.");
+                    player.setPlayWhenReady(true);
+                }
+            };
+        }
+        catch (Exception e) {
+                Log.e(TAG, "Exception makeExoPlayer: " + e);
+        }
+        return gvrVideoSceneObjectPlayer;
+    }  //  end makeExoPlayer
+
+
     /**
      * This class facilitates construction of GearVRF meshes from X3D data.
      * X3D can have different indices for positions, normals and texture coordinates.
@@ -232,6 +346,7 @@ public class X3Dobject {
         private FloatArray mOutputTexCoords = new FloatArray(64 * 3);
         private GVRContext mContext;
         private DefinedItem mVertexBufferDefine;
+        private float mMaxYTexcoord = Float.NEGATIVE_INFINITY;
         private boolean mUseNormals;
         private boolean mUseTexCoords;
 
@@ -254,6 +369,7 @@ public class X3Dobject {
             mPositionIndices.clear();
             mNormalIndices.clear();
             mTexcoordIndices.clear();
+            mMaxYTexcoord = Float.NEGATIVE_INFINITY;
         }
 
         void defineVertexBuffer(DefinedItem item)
@@ -332,7 +448,11 @@ public class X3Dobject {
         void addInputTexcoord(float[] tc)
         {
             if (mUseTexCoords) {
-                        mInputTexCoords.add(tc);
+                if (tc[1] > mMaxYTexcoord)
+                {
+                    mMaxYTexcoord = tc[1];
+                }
+                mInputTexCoords.add(tc);
             }
         }
 
@@ -487,7 +607,8 @@ public class X3Dobject {
                     int tindex = texcoordIndices[f] * 2;
                     mInputTexCoords.get(tindex, tc);
                     // flip the Y texture coordinate
-                    tc[1] = -tc[1];
+                    //tc[1] = -tc[1];
+                    tc[1] = mMaxYTexcoord - tc[1];
                     key += String.valueOf(tc[0]) + String.valueOf(tc[1]);
                 }
                 if (hasNormals)
@@ -581,7 +702,8 @@ public class X3Dobject {
                 int n = texCoords.length;
                 for(int i=1; i<n; i+=2)
                 {
-                    texCoords[i] = -texCoords[i];
+                    //texCoords[i] = -texCoords[i];
+                    texCoords[i] = mMaxYTexcoord - texCoords[i];
                 }
                 vbuffer.setFloatArray("a_texcoord", texCoords, 2, 0);
             }
@@ -599,6 +721,8 @@ public class X3Dobject {
     public static final String X3D_ROOT_NODE = "x3d_root_node_";
 
     private static final String TAG = "X3DObject";
+
+    public GVRShaderId x3DShader;
 
     // Like a C++ pre-compiler switch to select shaders.
     // Default is true to use Universal lights shader.
@@ -788,6 +912,7 @@ public class X3Dobject {
             this.gvrContext = assetRequest.getContext();
             this.activityContext = gvrContext.getContext();
             this.root = root;
+            x3DShader = gvrContext.getShaderManager().getShaderType(X3DShader.class);
 
 
             EnumSet<GVRImportSettings> settings = assetRequest.getImportSettings();
@@ -1429,7 +1554,7 @@ public class X3Dobject {
                 gvrRenderData.setAlphaToCoverage(true);
                 gvrRenderData.setRenderingOrder(GVRRenderingOrder.GEOMETRY);
                 gvrRenderData.setCullFace(GVRCullFaceEnum.Back);
-                shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID));
+                shaderSettings.initializeTextureMaterial(new GVRMaterial(gvrContext, x3DShader));
 
                 // Check if this Shape node is part of a Level-of-Detail
                 // If there is an active Level-of-Detail (LOD)
@@ -1646,23 +1771,22 @@ public class X3Dobject {
 
             /********** TextureTransform **********/
             else if (qName.equalsIgnoreCase("TextureTransform")) {
-                Log.e(TAG, "X3D TextureTransform not currently implemented");
                 attributeValue = attributes.getValue("DEF");
                 if (attributeValue != null) {
-                    Log.e(TAG,
-                            "TextureTransform DEF attribute not currently implemented");
+                    shaderSettings.setTextureTransformName(attributeValue);
                 }
                 String centerAttribute = attributes.getValue("center");
                 if (centerAttribute != null) {
                     float[] center = parseFixedLengthFloatString(centerAttribute, 2,
                             false, false);
+                    center[0] = -center[0];
                     shaderSettings.setTextureCenter(center);
                 }
                 String rotationAttribute = attributes.getValue("rotation");
                 if (rotationAttribute != null) {
                     float[] rotation = parseFixedLengthFloatString(rotationAttribute, 1,
                             false, false);
-                    shaderSettings.setTextureRotation(rotation[0]);
+                    shaderSettings.setTextureRotation( rotation[0] );
                 }
                 String scaleAttribute = attributes.getValue("scale");
                 if (scaleAttribute != null) {
@@ -1674,9 +1798,10 @@ public class X3Dobject {
                 if (translationAttribute != null) {
                     float[] translation = parseFixedLengthFloatString(translationAttribute,
                             2, false, false);
+                    translation[1] = -translation[1];
                     shaderSettings.setTextureTranslation(translation);
                 }
-            }
+            }  // end TextureTransform
 
             /********** IndexedFaceSet **********/
 
@@ -1758,7 +1883,7 @@ public class X3Dobject {
                         // were DEFined earlier. We don't want to share the entire GVRMesh
                         // since the 2 meshes may have different Normals and
                         // Texture Coordinates.  So as an alternative, copy the vertices.
-                            gvrVertexBuffer = useItem.getVertexBuffer();
+                        gvrVertexBuffer = useItem.getVertexBuffer();
                         reorganizeVerts = false;
                     }
                 } // end USE Coordinate
@@ -1793,12 +1918,12 @@ public class X3Dobject {
                     }
                     if (useItem != null) {
 
-                            // 'useItem' points to GVRVertexBuffer who's useItem.getVertexBuffer
+                        // 'useItem' points to GVRVertexBuffer who's useItem.getVertexBuffer
                         // TextureCoordinates were DEFined earlier.
-                            // We don't want to share the entire GVRVertexBuffer since the
-                            // the 2 meshes may have different Normals and Positions
+                        // We don't want to share the entire GVRVertexBuffer since the
+                        // the 2 meshes may have different Normals and Positions
                         // So as an alternative, copy the texture coordinates.
-                            gvrVertexBuffer.setFloatArray("a_texcoord", useItem.getVertexBuffer().getFloatArray("a_texcoord"));
+                        gvrVertexBuffer.setFloatArray("a_texcoord", useItem.getVertexBuffer().getFloatArray("a_texcoord"));
                         reorganizeVerts = false;
                     }
                 } // end USE TextureCoordinate
@@ -1836,11 +1961,11 @@ public class X3Dobject {
                     }
                     if (useItem != null) {
 
-                            // 'useItem' points to GVRVertexBuffer who's useItem.getVertexBuffer Coordinates
-                            // were DEFined earlier. We don't want to share the entire vertex buffer since
-                            // the 2 vertex buffers may have different Normals and Texture Coordinates
+                        // 'useItem' points to GVRVertexBuffer who's useItem.getVertexBuffer Coordinates
+                        // were DEFined earlier. We don't want to share the entire vertex buffer since
+                        // the 2 vertex buffers may have different Normals and Texture Coordinates
                         // So as an alternative, copy the normals.
-                            gvrVertexBuffer.setFloatArray("a_normal", useItem.getVertexBuffer().getFloatArray("a_normal"));
+                        gvrVertexBuffer.setFloatArray("a_normal", useItem.getVertexBuffer().getFloatArray("a_normal"));
                         reorganizeVerts = false;
                     }
                 } // end USE Coordinate
@@ -2562,7 +2687,7 @@ public class X3Dobject {
                     params.FacingOut = solid;
                     params.HasTopCap = false;
                     params.HasBottomCap = bottom;
-                    params.Material = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
+                    params.Material = new GVRMaterial(gvrContext, x3DShader);
                     GVRCylinderSceneObject cone = new GVRCylinderSceneObject(gvrContext,
                             params);
 
@@ -2612,7 +2737,7 @@ public class X3Dobject {
                     params.HasBottomCap = bottom;
                     params.HasTopCap = top;
                     params.FacingOut = solid;
-                    params.Material = new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID);
+                    params.Material = new GVRMaterial(gvrContext, x3DShader);
                     GVRCylinderSceneObject gvrCylinderSceneObject = new GVRCylinderSceneObject(
                             gvrContext, params);
                     currentSceneObject.addChildObject(gvrCylinderSceneObject);
@@ -2634,7 +2759,7 @@ public class X3Dobject {
                         solid = parseBooleanString(attributeValue);
                     }
                     GVRSphereSceneObject gvrSphereSceneObject = new GVRSphereSceneObject(
-                            gvrContext, solid, new GVRMaterial(gvrContext, GVRMaterial.GVRShaderType.Phong.ID), radius);
+                            gvrContext, solid, new GVRMaterial(gvrContext, x3DShader), radius);
                     currentSceneObject.addChildObject(gvrSphereSceneObject);
                     meshAttachedSceneObject = gvrSphereSceneObject;
 
@@ -2722,11 +2847,14 @@ public class X3Dobject {
                 /********** Text **********/
                 else if (qName.equalsIgnoreCase("Text")) {
                     Init_Text_FontParams();
+                    attributeValue = attributes.getValue("USE");
+                    if (attributeValue != null) {
+                        Log.e(TAG, "Text node USE name not currently implemented.");
+                    }
 
                    attributeValue = attributes.getValue("DEF");
                     if (attributeValue != null) {
                         Text_FontParams.nameTextAttribute = attributeValue;
-                        Log.e(TAG, "Text DEF name currently not implemented.");
                     }
                     attributeValue = attributes.getValue("length");
                     if (attributeValue != null) {
@@ -2832,8 +2960,6 @@ public class X3Dobject {
                         attributeValue = attributes.getValue("spacing");
                         if (attributeValue != null) {
                             Text_FontParams.spacing = 10.0f * (parseSingleFloatString(attributeValue, false, true) - 1);
-                            //Text_FontParams.spacing = parseSingleFloatString(attributeValue, false, true);
-                            //Text_FontParams.spacing = 10.0f * (Text_FontParams.spacing - 1.0f);
                         }
                         attributeValue = attributes.getValue("size");
                         if (attributeValue != null) {
@@ -3140,6 +3266,57 @@ public class X3Dobject {
                         currentScriptObject.addField(name, accessType, type);
                     }
                 }  //  end <field> node
+
+                /********** MovieTexture **********/
+                else if (qName.equalsIgnoreCase("MovieTexture")) {
+                    attributeValue = attributes.getValue("USE");
+                    if (attributeValue != null) {
+                        DefinedItem useItem = null;
+                        for (DefinedItem definedItem : mDefinedItems) {
+                            if (attributeValue.equals(definedItem.getName())) {
+                                useItem = definedItem;
+                                break;
+                            }
+                        }
+                        if (useItem != null) {
+                            Log.e(TAG, "MovieTexture USE not implemented");
+                            gvrTexture = useItem.getGVRTexture();
+                            shaderSettings.setTexture(gvrTexture);
+                        }
+                        else {
+                            Log.e(TAG, "Error: MovieTexture USE='" + attributeValue + "'; No matching DEF='" + attributeValue + "'.");
+                        }
+                    } else {
+                        String description = "";
+                        boolean loop = false;
+
+                        String urlAttribute = attributes.getValue("url");
+                        if (urlAttribute != null) {
+                            String[] urlsString = parseMFString(urlAttribute);
+
+                            for (int i = 0; i < urlsString.length; i++) {
+                                shaderSettings.movieTextures.add(urlsString[i]);
+                            }
+                        }
+                        attributeValue = attributes.getValue("loop");
+                        if (attributeValue != null) {
+                            shaderSettings.setMovieTextureLoop(parseBooleanString(attributeValue) );
+                        }
+                        String repeatSAttribute = attributes.getValue("repeatS");
+                        if (repeatSAttribute != null) {
+                                if (!parseBooleanString(repeatSAttribute)) {
+                                    //TODO: gvrTextureParameters.setWrapSType(TextureWrapType.GL_CLAMP_TO_EDGE);
+                                }
+                        }
+                        String repeatTAttribute = attributes.getValue("repeatT");
+                        if (repeatTAttribute != null) {
+                                if (!parseBooleanString(repeatTAttribute)) {
+                                    //TODO: gvrTextureParameters.setWrapTType(TextureWrapType.GL_CLAMP_TO_EDGE);
+                                }
+                        }
+                        shaderSettings.setMovieTextureName(attributes.getValue("DEF") );
+                    }
+                } // end <MovieTexture> node
 
 
                 /********** BooleanToggle **********/
@@ -3540,8 +3717,8 @@ public class X3Dobject {
                 else {
                     Log.e(TAG, "X3D node " + qName + " not implemented.");
                 }
-            }
-        }
+            }  // end 'else { if stmt' at ROUTE, which should be deleted
+        }  //  end startElement
 
         @Override
         public void endElement(String uri, String localName, String qName)
@@ -3599,7 +3776,6 @@ public class X3Dobject {
                                 gvrRenderData.setMaterial(gvrMaterial);
                             } else {
                                 // This GVRSceneObject came with a GVRRenderData and GVRMaterial
-
                                 // already attached.  Examples of this are Text or primitives
                                 // such as the Box, Cone, Cylinder, Sphere
 
@@ -3607,7 +3783,6 @@ public class X3Dobject {
                                 if (gvrRenderData != null) {
                                     // <Shape> node created an unused gvrRenderData
                                     // Check if we had a DEF in Shape node so that we can point to
-
                                     // the new gvrRenderData
                                     for (DefinedItem definedItem : mDefinedItems) {
                                         if (definedItem.getGVRRenderData() == gvrRenderData) {
@@ -3663,6 +3838,78 @@ public class X3Dobject {
                                 }
                             }
 
+
+                            if ( !shaderSettings.movieTextures.isEmpty()) {
+                                try {
+                                    GVRVideoSceneObjectPlayer<?> videoSceneObjectPlayer = null;
+                                    try {
+                                        videoSceneObjectPlayer = makeExoPlayer(shaderSettings.movieTextures.get(0));
+                                    }
+                                    catch (Exception e) {
+                                        Log.e(TAG, "Exception getting videoSceneObjectPlayer: " + e);
+                                    }
+                                    videoSceneObjectPlayer.start();
+
+                                    GVRVideoSceneObject gvrVideoSceneObject =
+                                            new GVRVideoSceneObject(gvrContext, gvrRenderData.getMesh(), videoSceneObjectPlayer,
+                                                    GVRVideoSceneObject.GVRVideoType.MONO);
+                                    currentSceneObject.addChildObject(gvrVideoSceneObject);
+                                    // Primitives such as Box, Cone, etc come with their own mesh
+                                    // so we need to remove these.
+                                    if ( meshAttachedSceneObject != null) {
+                                        GVRSceneObject primitiveParent = meshAttachedSceneObject.getParent();
+                                        primitiveParent.removeChildObject(meshAttachedSceneObject);
+                                    }
+                                    meshAttachedSceneObject = gvrVideoSceneObject;
+
+                                    if (shaderSettings.getMovieTextureName() != null) {
+                                        gvrVideoSceneObject.setName(shaderSettings.getMovieTextureName());
+                                        DefinedItem item = new DefinedItem(shaderSettings.getMovieTextureName());
+                                        item.setGVRVideoSceneObject(gvrVideoSceneObject);
+                                        mDefinedItems.add(item);
+                                    }
+
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                    Log.e(TAG, "X3D MovieTexture Exception:\n" + e);
+                                }
+                            }  // end MovieTexture
+
+                            // Texture Transform
+                            // If DEFined iteam, add to the DeFinedItem list. Maay be interactive
+                            // GearVR may not be doing texture transforms on primitives or text
+                            // crash otherwise.
+
+                            if (meshAttachedSceneObject == null) {
+                                if (!shaderSettings.getTextureTransformName().isEmpty()) {
+                                    DefinedItem definedItem = new DefinedItem(
+                                            shaderSettings.getTextureTransformName());
+                                    definedItem.setGVRMaterial(gvrMaterial);
+                                    definedItem.setTextureTranslation(shaderSettings.getTextureTranslation());
+                                    definedItem.setTextureCenter(shaderSettings.getTextureCenter());
+                                    definedItem.setTextureScale(shaderSettings.getTextureScale());
+                                    definedItem.setTextureRotation(shaderSettings.getTextureRotation().getValue());
+                                    definedItem.setName(shaderSettings.getTextureTransformName());
+                                    mDefinedItems.add(definedItem); // Add gvrMaterial to Array list
+                                }
+                                // Texture Transform Matrix equation:
+                                // TC' = -C * S * R * C * T * TC
+                                //where TC' is the transformed texture coordinate
+                                //   TC is the original Texture Coordinate
+                                //   C = center, S = scale, R = rotation, T = translation
+                                Matrix3f textureTransform = animationInteractivityManager.SetTextureTransformMatrix(
+                                        shaderSettings.getTextureTranslation(),
+                                        shaderSettings.getTextureCenter(),
+                                        shaderSettings.getTextureScale(),
+                                        shaderSettings.getTextureRotation());
+
+                                shaderSettings.textureMatrix = textureTransform;
+                                float[] texMtx = new float[9];
+                                shaderSettings.textureMatrix.get(texMtx);
+                                gvrMaterial.setFloatArray("texture_matrix", texMtx);
+                            }
+
+
                             // Appearance node thus far contains properties of GVRMaterial
                             // node
                             if (!shaderSettings.getAppearanceName().isEmpty()) {
@@ -3687,7 +3934,7 @@ public class X3Dobject {
 
                 if (meshAttachedSceneObject != null) {
                     // gvrRenderData already attached to a GVRSceneObject such as a
-                    // Cone or Cylinder
+                    // Cone or Cylinder or a Movie Texture
                     meshAttachedSceneObject = null;
                 } else
                     currentSceneObject.attachRenderData(gvrRenderData);
@@ -3872,6 +4119,8 @@ public class X3Dobject {
                 ;
             } else if (qName.equalsIgnoreCase("Background")) {
                 ;
+            } else if (qName.equalsIgnoreCase("MovieTexture")) {
+                ;
             } else if (qName.equalsIgnoreCase("ElevationGrid")) {
                 ;
             }
@@ -3928,14 +4177,15 @@ public class X3Dobject {
                     animationInteractivityManager.InitializeScript();
                 }
                 catch (Exception exception) {
-                    Log.e(TAG, "Error initialing X3D <ROUTE> or <Script> node related to Animation or Interactivity.");
+                    Log.e(TAG, "Error initialing X3D <ROUTE> or <Script> node related to Animation or Interactivity.\n"
+                            + exception);
                 }
 
             } // end </scene>
             else if (qName.equalsIgnoreCase("x3d")) {
                 ;
             } // end </x3d>
-        }
+        }  // end endElement
 
 
         @Override
@@ -3978,16 +4228,40 @@ public class X3Dobject {
                     String[] urls = inlineObject.getURL();
                     for (int j = 0; j < urls.length; j++) {
                         GVRAndroidResource gvrAndroidResource = null;
+                        GVRResourceVolume gvrResourceVolume = null;
                         try {
+                            String filename = urls[j];
                             inlineSubdirectory = "";
                             int lastIndex = urls[j].lastIndexOf('/');
                             if (lastIndex != -1) {
                                 inlineSubdirectory = urls[j].substring(0, urls[j].lastIndexOf('/')+1);
+                                filename = urls[j].substring(urls[j].lastIndexOf('/')+1, urls[j].length());
                             }
+
+                            gvrResourceVolume = new GVRResourceVolume(gvrContext, urls[j]);
+                            gvrAndroidResource = gvrResourceVolume.openResource( filename );
+
+                            if ( filename.toLowerCase().endsWith(".x3d")) {
+                                inputStream = gvrAndroidResource.getStream();
+                                currentSceneObject = inlineObject.getInlineGVRSceneObject();
+                                saxParser.parse(inputStream, userhandler);
+                            }
+                            else {
+                                GVRExternalScene gvrExternalScene = new GVRExternalScene(gvrContext, urls[j], false);
+                                currentSceneObject = inlineObject.getInlineGVRSceneObject();
+                                if (currentSceneObject == null) root.attachComponent(gvrExternalScene);
+                                else currentSceneObject.attachComponent(gvrExternalScene);
+                                GVRScene gvrScene = gvrContext.getMainScene();
+                                gvrExternalScene.load(gvrScene);
+                                GVRAnimator gvrAnimator = gvrExternalScene.getAnimator();
+                            }
+/*
                             gvrAndroidResource = new GVRAndroidResource(gvrContext, urls[j]);
                             inputStream = gvrAndroidResource.getStream();
+
                             currentSceneObject = inlineObject.getInlineGVRSceneObject();
                             saxParser.parse(inputStream, userhandler);
+                            */
                         } catch (FileNotFoundException e) {
                             Log.e(TAG,
                                     "Inline file reading: File Not Found: url " + urls[j] + ", Exception "
@@ -4003,7 +4277,9 @@ public class X3Dobject {
                     }
                 }
             }
-        } catch (Exception exception) {
+        }  catch (IOException exception) {
+            Log.d(TAG, "X3D/XML Parse IOException = " + exception);
+        }catch (Exception exception) {
             Log.e(TAG, "X3D/XML Parsing Exception = " + exception);
         }
 

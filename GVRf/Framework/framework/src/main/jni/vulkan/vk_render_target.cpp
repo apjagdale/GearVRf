@@ -40,7 +40,6 @@ VkRenderTarget::VkRenderTarget(RenderTexture* renderTexture, const RenderTarget*
 
 
 VkRenderTexture* VkRenderTarget :: getTexture() {
-
     VkFence fence =  static_cast<VkRenderTexture*>(mRenderTexture)->getFenceObject();
     VkResult err;
 

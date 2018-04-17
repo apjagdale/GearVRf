@@ -21,5 +21,11 @@ APP_ABI := arm64-v8a
 endif
 
 APP_PLATFORM := android-19
-APP_STL := gnustl_static
+
+ifndef GVRF_USE_CLANG
+APP_STL := gnustl_shared
 NDK_TOOLCHAIN_VERSION := 4.9
+else
+APP_STL := c++_shared
+NDK_TOOLCHAIN_VERSION := clang
+endif
