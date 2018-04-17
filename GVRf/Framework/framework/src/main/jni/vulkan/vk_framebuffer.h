@@ -57,9 +57,6 @@ public:
     }
 
     const VkImageView &getImageView(ImageType type) {
-        /*if(type == DEPTH_IMAGE){
-            return mAttachments[type]->getVkLayerImageView(0);
-        }*/
         return mAttachments[type]->getVkImageView();
     }
 

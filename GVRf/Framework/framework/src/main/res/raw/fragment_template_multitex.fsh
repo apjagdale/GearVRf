@@ -49,7 +49,6 @@ void main()
 #if defined(HAS_LIGHTSOURCES)
 	vec4 color = LightPixel(s);
 	color = clamp(color, vec4(0), vec4(1));
-
     fragColor = color;
 #else
 	fragColor = s.diffuse;

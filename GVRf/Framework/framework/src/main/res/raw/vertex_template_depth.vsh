@@ -8,8 +8,6 @@ layout(num_views = 2) in;
 #endif
 precision highp float;
 
-//uniform mat4 shadow_matrix;
-
 @MATRIX_UNIFORMS
 
 #ifdef HAS_VertexSkinShader

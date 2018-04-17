@@ -164,6 +164,7 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
             }
         }
         rdata->set_shader(pass, shader->getShaderID(), rstate.is_multiview);
+        static_cast<VulkanShader*>(shader)->setDepthShaderFlag();
     }
 
     // Normal Rendering

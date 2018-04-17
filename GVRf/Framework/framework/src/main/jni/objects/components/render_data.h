@@ -364,7 +364,6 @@ public:
 
     void set_shader(int pass, int shaderid, bool isMultiview)
     {
-        LOGD("SHADER: RenderData:setNativeShader %d %p", shaderid, this);
         render_pass_list_[pass]->set_shader(shaderid, isMultiview);
     }
 

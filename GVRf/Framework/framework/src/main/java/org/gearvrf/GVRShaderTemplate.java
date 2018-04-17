@@ -65,6 +65,7 @@ import org.gearvrf.utility.Log;
 public class GVRShaderTemplate extends GVRShader
 {
     private final static String TAG = "GVRShaderTemplate";
+    private final int shadowmapStartLocation = 20;
 
     protected class LightClass
     {
@@ -574,7 +575,7 @@ public class GVRShaderTemplate extends GVRShader
      */
     private String generateLightFragmentShaderLoop(GVRScene scene, Map<String, LightClass> lightClasses)
     {
-        int shadowMapLocation = 20;
+        int shadowMapLocation = shadowmapStartLocation;
         String lightFunction = "\nvec4 LightPixel(Surface s)\n{\n"
                                + "    vec4 color = vec4(0.0, 0.0, 0.0, 0.0);\n"
                                + "    vec4 c;\n"
@@ -636,7 +637,7 @@ public class GVRShaderTemplate extends GVRShader
      */
     private String generateLightVertexShaderLoop(GVRScene scene, Map<String, LightClass> lightClasses)
     {
-        int shadowMapLocation = 20;
+        int shadowMapLocation = shadowmapStartLocation;
         String lightSources = "";
         String lightDefs = "";
         String lightFunction = "\nvoid LightVertex(Vertex vertex)\n{\n";

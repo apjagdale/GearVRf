@@ -85,10 +85,8 @@ namespace gvr
         if(renderer->getInstance()->isVulkanInstance()){
             shadowMap->getRenderState().is_shadow = true;
             shadowMap->getRenderState().render_mask = 1;
-            shadowMap->getRenderState().is_shadow = true;
             shadowMap->getRenderState().shadow_map = nullptr;
             shadowMap->getRenderState().material_override = shadowMap->getShadowMaterial();
-
             shadowMap->getRenderState().render_mask = 1;
         }
         else {

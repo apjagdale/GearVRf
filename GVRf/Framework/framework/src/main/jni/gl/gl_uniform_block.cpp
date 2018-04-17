@@ -140,7 +140,6 @@ namespace gvr {
                              default:
                              LOGE("UniformBlock: ERROR invalid integer vector size %d", elemsize);
                              break;
-
                          }
                      }
                  }

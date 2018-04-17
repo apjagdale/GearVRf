@@ -313,7 +313,6 @@ bool LightList::createLightBlock(Renderer* renderer)
             numFloats += light->getTotalSize() / sizeof(float);
         }
     }
-
     if ((mLightBlock == NULL) ||
         (numFloats > (mLightBlock->getTotalSize()/ sizeof(float))))
     {

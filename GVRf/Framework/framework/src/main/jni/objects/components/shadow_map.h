@@ -40,7 +40,6 @@ class GLFrameBuffer;
         int         mLayerIndex;
         ShaderData* mShadowMaterial;
     };
-
 }
 #endif
 

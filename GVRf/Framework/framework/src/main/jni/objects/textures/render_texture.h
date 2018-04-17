@@ -34,7 +34,6 @@ struct RenderTextureInfo{
     GLuint fboId;
     GLuint texId;
     bool useMultiview;
-    // I added
     int layers;
     int fboType;
 };
