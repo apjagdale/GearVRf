@@ -90,7 +90,7 @@ namespace gvr {
                                                                VkVertexInputAttributeDescription binding;
                                                                binding.binding = GVR_VK_VERTEX_BUFFER_BIND_ID;
                                                                binding.location = e.Index;
-                                                               LOGI("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
+                                                               LOGV("location %d attrMapping[i].offset %d , name %s", entry->Index, entry->Offset, entry->Name);
                                                                binding.format = getDataType(entry->Type); //float3
                                                                binding.offset = entry->Offset;
                                                                stride+= entry->Size;
@@ -99,12 +99,13 @@ namespace gvr {
                                                            }
                                                            else                                // mesh uses attribute but shader does not
                                                            {
-                                                               LOGE("entry is not present %s", e.Name);
+                                                               LOGW("entry is not present %s", e.Name);
 
                                                            }
 
                                                        }
                                                    });
+
 
         // Create our buffer object.
         VkDevice& device = vulkanCore->getDevice();
@@ -197,7 +198,6 @@ namespace gvr {
         // structure with the correct information.
         vertices->vi.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertices->vi.pNext = nullptr;
-
         vertices->vi_bindings.stride = mTotalSize;
         vertices->vi.vertexAttributeDescriptionCount = i;
         vertices->vi.pVertexAttributeDescriptions = vertices->vi_attrs.data();
@@ -227,6 +227,8 @@ namespace gvr {
         if(type.compare("int4")==0 || type.compare("ivec4")==0)
             return VK_FORMAT_R32G32B32A32_SINT;
 
+        FAIL("VulkanVertexBuffer::getDataType: unknown type %s", type.c_str());
+        return VK_FORMAT_UNDEFINED;
     }
 } // end gvrf
 
