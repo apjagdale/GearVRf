@@ -21,6 +21,38 @@ namespace gvr{
     VkRenderTextureOffScreen::VkRenderTextureOffScreen(int width, int height, int fboType, int layers, int sample_count):VkRenderTexture(width, height, fboType, layers, sample_count){
     }
 
+    void VkRenderTextureOffScreen::createBufferForOculus(){
+        VkResult ret = VK_SUCCESS;
+        VulkanRenderer *vk_renderer = static_cast<VulkanRenderer *>(Renderer::getInstance());
+        VkDevice device = vk_renderer->getDevice();
+        VkMemoryRequirements mem_reqs;
+        uint32_t memoryTypeIndex;
+
+        // Components currently hard coded to 4
+        ret = vkCreateBuffer(device,
+                             gvr::BufferCreateInfo(mWidth * mHeight *  4 * mLayers  * sizeof(uint8_t),
+                                                   VK_BUFFER_USAGE_TRANSFER_DST_BIT), nullptr,
+                             &offscreenMemoryHandle);
+        GVR_VK_CHECK(!ret);
+
+        // Obtain the memory requirements for this buffer.
+        vkGetBufferMemoryRequirements(device, offscreenMemoryHandle, &mem_reqs);
+        GVR_VK_CHECK(!ret);
+
+        bool pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
+                                                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+                                                        &memoryTypeIndex);
+        GVR_VK_CHECK(pass);
+
+        ret = vkAllocateMemory(device,
+                               gvr::MemoryAllocateInfo(mem_reqs.size, memoryTypeIndex), nullptr,
+                               &offscreenMemory);
+        GVR_VK_CHECK(!ret);
+
+        ret = vkBindBufferMemory(device, offscreenMemoryHandle, offscreenMemory, 0);
+        GVR_VK_CHECK(!ret);
+    }
+
     void VkRenderTextureOffScreen::bind() {
         if(fbo == nullptr){
             fbo = new VKFramebuffer(mWidth,mHeight);
@@ -28,6 +60,9 @@ namespace gvr{
             VulkanRenderer* vk_renderer= static_cast<VulkanRenderer*>(Renderer::getInstance());
 
             fbo->createFrameBuffer(vk_renderer->getDevice(), mFboType, mLayers, mSamples);
+
+            // Create buffer to copy result for oculus
+            createBufferForOculus();
         }
     }
 
@@ -86,7 +121,7 @@ namespace gvr{
         region.imageExtent = extent3D;
         vkCmdCopyImageToBuffer(mCmdBuffer,  fbo->getImage(COLOR_IMAGE),
                                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-                               *(fbo->getImageBuffer(COLOR_IMAGE)), 1, &region);
+                               offscreenMemoryHandle, 1, &region);
         vkEndCommandBuffer(mCmdBuffer);
 
         VkSubmitInfo ssubmitInfo = {};
@@ -99,8 +134,8 @@ namespace gvr{
         uint8_t *data;
         err = vkWaitForFences(device, 1, &mWaitFence, VK_TRUE, 4294967295U);
         GVR_VK_CHECK(!err);
-        VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
-        err = vkMapMemory(device, mem, 0,
+        //VkDeviceMemory mem = fbo->getHostMemory(COLOR_IMAGE);
+        err = vkMapMemory(device, offscreenMemory, 0,
                           fbo->getImageSize(COLOR_IMAGE), 0, (void **) &data);
 
         *readback_buffer = data;
@@ -117,8 +152,8 @@ namespace gvr{
 
         VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
         VkDevice device = vk_renderer->getDevice();
-        VkDeviceMemory mem = fbo->getDeviceMemory(COLOR_IMAGE);
-        vkUnmapMemory(device, mem);
+        //VkDeviceMemory mem = fbo->getHostMemory(COLOR_IMAGE);
+        vkUnmapMemory(device, offscreenMemory);
     }
 
 }

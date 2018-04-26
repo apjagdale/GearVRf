@@ -12,3 +12,31 @@ if (hasProperty('only_daydream') && (only_daydream == "true")) {
 if(file("../../../extra_settings.gradle").exists()) {
     apply from: '../../../extra_settings.gradle'
 }
+
+
+include ':gvr-complexscene'
+project(':gvr-complexscene').projectDir=new File('../../../GearVRf-Demos/gvr-complexscene/app')
+
+include ':gvr-simplesample'
+project(':gvr-simplesample').projectDir=new File('../../../GearVRf-Demos/gvr-simplesample/app')
+
+
+
+include ':gvr-outline'
+project(':gvr-outline').projectDir=new File('../../../GearVRf-Demos/gvr-outline/app')
+
+
+
+include ':gvr-shadowmap'
+project(':gvr-shadowmap').projectDir=new File('../../../GearVRf-Demos/gvr-shadows/app')
+
+
+
+include ':gvr-unittestutils'
+project(':gvr-unittestutils').projectDir=file('../../../GearVRf-Tests/gvr-unittestutils')
+
+include ':asset-tests'
+project(':asset-tests').projectDir=file('../../../GearVRf-Tests/asset-tests/app')
+
+include ':framework-tests'
+project(':framework-tests').projectDir=file('../../../GearVRf-Tests/framework-tests/app')

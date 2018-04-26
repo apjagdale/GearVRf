@@ -30,6 +30,12 @@ namespace gvr {
         bool readRenderResult(uint8_t *readback_buffer);
         bool accessRenderResult(uint8_t **readback_buffer);
         void unmapDeviceMemory();
+
+    private:
+        VkDeviceMemory offscreenMemory = VK_NULL_HANDLE;
+        VkBuffer offscreenMemoryHandle  = VK_NULL_HANDLE;
+
+        void createBufferForOculus();
     };
 
 }

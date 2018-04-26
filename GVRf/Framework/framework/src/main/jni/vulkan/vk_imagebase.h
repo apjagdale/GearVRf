@@ -50,7 +50,7 @@ class vkImageBase
     :imageType(type), outBuffer(new VkBuffer), mLayers(layers) ,size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
     { }
     virtual ~vkImageBase();
-        void createImageView(bool host_accessible);
+        void createImage();
         void updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
         void createMipLevels(VkFormatProperties formatProperties, VulkanRenderer *vk_renderer,
                                      VkCommandBufferBeginInfo setupCmdsBeginInfo, std::vector<VkBufferImageCopy> &bufferCopyRegions,
@@ -76,18 +76,15 @@ class vkImageBase
         VkBuffer* const getBuffer(){
             return outBuffer.get();
         }
-        VkDeviceMemory getDeviceMemory(){
-            return dev_memory;
-        }
         VkFormat getFormat(){
             return format_;
         }
         const VkImage& getVkImage(){
-            return image;
+            return imageHandle;
         }
 
         void setVkImage(VkImage img){
-            image = img;
+            imageHandle = img;
         }
         VkDeviceSize getSize(){
             return size;
@@ -95,8 +92,8 @@ class vkImageBase
 
     private:
         VkImageViewType imageType;
-        VkImage image = 0;
-        VkDeviceMemory dev_memory = 0, host_memory = 0;
+        VkImage imageHandle = 0;
+        VkDeviceMemory device_memory = 0;
         VkImageLayout imageLayout;
         VkImageView imageView;
         std::vector<VkImageView> cascadeImageView;
@@ -106,7 +103,6 @@ class vkImageBase
         VkImageTiling tiling_;
         VkImageUsageFlags usage_flags_;
         std::unique_ptr<VkBuffer> outBuffer = nullptr;
-        VkBuffer hostBuffer = 0;
         VkDeviceSize size;
         bool host_accessible_ = false;
 };
