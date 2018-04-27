@@ -19,7 +19,6 @@
 #include "vulkan_headers.h"
 #include "../objects/textures/image.h"
 #include "../objects/textures/texture.h"
-#include "vk_imagebase.h"
 
 
 namespace gvr {
@@ -55,11 +54,6 @@ private:
 
     void updateSampler();
     bool updateImage();
-    void updateMipVkImage(uint64_t texSize, std::vector<void*>& pixels,std::vector<ImageInfo>& bitmapInfos, std::vector<VkBufferImageCopy>& bufferCopyRegions, VkImageViewType target, VkFormat internalFormat, int mipLevels =1,VkImageCreateFlags flags=0);
-    void createMipLevels(VkFormatProperties formatProperties, VulkanRenderer *vk_renderer,
-                         VkCommandBufferBeginInfo setupCmdsBeginInfo, std::vector<VkBufferImageCopy> &bufferCopyRegions,
-                         int mipLevels, std::vector<ImageInfo> &bitmapInfos, VkImageMemoryBarrier imageMemoryBarrier,
-                         VkSubmitInfo submit_info, VkCommandBuffer *buffers, VkQueue queue);
 
 protected:
 

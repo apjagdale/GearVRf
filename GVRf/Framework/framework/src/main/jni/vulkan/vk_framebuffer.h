@@ -64,14 +64,6 @@ public:
         return mAttachments[type]->getImageLayout();
     }
 
-    /*VkDeviceMemory getHostMemory(ImageType type) {
-        return mAttachments[type]->getHostMemory();
-    }*/
-
-    const VkBuffer *getImageBuffer(ImageType type) {
-        return mAttachments[type]->getBuffer();
-    }
-
     VkDeviceSize getImageSize(ImageType type) {
         return mAttachments[type]->getSize();
     }

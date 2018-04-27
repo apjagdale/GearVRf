@@ -37,17 +37,17 @@ namespace gvr {
 class vkImageBase
 {
     public:
-    explicit vkImageBase(VkImageViewType type) : outBuffer(new VkBuffer),imageType(type), size(0), format_(VK_FORMAT_R8G8B8A8_UNORM), tiling_(VK_IMAGE_TILING_LINEAR), usage_flags_(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT),mSampleCount(1)
+    explicit vkImageBase(VkImageViewType type) : imageType(type), size(0), format_(VK_FORMAT_R8G8B8A8_UNORM), tiling_(VK_IMAGE_TILING_LINEAR), usage_flags_(VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT),mSampleCount(1)
     { }
     explicit vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageTiling tiling, VkImageUsageFlags flags, VkImageLayout imageLayout)
-    : mLayers(1),imageType(type), outBuffer(new VkBuffer), size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(1)
+    : mLayers(1),imageType(type), size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(1)
     { }
 
     explicit vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageTiling tiling, VkImageUsageFlags flags, VkImageLayout imageLayout, int sample_count)
-    :mLayers(1), imageType(type), outBuffer(new VkBuffer), size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
+    :mLayers(1), imageType(type), size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
     { }
     explicit vkImageBase(VkImageViewType type, VkFormat format, int width, int height, int depth, VkImageTiling tiling, VkImageUsageFlags flags, VkImageLayout imageLayout, int layers, int sample_count )
-    :imageType(type), outBuffer(new VkBuffer), mLayers(layers) ,size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
+    :imageType(type),  mLayers(layers) ,size(0), format_(format), usage_flags_(flags), width_(width), height_(height), depth_(depth), imageLayout(imageLayout), mSampleCount(sample_count)
     { }
     virtual ~vkImageBase();
         void createImage();
@@ -73,9 +73,6 @@ class vkImageBase
         const VkImageLayout& getImageLayout(){
             return imageLayout;
         }
-        VkBuffer* const getBuffer(){
-            return outBuffer.get();
-        }
         VkFormat getFormat(){
             return format_;
         }
@@ -100,11 +97,10 @@ class vkImageBase
         VkFormat format_;
         int mSampleCount;
         int width_, height_, depth_,  mLayers;
+        uint32_t aMipLevels = 1;
         VkImageTiling tiling_;
         VkImageUsageFlags usage_flags_;
-        std::unique_ptr<VkBuffer> outBuffer = nullptr;
         VkDeviceSize size;
-        bool host_accessible_ = false;
 };
 }
 #endif

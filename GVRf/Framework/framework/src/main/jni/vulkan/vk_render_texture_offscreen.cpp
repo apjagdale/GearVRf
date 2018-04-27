@@ -152,7 +152,6 @@ namespace gvr{
 
         VulkanRenderer* vk_renderer = static_cast<VulkanRenderer*>(Renderer::getInstance());
         VkDevice device = vk_renderer->getDevice();
-        //VkDeviceMemory mem = fbo->getHostMemory(COLOR_IMAGE);
         vkUnmapMemory(device, offscreenMemory);
     }
 

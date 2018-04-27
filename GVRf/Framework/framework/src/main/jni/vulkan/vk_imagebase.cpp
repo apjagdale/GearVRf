@@ -57,16 +57,6 @@ int getComponentsNumber(VkFormat format){
 
         if(device_memory != 0)
             vkFreeMemory(device, device_memory, nullptr);
-
-        //if(deviceBuffer != 0)
-        //    vkDestroyBuffer(device, deviceBuffer, nullptr);
-
-
-        if(host_accessible_) {
-            vkDestroyBuffer(device, *outBuffer, nullptr);
-            //vkFreeMemory(device, host_memory, nullptr);
-        }
-
       }
 
 
@@ -81,7 +71,7 @@ int getComponentsNumber(VkFormat format){
         ret = vkCreateImage(
                 device,
                 gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D, format_, width_,
-                                     height_, depth_, 1, mLayers,
+                                     height_, depth_, aMipLevels, mLayers,
                                      tiling_,
                                      usage_flags_, 0, getVKSampleBit(mSampleCount),
                                      imageLayout),
@@ -207,36 +197,19 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
     err = vkBindBufferMemory(device, texBuffer, texMemory, 0);
     assert(!err);
 
-    err = vkCreateImage(device, gvr::ImageCreateInfo(VK_IMAGE_TYPE_2D,
-                                                     internalFormat,
-                                                     bitmapInfos[0].width,
-                                                     bitmapInfos[0].height, 1, mipLevels, pixels.size(),
-                                                     VK_IMAGE_TILING_OPTIMAL,
-                                                     VK_IMAGE_USAGE_TRANSFER_DST_BIT |
-                                                     VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
-                                                     VK_IMAGE_USAGE_SAMPLED_BIT,
-                                                     flags,
-                                                     getVKSampleBit(mSampleCount),
-                                                     VK_IMAGE_LAYOUT_UNDEFINED), NULL,
-                        &imageHandle);
-    assert(!err);
-
-    vkGetImageMemoryRequirements(device, imageHandle, &mem_reqs);
-
-    memoryAllocateInfo.allocationSize = mem_reqs.size;
-
-    pass = vk_renderer->GetMemoryTypeFromProperties(mem_reqs.memoryTypeBits,
-                                                    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-                                                    &memoryAllocateInfo.memoryTypeIndex);
-    assert(pass);
-
-    /* allocate memory */
-    err = vkAllocateMemory(device, &memoryAllocateInfo, NULL, &device_memory);
-    assert(!err);
-
-    /* bind memory */
-    err = vkBindImageMemory(device, imageHandle, device_memory, 0);
-    assert(!err);
+    format_ = internalFormat;
+    width_ = bitmapInfos[0].width;
+    height_ = bitmapInfos[0].height;
+    depth_ = 1;
+    aMipLevels = mipLevels;
+    tiling_ = VK_IMAGE_TILING_OPTIMAL;
+    usage_flags_ = VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                   VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                   VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    mSampleCount = 1;
+    mLayers = pixels.size();
+    createImage();
 
     // Reset the setup command buffer
     VkCommandBuffer textureCmdBuffer;
@@ -326,13 +299,6 @@ void vkImageBase::updateMipVkImage(uint64_t texSize, std::vector<void *> &pixels
         createMipLevels(formatProperties, vk_renderer, setupCmdsBeginInfo,
                         bufferCopyRegions, mipLevels, bitmapInfos, imageMemoryBarrier,
                         submit_info, buffers, queue);
-
-    err = vkCreateImageView(device, gvr::ImageViewCreateInfo(imageHandle,
-                                                             target,
-                                                             internalFormat, mipLevels,0,
-                                                             pixels.size(),
-                                                             VK_IMAGE_ASPECT_COLOR_BIT), NULL,
-                            &imageView);
     assert(!err);
 }
 
