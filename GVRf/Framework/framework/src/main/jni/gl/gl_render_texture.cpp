@@ -317,6 +317,10 @@ void GLRenderTexture::endRendering(Renderer* renderer)
                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
         invalidateFrameBuffer(GL_READ_FRAMEBUFFER, true, true, false);
     }
+
+    GL(glDisable(GL_DEPTH_TEST));
+    GL(glDisable(GL_CULL_FACE));
+    GL(glFlush());
 }
 
 void GLRenderTexture::invalidateFrameBuffer(GLenum target, bool is_fbo, const bool color_buffer, const bool depth_buffer) {

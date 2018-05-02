@@ -83,7 +83,7 @@ public:
         return mAttachments[type]->getSize();
     }
 
-    void createFrameBuffer(VkDevice &, int, int layers = 1, int sample_count = 1, bool monoscopic = false);
+    void createFrameBuffer(VkDevice &, int, int layers = 1, int sample_count = 1);
     void createFramebuffer(VkDevice& device);
     const VkFramebuffer &getFramebuffer(int layer) {
         if(layer == -1) {
