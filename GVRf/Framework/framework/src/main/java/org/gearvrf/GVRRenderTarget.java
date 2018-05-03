@@ -138,22 +138,9 @@ public class GVRRenderTarget extends GVRBehavior
         return mTexture;
     }
 
-    private GVRDrawFrameListener  mDrawListener = new GVRDrawFrameListener()
+    public void onDrawFrame(float frameTime)
     {
-        public void onDrawFrame(float frameTime)
-        {
-            getGVRContext().getActivity().getViewManager().cullAndRender(GVRRenderTarget.this, mScene);
-        }
-    };
-
-    public void startRendering()
-    {
-        getGVRContext().registerDrawFrameListener(mDrawListener);
-    }
-
-    public void stopRendering()
-    {
-        getGVRContext().unregisterDrawFrameListener(mDrawListener);
+        getGVRContext().getActivity().getViewManager().cullAndRender(this, mScene);
     }
 }
 
