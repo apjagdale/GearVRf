@@ -921,7 +921,14 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     err = vkCreateGraphicsPipelines(m_device, 0, 1, &pipelineCreateInfo, nullptr,
                                     &pipeline);
     GVR_VK_CHECK(!err);
-    rdata->setPipeline(pipeline,pass);
+    VulkanRenderPass * rp ;
+    if(shader->isDepthShader()){
+        rp = rdata->getShadowRenderPass();
+        rp->m_pipeline = pipeline;
+    }else{
+        rdata->setPipeline(pipeline,pass);
+    }
+
     LOGI("Vulkan graphics call after");
 
 }
@@ -1049,7 +1056,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
     }
 
     void VulkanCore::BuildCmdBufferForRenderData(std::vector<RenderData *> &render_data_vector,
-                                                 Camera *camera, ShaderManager* shader_manager, RenderTarget* renderTarget, VkRenderTexture* postEffectRenderTexture, bool postEffectFlag) {
+                                                 Camera *camera, ShaderManager* shader_manager, RenderTarget* renderTarget, VkRenderTexture* postEffectRenderTexture, bool postEffectFlag, bool shadowmapFlag) {
 
         VkResult err;
         // For the triangle sample, we pre-record our command buffer, as it is static.
@@ -1074,7 +1081,17 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             VulkanRenderData *rdata = static_cast<VulkanRenderData *>(render_data_vector[j]);
 
             for(int curr_pass = postEffectFlag ? (rdata->pass_count() - 1) : 0 ;curr_pass < rdata->pass_count(); curr_pass++) {
-                VulkanShader *shader = static_cast<VulkanShader *>(shader_manager->getShader(rdata->get_shader(false,curr_pass)));
+                VulkanShader *shader;
+                if(shadowmapFlag){
+                    const char *depthShaderName = rdata->mesh()->hasBones()
+                                                  ? "GVRDepthShader$a_bone_weights$a_bone_indices"
+                                                  : "GVRDepthShader";
+                    shader = static_cast<VulkanShader *>(shader_manager->findShader(depthShaderName));
+                }
+                else {
+                    shader = static_cast<VulkanShader *>(shader_manager->getShader(
+                            rdata->get_shader(false, curr_pass)));
+                }
                 float line_width;
                 ShaderData* material = rdata->pass(curr_pass)->material();
                 if(!material || !material->getFloat("line_width", line_width)){
@@ -1221,7 +1238,15 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkDescriptorSet descriptorSet;
         VkResult err = vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, &descriptorSet);
         GVR_VK_CHECK(!err);
-        vkData->setDescriptorSet(descriptorSet,pass);
+
+        VulkanRenderPass * rp;
+        if(vkShader->isDepthShader()){
+            rp = vkData->getShadowRenderPass();
+        }
+        else {
+            rp = vkData->getRenderPass(pass);
+        }
+        rp->m_descriptorSet = descriptorSet;
 
         if (transformUboPresent) {
             vkData->getTransformUbo().setDescriptorSet(descriptorSet);
@@ -1247,12 +1272,12 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if(lights != NULL)
         shadowMap= lights->scanLights();
 
-        if(shadowMap){
+        if(shadowMap && !vkShader->isDepthShader()){
+
             RenderTarget *rt = reinterpret_cast<RenderTarget*>(shadowMap);
             VkRenderTexture* vkRenderTexture = static_cast<VkRenderTexture *>(rt->getTexture());
 
             if(vkRenderTexture->getFBO() != nullptr) {
-
                 VkWriteDescriptorSet write;
                 memset(&write, 0, sizeof(write));
 
@@ -1271,7 +1296,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             return false;
 
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
-        vkData->setDescriptorSetNull(false,pass);
+        rp->descriptorSetNull = false;
         LOGI("Vulkan after update descriptor");
         return true;
     }

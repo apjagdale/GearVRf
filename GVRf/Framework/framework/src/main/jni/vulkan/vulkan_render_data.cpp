@@ -24,14 +24,25 @@ void VulkanRenderData::render(Shader* shader, VkCommandBuffer cmdBuffer, int cur
     if(shader == NULL)
         LOGE("Shader is NULL");
 
+    VulkanRenderPass * rp;
+    if(static_cast<VulkanShader*>(shader)->isDepthShader())
+        rp = getShadowRenderPass();
+    else
+        rp = getRenderPass(curr_pass);
+
     vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      getVKPipeline(curr_pass) );
+                      rp->m_pipeline );
 
     VulkanShader *Vkshader = reinterpret_cast<VulkanShader *>(shader);
 
     VkDescriptorSet descriptorSet = getDescriptorSet(curr_pass);
     //bind out descriptor set, which handles our uniforms and samplers
-    if (!isDescriptorSetNull(curr_pass)) {
+    if(static_cast<VulkanShader*>(shader)->isDepthShader()){
+        vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                Vkshader->getPipelineLayout(), 0, 1,
+                                &rp->m_descriptorSet, 0, NULL);
+    }
+    else if (!isDescriptorSetNull(curr_pass)) {
         vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 Vkshader->getPipelineLayout(), 0, 1,
                                 &descriptorSet, 0, NULL);

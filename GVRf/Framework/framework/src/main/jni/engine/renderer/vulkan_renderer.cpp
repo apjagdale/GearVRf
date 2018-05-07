@@ -137,8 +137,16 @@ IndexBuffer* VulkanRenderer::createIndexBuffer(int bytesPerIndex, int icount)
 
 bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, RenderData* rdata, ShaderData* shaderData,  int pass)
 {
+
+    // Normal Rendering
+    VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
+    UniformBlock& transformUBO = vkRdata->getTransformUbo();
+    VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(shaderData);
+    VulkanRenderPass * rp = vkRdata->getRenderPass(pass);
+
     // For Shadowmap just replace the shader
     ShaderData* curr_material = rstate.material_override;
+    bool shadowFlag = false;
     if (rstate.is_shadow && curr_material) {
         const char *depthShaderName = rdata->mesh()->hasBones()
                                       ? "GVRDepthShader$a_bone_weights$a_bone_indices"
@@ -152,14 +160,17 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
                 return false;
             }
         }
-        rdata->set_shader(pass, shader->getShaderID(), rstate.is_multiview);
         static_cast<VulkanShader*>(shader)->setDepthShaderFlag();
-    }
 
-    // Normal Rendering
-    VulkanRenderData* vkRdata = static_cast<VulkanRenderData*>(rdata);
-    UniformBlock& transformUBO = vkRdata->getTransformUbo();
-    VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(shaderData);
+        rp = vkRdata->getShadowRenderPass();
+        if(rp == nullptr){
+            rp = (VulkanRenderPass*)createRenderPass();
+            vkRdata->setShadowRenderPass(rp);
+            shadowFlag = true;
+        }else{
+            shadowFlag = false;
+        }
+    }
 
     if (shader->usesMatrixUniforms())
     {
@@ -170,7 +181,7 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
     LightList& lights = rstate.scene->getLights();
     vulkanCore_->InitLayoutRenderData(vkmtl, vkRdata, shader, lights);
 
-    if(vkRdata->isDirty(pass)) {
+    if(vkRdata->isDirty(pass) || shadowFlag) {
         VulkanMaterial* vkmtl = static_cast<VulkanMaterial*>(vkRdata->material(pass));
         vulkanCore_->InitDescriptorSetForRenderData(this, pass, shader, vkRdata, &lights,vkmtl);
 
@@ -183,12 +194,16 @@ bool VulkanRenderer::renderWithShader(RenderState& rstate, Shader* shader, Rende
         VkPipeline pipeline = vulkanCore_->getPipeline(vkPipelineHashCode);
         if(pipeline == 0) {
             vkRdata->createPipeline(shader, this, pass, render_pass, rstate.sampleCount);
-            vulkanCore_->addPipeline(vkPipelineHashCode, vkRdata->getVKPipeline(pass));
+            vulkanCore_->addPipeline(vkPipelineHashCode, rp->m_pipeline);
         }
         else{
-            vkRdata->setPipeline(pipeline, pass);
-            vkRdata->clearDirty();
+            if(!static_cast<VulkanShader*>(shader)->isDepthShader()){
+                vkRdata->clearDirty();
+            }
+            rp->m_pipeline = pipeline;
         }
+        if(shadowFlag)
+            vkRdata->markDirty();
     }
     return true;
 }
@@ -288,7 +303,7 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
         VkRenderTexture* renderTexture = static_cast<VkRenderTexture*>(post_effect_render_texture_a);
         VkRenderTexture* input_texture = renderTexture;
         vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager,
-                                                 nullptr, renderTexture, false);
+                                                 nullptr, renderTexture, false, rstate.is_shadow);
 
         vulkanCore_->submitCmdBuffer(renderTexture->getFenceObject(), renderTexture->getCommandBuffer());
         vulkanCore_->waitForFence(renderTexture->getFenceObject());
@@ -321,14 +336,14 @@ void VulkanRenderer::renderRenderTarget(Scene* scene, jobject javaSceneObject, R
         if(!renderPostEffectData(rstate,input_texture,post_effects,postEffectCount - 1))
             return;
 
-        vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager, renderTarget, nullptr, true);
+        vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager, renderTarget, nullptr, true, rstate.is_shadow);
         vulkanCore_->submitCmdBuffer(
                 static_cast<VkRenderTexture *>(renderTarget->getTexture())->getFenceObject(),
                 vk_renderTarget->getCommandBuffer());
     }
     else {
         vulkanCore_->BuildCmdBufferForRenderData(render_data_list, camera, shader_manager,
-                                                 renderTarget, nullptr, false);
+                                                 renderTarget, nullptr, false, rstate.is_shadow);
         vulkanCore_->submitCmdBuffer(
                 static_cast<VkRenderTexture *>(renderTarget->getTexture())->getFenceObject(),
                 vk_renderTarget->getCommandBuffer());
