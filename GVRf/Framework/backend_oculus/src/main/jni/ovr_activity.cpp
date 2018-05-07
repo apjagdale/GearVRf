@@ -127,6 +127,10 @@ RenderTextureInfo *GVRActivity::getRenderTextureInfo(int eye, int index) {
     renderTextureInfo->useMultiview = use_multiview;
     renderTextureInfo->views = use_multiview ? 2 : 1;
     renderTextureInfo->texId = fbo.getColorTexId(index);
+    renderTextureInfo->viewport[0] = x;
+    renderTextureInfo->viewport[1] = y;
+    renderTextureInfo->viewport[2] = width;
+    renderTextureInfo->viewport[3] = height;
 
     return renderTextureInfo;
 }

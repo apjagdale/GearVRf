@@ -36,6 +36,7 @@ struct RenderTextureInfo{
     bool useMultiview;
     int layers;
     int fboType;
+    int viewport[4];
 };
 class RenderTexture : public Texture
 {

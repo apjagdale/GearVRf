@@ -65,6 +65,7 @@ import org.gearvrf.utility.Log;
 public class GVRShaderTemplate extends GVRShader
 {
     private final static String TAG = "GVRShaderTemplate";
+    // Keeping the start of shadow attribute from 20 since locations less than it are used up by vertex descriptor and texture coords.
     private final int shadowmapStartLocation = 20;
 
     protected class LightClass
