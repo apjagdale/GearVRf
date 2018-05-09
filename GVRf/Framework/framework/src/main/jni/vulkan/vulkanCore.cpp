@@ -952,7 +952,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkImageBase *multisampledImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, VK_FORMAT_R8G8B8A8_UNORM, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, layers, sample_count);
-            multisampledImage->createImageView(false, false);
+            multisampledImage->createImage();
             mAttachments[MULTISAMPLED_IMAGE] = multisampledImage;
             attachments.push_back(multisampledImage->getVkImageView());
         }
@@ -971,10 +971,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             if(core->isSwapChainPresent() && !core->isSwapChainCreationFinished()) {
                 colorImage->setVkImage(vk_renderer->getCore()->getSwapChainImage());
                 colorImage->setVkImageView(vk_renderer->getCore()->getSwapChainView());
-                colorImage->createImageView(true, true);
             }
             else{
-                colorImage->createImageView(true, false);
+                colorImage->createImage();
             }
 
             attachments.push_back(colorImage->getVkImageView());
@@ -985,7 +984,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
             vkImageBase *depthImage = new vkImageBase(VK_IMAGE_VIEW_TYPE_2D, depthFormat, mWidth,
                                                       mHeight, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT ,
                                                       VK_IMAGE_LAYOUT_UNDEFINED, layers, sample_count);
-            depthImage->createImageView(false, false);
+            depthImage->createImage();
             mAttachments[DEPTH_IMAGE] = depthImage;
             attachments.push_back(depthImage->getVkImageView());
         }
