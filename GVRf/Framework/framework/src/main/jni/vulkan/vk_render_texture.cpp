@@ -105,7 +105,7 @@ void VkRenderTexture::createBufferForRenderedResult(){
     VkMemoryRequirements mem_reqs;
     uint32_t memoryTypeIndex;
 
-    // Components currently hard coded to 4
+    // Components currently hard coded to 4 since our Color buffer is VK_FORMAT_R8G8B8A8_UNORM
     ret = vkCreateBuffer(device,
                          gvr::BufferCreateInfo(mWidth * mHeight *  4 * sizeof(uint8_t),
                                                VK_BUFFER_USAGE_TRANSFER_DST_BIT), nullptr,

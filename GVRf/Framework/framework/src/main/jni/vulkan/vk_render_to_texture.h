@@ -54,7 +54,7 @@ public:
         return mHeight;
     }
     virtual ~VkRenderTexture(){
-        //cleanup();
+        cleanup();
         delete fbo;
     }
     void cleanup();

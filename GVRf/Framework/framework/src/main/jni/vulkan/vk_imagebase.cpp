@@ -17,21 +17,6 @@
 #include "engine/renderer/vulkan_renderer.h"
 
 namespace gvr {
-int getComponentsNumber(VkFormat format){
-    switch (format){
-        case VK_FORMAT_R8G8B8A8_UNORM:
-            return 4;
-        case VK_FORMAT_D16_UNORM:
-            return 2;
-        case VK_FORMAT_D32_SFLOAT:
-        case VK_FORMAT_D24_UNORM_S8_UINT:
-            return 4;
-        default:
-            FAIL("format not found");
-    }
-    return 0;
-}
-
     VkImageAspectFlagBits getAspectFlagForFormat(VkFormat format){
         switch (format){
             case VK_FORMAT_R8G8B8A8_UNORM:
@@ -48,10 +33,6 @@ int getComponentsNumber(VkFormat format){
     }
 
     vkImageBase::~vkImageBase(){
-
-        VulkanCore * instance = VulkanCore::getInstance();
-        VkDevice device = instance->getDevice();
-
         cleanup();
     }
 
