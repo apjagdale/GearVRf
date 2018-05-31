@@ -83,8 +83,6 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     private GVRMethodCallTracer mTracerDrawEyes2;
     private GVRMethodCallTracer mTracerDrawFrame;
     private GVRMethodCallTracer mTracerDrawFrameGap;
-    private GVRGearCursorController mGearController;
-
 
     private MonoscopicSurfaceView mView;
     private int mViewportWidth, mViewportHeight, sampleCount;
@@ -183,6 +181,7 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
             eyeBufferParams.setResolutionHeight(mViewportHeight);
             eyeBufferParams.setMultiSamples(sampleCount);
             vulkanSurfaceView = new SurfaceView(mActivity);
+            vulkanSurfaceView.getHolder().setFixedSize(mViewportWidth, mViewportHeight);
 
             vulkanSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
                 @Override
@@ -334,10 +333,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
 
     GVRRenderTarget getRenderTarget(){
         if(mRenderTarget[0] == null) {
-            mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(),
-                    mViewportWidth, mViewportHeight, sampleCount), getMainScene());
-
             if(isVulkanInstance) {
+                mRenderTarget[0] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(),
+                        mViewportWidth, mViewportHeight, sampleCount), getMainScene());
                 mRenderTarget[1] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(),
                         mViewportWidth, mViewportHeight, sampleCount), getMainScene());
                 mRenderTarget[2] = new GVRRenderTarget(new GVRRenderTexture(getActivity().getGVRContext(),
@@ -346,6 +344,9 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
                 mRenderBundle.addRenderTarget(mRenderTarget[0], GVRViewManager.EYE.LEFT, 0);
                 mRenderBundle.addRenderTarget(mRenderTarget[1], GVRViewManager.EYE.LEFT, 1);
                 mRenderBundle.addRenderTarget(mRenderTarget[2], GVRViewManager.EYE.LEFT, 2);
+            }
+            else{
+                mRenderTarget[0] = new GVRRenderTarget(getActivity().getGVRContext());
             }
         }
 
@@ -400,11 +401,6 @@ class MonoscopicViewManager extends GVRViewManager implements MonoscopicRotation
     void onSurfaceCreated() {
         super.onSurfaceCreated();
         mRotationSensor.onResume();
-        mGearController = mInputManager.getGearController();
-        if (mGearController != null)
-        {
-            mGearController.attachReader(new MonoscopicControllerReader());
-        }
     }
 
     private void drawEyes() {

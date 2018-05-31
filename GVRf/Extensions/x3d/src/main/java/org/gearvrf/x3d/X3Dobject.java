@@ -52,6 +52,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.gearvrf.script.GVRJavascriptScriptFile;
 import org.gearvrf.script.javascript.GVRJavascriptV8File;
+import org.gearvrf.x3d.data_types.MFString;
 import org.joml.Matrix3f;
 import org.joml.Vector2f;
 import org.xml.sax.Attributes;
@@ -760,6 +761,12 @@ public class X3Dobject {
     private boolean reorganizeVerts = false;
 
     private static final float CUBE_WIDTH = 20.0f; // used for cube maps
+
+    //GearVR Multi-Texture settings:
+    //  0:MULTIPLY; 1=for ADD; 2 for SUBTRACT; 3 for DIVIDE; 4=SMOOTH_ADD; 5=SIGNED_ADD
+    public enum MultiTextureModes { MULTIPLY, ADD, SUBTRACT, DIVIDE,
+        SMOOTH_ADD, SIGNED_ADD };
+
     private GVRAssetLoader.AssetRequest assetRequest = null;
     private GVRContext gvrContext = null;
     private Context activityContext = null;
@@ -912,8 +919,9 @@ public class X3Dobject {
             this.gvrContext = assetRequest.getContext();
             this.activityContext = gvrContext.getContext();
             this.root = root;
+//            x3DShader = gvrContext.getShaderManager().getShaderType(X3DShader.class);
             x3DShader = gvrContext.getShaderManager().getShaderType(X3DShader.class);
-
+            shaderSettings = new ShaderSettings(new GVRMaterial(gvrContext, x3DShader));
 
             EnumSet<GVRImportSettings> settings = assetRequest.getImportSettings();
             blockLighting = settings.contains(GVRImportSettings.NO_LIGHTING);
@@ -1762,6 +1770,10 @@ public class X3Dobject {
                                 DefinedItem item = new DefinedItem(defValue);
                                 item.setGVRTexture(gvrTexture);
                                 mDefinedItems.add(item);
+                            }
+
+                            if ( shaderSettings.getMultiTexture() ) {
+                                shaderSettings.setMultiTextureGVRTexture( gvrTexture );
                             }
                         }
                     }
@@ -2645,6 +2657,7 @@ public class X3Dobject {
                     Vector3f sizeVector = new Vector3f(size[0], size[1], size[2]);
                     GVRCubeSceneObject gvrCubeSceneObject = new GVRCubeSceneObject(
                             gvrContext, solid, sizeVector);
+                    gvrCubeSceneObject.getRenderData().setMaterial(new GVRMaterial(gvrContext, x3DShader));
                     currentSceneObject.addChildObject(gvrCubeSceneObject);
                     meshAttachedSceneObject = gvrCubeSceneObject;
 
@@ -3151,7 +3164,7 @@ public class X3Dobject {
                     currentSceneObject = AddGVRSceneObject();
                     currentSceneObject.setName(name);
                     Sensor sensor = new Sensor(name, Sensor.Type.ANCHOR,
-                            currentSceneObject);
+                            currentSceneObject, true);
                     sensor.setAnchorURL(url);
                     sensors.add(sensor);
                     animationInteractivityManager.BuildInteractiveObjectFromAnchor(sensor, url);
@@ -3176,11 +3189,49 @@ public class X3Dobject {
                         enabled = parseBooleanString(attributeValue);
                     }
 
-                    Sensor sensor = new Sensor(name, Sensor.Type.TOUCH, currentSceneObject);
+                    Sensor sensor = new Sensor(name, Sensor.Type.TOUCH, currentSceneObject, enabled);
                     sensors.add(sensor);
                     // add colliders to all objects under the touch sensor
                     currentSceneObject.attachCollider(new GVRMeshCollider(gvrContext, true));
                 } // end <TouchSensor> node
+
+
+                /********** PlaneSensor **********/
+                else if (qName.equalsIgnoreCase("PlaneSensor")) {
+                    String name = "";
+                    String description = "";
+                    boolean enabled = true;
+                    SFVec2f minPosition = new SFVec2f(0, 0);
+                    SFVec2f maxPosition = new SFVec2f(-1, -1);
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        name = attributeValue;
+                    }
+                    attributeValue = attributes.getValue("description");
+                    if (attributeValue != null) {
+                        description = attributeValue;
+                    }
+                    attributeValue = attributes.getValue("enabled");
+                    if (attributeValue != null) {
+                        enabled = parseBooleanString(attributeValue);
+                    }
+                    attributeValue = attributes.getValue("maxPosition");
+                    if (attributeValue != null) {
+                        float[] maxValues = parseFixedLengthFloatString(attributeValue, 2, false, false);
+                        maxPosition.setValue(maxValues[0], maxValues[1]);
+                    }
+                    attributeValue = attributes.getValue("minPosition");
+                    if (attributeValue != null) {
+                        float[] minValues = parseFixedLengthFloatString(attributeValue, 2, false, false);
+                        minPosition.setValue(minValues[0], minValues[1]);
+                    }
+
+                    Sensor sensor = new Sensor(name, Sensor.Type.PLANE, currentSceneObject, enabled);
+                    sensor.setMinMaxValues(minPosition, maxPosition);
+                    sensors.add(sensor);
+                    // add colliders to all objects under the touch sensor
+                    currentSceneObject.attachCollider(new GVRMeshCollider(gvrContext, true));
+                } // end <PlaneSensor> node
 
 
                 /********** ProximitySensor **********/
@@ -3317,6 +3368,53 @@ public class X3Dobject {
                         shaderSettings.setMovieTextureName(attributes.getValue("DEF") );
                     }
                 } // end <MovieTexture> node
+
+
+                /********** MultiTexture **********/
+                else if (qName.equalsIgnoreCase("MultiTexture")) {
+                    String name = "";
+                    float alpha = 1;
+                    float[] color = { 1, 1, 1 };
+                    String[] function = {""};
+                    MFString mode = new MFString("MODULATE");
+                    String[] source = {""};
+
+                    shaderSettings.setMultiTexture( true );
+
+                    attributeValue = attributes.getValue("DEF");
+                    if (attributeValue != null) {
+                        shaderSettings.setMultiTextureName( attributeValue );
+                    }
+                    attributeValue = attributes.getValue("alpha");
+                    if (attributeValue != null) {
+                        alpha = parseSingleFloatString(attributeValue, true,
+                                true);
+                        Log.e(TAG, "MultiTexture alpha not implemented");
+                    }
+                    attributeValue = attributes.getValue("color");
+                    if (attributeValue != null) {
+                        color = parseFixedLengthFloatString(attributeValue, 3, true,
+                                false);
+                        Log.e(TAG, "MultiTexture color not implemented");
+                    }
+                    attributeValue = attributes.getValue("function");
+                    if (attributeValue != null) {
+                        function = parseMFString(attributeValue);
+                        Log.e(TAG, "MultiTexture function not implemented");
+                    }
+                    attributeValue = attributes.getValue("mode");
+                    if (attributeValue != null) {
+                        String[] modeString = parseMFString(attributeValue);
+                        mode.setValue(modeString.length, modeString);
+                    }
+                    attributeValue = attributes.getValue("source");
+                    if (attributeValue != null) {
+                        source = parseMFString(attributeValue);
+                        Log.e(TAG, "MultiTexture source not implemented");
+                    }
+
+                    shaderSettings.setMultiTextureMode( mode );
+                }  //  end <MultiTexture> node
 
 
                 /********** BooleanToggle **********/
@@ -3680,6 +3778,7 @@ public class X3Dobject {
 
                         GVRCubeSceneObject mCubeEvironment = new GVRCubeSceneObject(
                                 gvrContext, false, textureList);
+                        mCubeEvironment.getRenderData().setMaterial(new GVRMaterial(gvrContext, x3DShader));
                         mCubeEvironment.getTransform().setScale(CUBE_WIDTH, CUBE_WIDTH,
                                 CUBE_WIDTH);
 
@@ -3715,7 +3814,7 @@ public class X3Dobject {
 
                 /***** end of parsing the nodes currently parsed *****/
                 else {
-                    Log.e(TAG, "X3D node " + qName + " not implemented.");
+                    Log.e(TAG, "X3D node '" + qName + "' not implemented.");
                 }
             }  // end 'else { if stmt' at ROUTE, which should be deleted
         }  //  end startElement
@@ -3824,7 +3923,22 @@ public class X3Dobject {
                                 // objects with USE
                             }
 
-                            if (shaderSettings.texture != null) {
+                            if ( shaderSettings.getMultiTexture()) { 
+                                if ( !shaderSettings.getMultiTextureName().isEmpty() ) {
+                                    DefinedItem definedItem = new DefinedItem(
+                                            shaderSettings.getMultiTextureName() );
+                                    definedItem.setGVRMaterial(gvrMaterial);
+                                    mDefinedItems.add(definedItem); // Add gvrMaterial to Array list
+                                }
+                                gvrMaterial.setTexture("diffuseTexture", shaderSettings.getMultiTextureGVRTexture(0) );
+                                gvrMaterial.setTexture("diffuseTexture1", shaderSettings.getMultiTextureGVRTexture(1) );
+                                // 0:Mul; 1=for ADD; 2 for SUBTRACT; 3 for DIVIDE; 4=smooth add; 5=Signed add
+                                gvrMaterial.setInt("diffuseTexture1_blendop", shaderSettings.getMultiTextureMode().ordinal());
+                                gvrMaterial.setTexCoord("diffuseTexture", "a_texcoord", "diffuse_coord");
+                                gvrMaterial.setTexCoord("diffuseTexture1", "a_texcoord", "diffuse_coord1");
+
+                            }
+                            else if (shaderSettings.texture != null) {
                                 gvrMaterial.setTexture("diffuseTexture",
                                         shaderSettings.texture);
                                 // if the TextureMap is a DEFined item, then set the
@@ -3874,6 +3988,7 @@ public class X3Dobject {
                                     Log.e(TAG, "X3D MovieTexture Exception:\n" + e);
                                 }
                             }  // end MovieTexture
+
 
                             // Texture Transform
                             // If DEFined iteam, add to the DeFinedItem list. Maay be interactive
@@ -4021,6 +4136,8 @@ public class X3Dobject {
                 ;
             } else if (qName.equalsIgnoreCase("TouchSensor")) {
                 ;
+            } else if (qName.equalsIgnoreCase("PlaneSensor")) {
+                ;
             } else if (qName.equalsIgnoreCase("ProximitySensor")) {
                 ;
             } else if (qName.equalsIgnoreCase("Text")) {
@@ -4113,6 +4230,8 @@ public class X3Dobject {
                 currentScriptObject = null;
             } else if (qName.equalsIgnoreCase("field")) {
                 ; // embedded inside a <SCRIPT> node
+            } else if (qName.equalsIgnoreCase("MultiTexture")) {
+                ;
             } else if (qName.equalsIgnoreCase("BooleanToggle")) {
                 ;
             } else if (qName.equalsIgnoreCase("NavigationInfo")) {
@@ -4185,6 +4304,10 @@ public class X3Dobject {
             else if (qName.equalsIgnoreCase("x3d")) {
                 ;
             } // end </x3d>
+            else {
+                Log.e(TAG, "Not parsing ending '" + qName + "' tag.");
+                ;
+            } // end </x3d>
         }  // end endElement
 
 
@@ -4255,13 +4378,6 @@ public class X3Dobject {
                                 gvrExternalScene.load(gvrScene);
                                 GVRAnimator gvrAnimator = gvrExternalScene.getAnimator();
                             }
-/*
-                            gvrAndroidResource = new GVRAndroidResource(gvrContext, urls[j]);
-                            inputStream = gvrAndroidResource.getStream();
-
-                            currentSceneObject = inlineObject.getInlineGVRSceneObject();
-                            saxParser.parse(inputStream, userhandler);
-                            */
                         } catch (FileNotFoundException e) {
                             Log.e(TAG,
                                     "Inline file reading: File Not Found: url " + urls[j] + ", Exception "
