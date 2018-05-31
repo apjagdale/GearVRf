@@ -103,34 +103,23 @@ void vkImageBase::createImage() {
     ret = vkBindImageMemory(device, imageHandle, device_memory, 0);
     GVR_VK_CHECK(!ret);
 
-    // Overall view of the image created
-    if(mLayers == 1) {
-        ret = vkCreateImageView(
-                device,
-                gvr::ImageViewCreateInfo(imageHandle, imageType,
-                                         format_, 1, 0, mLayers,
-                                         getAspectFlagForFormat(format_)),
-                nullptr, &imageView
-        );
-        GVR_VK_CHECK(!ret);
-    }
-    else {
-        // View for whole array
-        ret = vkCreateImageView(
-                device,
-                gvr::ImageViewCreateInfo(imageHandle, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
-                                         format_, 1, 0, mLayers,
-                                         getAspectFlagForFormat(format_)),
-                nullptr, &imageView
-        );
-        GVR_VK_CHECK(!ret);
+    // View of the image created
+    ret = vkCreateImageView(
+              device,
+              gvr::ImageViewCreateInfo(imageHandle, imageType,
+                                       format_, 1, 0, mLayers,
+                                       getAspectFlagForFormat(format_)),
+              nullptr, &imageView
+    );
+    GVR_VK_CHECK(!ret);
 
+    if(mLayers > 1){
         //View per layers are created here
         VkImageView layerView;
         for (int i = 0; i < mLayers; i++) {
             ret = vkCreateImageView(
                     device,
-                    gvr::ImageViewCreateInfo(imageHandle, VK_IMAGE_VIEW_TYPE_2D_ARRAY,
+                    gvr::ImageViewCreateInfo(imageHandle, imageType,
                                              format_, 1, i, 1,
                                              getAspectFlagForFormat(format_)),
                     nullptr, &layerView
