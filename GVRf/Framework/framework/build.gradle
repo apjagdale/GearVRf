@@ -8,7 +8,7 @@ repositories {
 
 android {
     compileSdkVersion 26
-
+    defaultPublishConfig 'debug'
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 24
@@ -108,6 +108,10 @@ android {
     sourceSets.main {
         java.srcDirs = ['src/main/java']
         resources.srcDir 'src/main/libs'
+
+        jniLibs {
+            srcDir "${System.env.ANDROID_NDK}/sources/third_party/vulkan/src/build-android/jniLibs"
+        }
     }
 }
 

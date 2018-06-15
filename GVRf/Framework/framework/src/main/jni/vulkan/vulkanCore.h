@@ -97,6 +97,18 @@ public:
         return NULL;
     }
 
+    // Validation START
+
+
+    std::vector<const char*> getInstanceLayers();
+    std::vector<const char*> getInstanceExtensions();
+    void CreateValidationCallbacks();
+    PFN_vkCreateDebugReportCallbackEXT  mCreateDebugReportCallbackEXT;
+    PFN_vkDestroyDebugReportCallbackEXT mDestroyDebugReportCallbackEXT;
+    PFN_vkDebugReportMessageEXT         mDebugReportMessageCallback;
+    VkDebugReportCallbackEXT            mDebugReportCallback;
+
+    // Validation END
 
     //check if Vulkan has been initialised.
     static bool isInstancePresent(){
