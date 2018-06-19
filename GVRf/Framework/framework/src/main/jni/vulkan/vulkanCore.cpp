@@ -129,6 +129,7 @@ namespace gvr {
             "VK_LAYER_GOOGLE_threading",
             "VK_LAYER_LUNARG_parameter_validation",
             "VK_LAYER_LUNARG_object_tracker",
+         // Enable this extension if required
          //   "VK_LAYER_LUNARG_core_validation",
             "VK_LAYER_LUNARG_image",
             "VK_LAYER_LUNARG_swapchain",
@@ -173,15 +174,12 @@ namespace gvr {
                         "VK_EXT_debug_report"
                 };
 
-        // Discover the number of extensions listed in the instance properties in order to allocate
-        // a buffer large enough to hold them.
         uint32_t instanceExtensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
 
         VkExtensionProperties *extensionProperties = nullptr;
         extensionProperties = new VkExtensionProperties[instanceExtensionCount];
 
-        // Now request instanceExtensionCount VkExtensionProperties elements be read into out buffer
         vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, extensionProperties);
 
         for (uint32_t i = 0; i < instanceExtensions.size(); i++)
@@ -240,11 +238,9 @@ namespace gvr {
     {
         mCreateDebugReportCallbackEXT   = (PFN_vkCreateDebugReportCallbackEXT)  vkGetInstanceProcAddr( m_instance, "vkCreateDebugReportCallbackEXT");
         mDestroyDebugReportCallbackEXT  = (PFN_vkDestroyDebugReportCallbackEXT) vkGetInstanceProcAddr( m_instance, "vkDestroyDebugReportCallbackEXT");
-        mDebugReportMessageCallback     = (PFN_vkDebugReportMessageEXT)         vkGetInstanceProcAddr( m_instance, "vkDebugReportMessageEXT");
 
         GVR_VK_CHECK(mCreateDebugReportCallbackEXT);
         GVR_VK_CHECK(mDestroyDebugReportCallbackEXT);
-        GVR_VK_CHECK(mDebugReportMessageCallback);
 
         // Create the debug report callback..
         VkDebugReportCallbackCreateInfoEXT dbgCreateInfo;
@@ -266,7 +262,10 @@ namespace gvr {
     bool VulkanCore::CreateInstance() {
         VkResult ret = VK_SUCCESS;
 
-        std::vector<const char*>  instanceLayers = getInstanceLayers();
+        std::vector<const char*>  instanceLayers;
+        if(validationLayers)
+            instanceLayers = getInstanceLayers();
+
         std::vector<const char*>  instanceExtensions = getInstanceExtensions();
 
         // We specify the Vulkan version our application was built with,
@@ -312,7 +311,8 @@ namespace gvr {
             GVR_VK_CHECK(!ret);
         }
 
-        CreateValidationCallbacks();
+        if(validationLayers)
+            CreateValidationCallbacks();
 
         return true;
 }
@@ -1281,13 +1281,13 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         VkDescriptorPoolSize poolSize[3] = {};
 
         poolSize[0].type            = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-        poolSize[0].descriptorCount = 10;
+        poolSize[0].descriptorCount = 5;
 
         poolSize[1].type            = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSize[1].descriptorCount = 12;
 
         poolSize[2].type            = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
-        poolSize[2].descriptorCount = 10;
+        poolSize[2].descriptorCount = 5;
 
         VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
         descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1384,10 +1384,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         if(vkShader->bindTextures(vkmtl, writes,  descriptorSet) == false)
             return false;
 
-        for(int i = 0; i < writes.size(); i++){
-            LOGE("Abhijit write binding %d", writes[i].dstBinding);
-        }
-        LOGE("Abhijit size of write binding %d", writes.size());
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
         rp->descriptorSetNull = false;
         LOGI("Vulkan after update descriptor");
@@ -1456,6 +1452,9 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         vkDestroyDevice(m_device, nullptr);
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
+
+        if(validationLayers)
+            mDestroyDebugReportCallbackEXT(m_instance, mDebugReportCallback, nullptr);
     }
 
     void VulkanCore::initVulkanCore() {
