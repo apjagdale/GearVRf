@@ -122,34 +122,22 @@ namespace gvr {
                 1, &imageMemoryBarrier);
     }
 
-    std::vector<const char*> VulkanCore::getInstanceLayers()
+    bool VulkanCore::checkInstanceLayers(std::vector<const char*> &instanceLayers)
     {
-        std::vector<const char*>  instanceLayers
-        {
-            "VK_LAYER_GOOGLE_threading",
-            "VK_LAYER_LUNARG_parameter_validation",
-            "VK_LAYER_LUNARG_object_tracker",
-         // Enable this extension if required
-         //   "VK_LAYER_LUNARG_core_validation",
-            "VK_LAYER_LUNARG_image",
-            "VK_LAYER_LUNARG_swapchain",
-            "VK_LAYER_GOOGLE_unique_objects",
-        };
-
+        bool result = true;
         // Determine the number of instance layers that Vulkan reports
         uint32_t numInstanceLayers = 0;
         vkEnumerateInstanceLayerProperties(&numInstanceLayers, nullptr);
 
-        // Enumerate instance layers with valid pointer in last parameter
-        VkLayerProperties* layerProperties = (VkLayerProperties*)malloc(numInstanceLayers * sizeof(VkLayerProperties));
-        vkEnumerateInstanceLayerProperties(&numInstanceLayers, layerProperties);
+        std::unique_ptr<VkLayerProperties[]> layerProperties{new VkLayerProperties[numInstanceLayers]};
+        vkEnumerateInstanceLayerProperties(&numInstanceLayers, layerProperties.get());
 
         for (uint32_t i = 0; i < instanceLayers.size(); i++)
         {
             bool found = false;
             for (uint32_t j = 0; j < numInstanceLayers; j++)
             {
-                if (strcmp(instanceLayers[i], layerProperties[j].layerName) == 0)
+                if (strcmp(instanceLayers[i], layerProperties.get()[j].layerName) == 0)
                 {
                     found = true;
                     break;
@@ -158,36 +146,29 @@ namespace gvr {
             if (!found)
             {
                 LOGE("Instance Layer not found: %s", instanceLayers[i]);
-                GVR_VK_CHECK(found);
+                result = false;
+                break;
             }
         }
 
-        return instanceLayers;
+        return result;
     }
 
-    std::vector<const char*> VulkanCore::getInstanceExtensions()
+    bool VulkanCore::checkInstanceExtensions(std::vector<const char*> &instanceExtensions)
     {
-        std::vector<const char*>  instanceExtensions
-                {
-                        "VK_KHR_surface",
-                        "VK_KHR_android_surface",
-                        "VK_EXT_debug_report"
-                };
-
+        bool result = true;
         uint32_t instanceExtensionCount = 0;
         vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
 
-        VkExtensionProperties *extensionProperties = nullptr;
-        extensionProperties = new VkExtensionProperties[instanceExtensionCount];
-
-        vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, extensionProperties);
+        std::unique_ptr<VkExtensionProperties[]> extensionProperties{new VkExtensionProperties[instanceExtensionCount]};
+        vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, extensionProperties.get());
 
         for (uint32_t i = 0; i < instanceExtensions.size(); i++)
         {
             bool found = false;
             for (uint32_t j = 0; j < instanceExtensionCount; j++)
             {
-                if (strcmp(instanceExtensions[i], extensionProperties[j].extensionName) == 0)
+                if (strcmp(instanceExtensions[i], extensionProperties.get()[j].extensionName) == 0)
                 {
                     found = true;
                     break;
@@ -196,11 +177,11 @@ namespace gvr {
             if (!found)
             {
                 LOGE("Instance Layer not found: %s", instanceExtensions[i]);
-                GVR_VK_CHECK(found);
+                result = false;
             }
         }
 
-        return instanceExtensions;
+        return result;
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
@@ -262,11 +243,31 @@ namespace gvr {
     bool VulkanCore::CreateInstance() {
         VkResult ret = VK_SUCCESS;
 
-        std::vector<const char*>  instanceLayers;
-        if(validationLayers)
-            instanceLayers = getInstanceLayers();
+        std::vector<const char*>  instanceLayers
+        {
+            "VK_LAYER_GOOGLE_threading",
+            "VK_LAYER_LUNARG_parameter_validation",
+            "VK_LAYER_LUNARG_object_tracker",
+            // Enable this extension if required
+            //   "VK_LAYER_LUNARG_core_validation",
+            "VK_LAYER_LUNARG_image",
+            "VK_LAYER_LUNARG_swapchain",
+            "VK_LAYER_GOOGLE_unique_objects",
+        };
 
-        std::vector<const char*>  instanceExtensions = getInstanceExtensions();
+        if(validationLayers)
+            GVR_VK_CHECK(checkInstanceLayers(instanceLayers));
+
+
+        std::vector<const char*>  instanceExtensions
+        {
+            "VK_KHR_surface",
+            "VK_KHR_android_surface"
+        };
+
+        if(validationLayers)
+            instanceExtensions.push_back("VK_EXT_debug_report");
+        GVR_VK_CHECK(checkInstanceExtensions(instanceExtensions));
 
         // We specify the Vulkan version our application was built with,
         // as well as names and versions for our application and engine,
@@ -287,11 +288,10 @@ namespace gvr {
         instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         instanceCreateInfo.pNext = nullptr;
         instanceCreateInfo.pApplicationInfo = &applicationInfo;
-        instanceCreateInfo.enabledLayerCount = instanceLayers.size();
-        instanceCreateInfo.ppEnabledLayerNames = instanceLayers.data();
+        instanceCreateInfo.enabledLayerCount = validationLayers ? instanceLayers.size() : 0;
+        instanceCreateInfo.ppEnabledLayerNames = validationLayers ? instanceLayers.data() : nullptr;
         instanceCreateInfo.enabledExtensionCount = instanceExtensions.size();
         instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
-
 
         // The main Vulkan instance is created with the creation infos above.
         // We do not specify a custom memory allocator for instance creation.

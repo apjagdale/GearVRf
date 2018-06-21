@@ -55,7 +55,11 @@ int Renderer::getVulkanPropValue(){
     //                            - use setting from gvr.xml (not implemented yet. Select OpenGL ES.)
     //     1                      - pretend gvr.xml asked for Vulkan (not implemented yet. Select Vulkan.)
     //     2                      - vulkan with validation layers enabled (use for debugging)
-    int vulkanPropValue = 0; // TODO: obtain setting from gvr.xml
+    static int vulkanPropValue = -1; // TODO: obtain setting from gvr.xml
+
+    if(vulkanPropValue != -1)
+        return vulkanPropValue;
+
     const prop_info *pi = __system_property_find("debug.gearvrf.vulkan");
     char buffer[PROP_VALUE_MAX];
     int len = 0;
