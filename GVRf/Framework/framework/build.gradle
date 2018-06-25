@@ -110,7 +110,7 @@ android {
         resources.srcDir 'src/main/libs'
 
         jniLibs {
-            srcDir "${System.env.ANDROID_NDK}/sources/third_party/vulkan/src/build-android/jniLibs"
+            srcDir "${android.ndkDirectory}/sources/third_party/vulkan/src/build-android/jniLibs"
         }
     }
 }
