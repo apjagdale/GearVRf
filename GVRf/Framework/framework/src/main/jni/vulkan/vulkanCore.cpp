@@ -122,9 +122,21 @@ namespace gvr {
                 1, &imageMemoryBarrier);
     }
 
-    bool VulkanCore::checkInstanceLayers(std::vector<const char*> &instanceLayers)
+    std::vector<const char*> VulkanCore::getInstanceLayers()
     {
-        bool result = true;
+        std::vector<const char*> presentLayers;
+        std::vector<const char*>  instanceLayers
+        {
+            "VK_LAYER_GOOGLE_threading",
+            "VK_LAYER_LUNARG_parameter_validation",
+            "VK_LAYER_LUNARG_object_tracker",
+            // Enable this extension if required
+            //   "VK_LAYER_LUNARG_core_validation",
+            "VK_LAYER_LUNARG_image",
+            "VK_LAYER_LUNARG_swapchain",
+            "VK_LAYER_GOOGLE_unique_objects"
+        };
+
         // Determine the number of instance layers that Vulkan reports
         uint32_t numInstanceLayers = 0;
         vkEnumerateInstanceLayerProperties(&numInstanceLayers, nullptr);
@@ -140,18 +152,17 @@ namespace gvr {
                 if (strcmp(instanceLayers[i], layerProperties.get()[j].layerName) == 0)
                 {
                     found = true;
+                    presentLayers.push_back(instanceLayers[i]);
                     break;
                 }
             }
             if (!found)
             {
                 LOGE("Instance Layer not found: %s", instanceLayers[i]);
-                result = false;
-                break;
             }
         }
 
-        return result;
+        return presentLayers;
     }
 
     bool VulkanCore::checkInstanceExtensions(std::vector<const char*> &instanceExtensions)
@@ -243,20 +254,11 @@ namespace gvr {
     bool VulkanCore::CreateInstance() {
         VkResult ret = VK_SUCCESS;
 
-        std::vector<const char*>  instanceLayers
-        {
-            "VK_LAYER_GOOGLE_threading",
-            "VK_LAYER_LUNARG_parameter_validation",
-            "VK_LAYER_LUNARG_object_tracker",
-            // Enable this extension if required
-            //   "VK_LAYER_LUNARG_core_validation",
-            "VK_LAYER_LUNARG_image",
-            "VK_LAYER_LUNARG_swapchain",
-            "VK_LAYER_GOOGLE_unique_objects",
-        };
+        std::vector<const char*>  instanceLayers;
 
-        if(validationLayers)
-            GVR_VK_CHECK(checkInstanceLayers(instanceLayers));
+        if(validationLayers){
+            instanceLayers = getInstanceLayers();
+        }
 
 
         std::vector<const char*>  instanceExtensions

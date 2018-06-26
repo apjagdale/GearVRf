@@ -279,7 +279,7 @@ private:
 
     std::vector<VKDeviceComponent * > mDeviceComponents;
     bool validationLayers = false;
-    bool checkInstanceLayers(std::vector<const char*>&);
+    std::vector<const char*> getInstanceLayers();
     bool checkInstanceExtensions(std::vector<const char*>&);
     void CreateValidationCallbacks();
     PFN_vkCreateDebugReportCallbackEXT  mCreateDebugReportCallbackEXT;
