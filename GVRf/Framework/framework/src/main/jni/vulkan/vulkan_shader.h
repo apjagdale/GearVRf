@@ -104,7 +104,7 @@ public:
     static std::string makeLayout(const DataDescriptor& desc, const char* blockName, bool useGPUBuffer);
 private:
     VkPipelineLayout m_pipelineLayout;
-    VkDescriptorSetLayout m_descriptorLayout[2] = {NULL, NULL};
+    VkDescriptorSetLayout m_descriptorLayout[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE};
 
     VulkanShader(const VulkanShader& shader) = delete;
     VulkanShader(VulkanShader&& shader) = delete;
