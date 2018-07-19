@@ -36,7 +36,7 @@ struct VulkanRenderPass : public RenderPass
     bool descriptorSetNull = true;
     VkDescriptorPool m_descriptorPool;
     VkPipeline m_pipeline;
-    VkDescriptorSet m_descriptorSet;
+    VkDescriptorSet m_descriptorSet[2] = {NULL, NULL};
 };
 
 
@@ -77,7 +77,12 @@ struct VulkanRenderPass : public RenderPass
         VkDescriptorSet getDescriptorSet(int pass)
         {
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
-            return renderPass->m_descriptorSet;
+            return renderPass->m_descriptorSet[0];
+        }
+        VkDescriptorSet getDescriptorSet1(int pass)
+        {
+            VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
+            return renderPass->m_descriptorSet[1];
         }
         void setPipeline(VkPipeline pipeline, int pass){
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
@@ -94,11 +99,11 @@ struct VulkanRenderPass : public RenderPass
             return renderPass->m_descriptorPool;
 
         }
-        void setDescriptorSet(VkDescriptorSet descriptorSet, int pass){
+        /*void setDescriptorSet(VkDescriptorSet descriptorSet, int pass){
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
             renderPass->m_descriptorSet= descriptorSet;
 
-        }
+        }*/
         void setDescriptorSetNull(bool flag, int pass){
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
             renderPass->descriptorSetNull = flag;

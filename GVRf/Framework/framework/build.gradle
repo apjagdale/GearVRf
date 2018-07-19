@@ -9,6 +9,8 @@ repositories {
 android {
     compileSdkVersion 26
 
+
+    defaultPublishConfig 'debug'
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 24
