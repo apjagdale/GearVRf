@@ -20,25 +20,3 @@ new File("../../../").eachDir {
         println "including modules from " + it.toString()
     }
 }
-
-
-
-
-include ':gvr-complexscene'
-project(':gvr-complexscene').projectDir=new File('../../../GearVRf-Demos/gvr-complexscene/app')
-
-
-include ':gvr-blurfilter'
-project(':gvr-blurfilter').projectDir=new File('../../../GearVRf-Demos/gvr-blurfilter/app')
-
-
-include ':gvr-shadows'
-project(':gvr-shadows').projectDir=new File('../../../GearVRf-Demos/gvr-shadows/app')
-
-
-include ':gvr-simplesample'
-project(':gvr-simplesample').projectDir=new File('../../../GearVRf-Demos/gvr-simplesample/app')
-
-
-include ':gvr-rendertotexture'
-project(':gvr-rendertotexture').projectDir=new File('../../../GearVRf-Demos/gvr-rendertotexture/app')
