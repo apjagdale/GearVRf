@@ -1405,7 +1405,6 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
 
         vkUpdateDescriptorSets(m_device, writes.size(), writes.data(), 0, nullptr);
         writes.clear();
-        rp->descriptorSetNull = false;
 
         if(vkShader->bindTextures(vkmtl, writes,  rp->m_descriptorSet[1]) == false) {
                 return false;
