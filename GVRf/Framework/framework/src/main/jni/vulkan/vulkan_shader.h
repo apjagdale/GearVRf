@@ -83,7 +83,7 @@ public:
         return m_pipelineLayout;
     }
 
-    VkDescriptorSetLayout* getDescriptorLayout()
+    VkDescriptorSetLayout* getDescriptorLayouts()
     {
         return &m_descriptorLayout[0];
     }

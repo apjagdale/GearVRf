@@ -694,7 +694,7 @@ void VulkanCore::InitCommandPools(){
         vk_shader->makeUniformLayout(*vkMtl, uniformBinding,  index, vkdata, lights);
         vk_shader->makeSamplerLayout(*vkMtl, samplerBinding);
 
-        VkDescriptorSetLayout * descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
+        VkDescriptorSetLayout * descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayouts();
         ret = vkCreateDescriptorSetLayout(m_device, gvr::DescriptorSetLayoutCreateInfo(0,
                                                                                        uniformBinding.size(),
                                                                                        uniformBinding.data()),
@@ -1336,7 +1336,7 @@ void VulkanCore::InitPipelineForRenderData(const GVR_VK_Vertices* m_vertices, Vu
         std::vector<VkWriteDescriptorSet> writes;
         VkDescriptorPool descriptorPool;
         GetDescriptorPool(descriptorPool);
-        VkDescriptorSetLayout * descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayout();
+        VkDescriptorSetLayout * descriptorLayout = static_cast<VulkanShader *>(shader)->getDescriptorLayouts();
         VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
         descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         descriptorSetAllocateInfo.pNext = nullptr;
