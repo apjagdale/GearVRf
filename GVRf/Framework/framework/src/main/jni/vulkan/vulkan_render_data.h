@@ -33,6 +33,7 @@ namespace gvr
 struct VulkanRenderPass : public RenderPass
 {
     virtual ~VulkanRenderPass() {}
+    bool descriptorSetNull = true;
     VkDescriptorPool m_descriptorPool;
     VkPipeline m_pipeline;
     VkDescriptorSet m_descriptorSet[2] = {VK_NULL_HANDLE, VK_NULL_HANDLE};
@@ -68,6 +69,10 @@ struct VulkanRenderPass : public RenderPass
             VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
             return renderPass->m_pipeline;
 
+        }
+        bool isDescriptorSetNull(int pass){
+            VulkanRenderPass* renderPass = static_cast<VulkanRenderPass*>(render_pass_list_[pass]);
+            return renderPass->descriptorSetNull;
         }
         VkDescriptorSet getDescriptorSet(int pass)
         {
@@ -110,7 +115,7 @@ struct VulkanRenderPass : public RenderPass
 
         void bindToShader(Shader* shader, Renderer* renderer);
         bool isDirty(int pass){
-            return isHashCodeDirty() || RenderData::isDirty();
+            return isHashCodeDirty() || RenderData::isDirty() || isDescriptorSetNull(pass);
         }
         void render(Shader* shader, VkCommandBuffer cmdBuffer, int curr_pass);
     private:
