@@ -66,7 +66,7 @@ public class GVRSticker {
      * Initiate's the screenshot capturing
      * Captures images every {@link GVRSticker#mInterval} milliseconds
      */
-    public void captureScreen()
+    public void startCapturing()
     {
         mCaptureFlag = true;
         Threads.spawn(new Runnable()
@@ -101,7 +101,7 @@ public class GVRSticker {
     /**
      * Stop's the screenshot thread
      */
-    public void stop(){
+    public void stopCapturing(){
         mCaptureFlag = false;
     }
 
